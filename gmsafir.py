@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-02-10 - Version 1.0(BETA)"
+        self.version="2022-02-11 - Version 1.0(BETA)"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -4836,7 +4836,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
             #
             f.write(self.writeLineFortran('(A15)',[typcalcode])+"\n")
-            if(typcal=="USE_LOCAFI" or typcal=="USE_HASEMI" or typcal=="USE_CFD"):
+            if(typcal=="USE_LOCAFI" or typcal=="USE_HASEMI" or typcal=="USE_CFD") and not istorsrun:
                 tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","name",typcal),("props","name","Expected name of the structural .IN File")],False)
                 structfile=tmp0['values'][0]
                 tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","name",typcal),("props","name","IELEMTYPE")],False)
@@ -4975,9 +4975,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Center of torsion (Xc)")],False)
             zc=tmp0['values'][0]
             #
-            if(typcal=="USE_CURVES" or typcal=="USE_HASEMI"  or typcal=="USE_LOCAFI" and not istorsrun):
-                f.write(self.writeLineFortran('(A10,F5.1,F5.1)',['NODELINE',float(y0),float(z0)])+"\n") #TBD - Correct coding needed
-                f.write(self.writeLineFortran('(A10,F5.1,F5.1)',['YC_ZC',float(yc),float(zc)])+"\n") #TBD - Correct coding needed
+            if(typcal=="USE_CURVES" or typcal=="USE_HASEMI"  or typcal=="USE_LOCAFI" and not istorsrun) or istorsrun:
+                f.write(self.writeLineFortran('(A10,F5.1,F5.1)',['NODELINE',float(y0),float(z0)])+"\n")
+                f.write(self.writeLineFortran('(A10,F5.1,F5.1)',['YC_ZC',float(yc),float(zc)])+"\n")
             #
             #
         # 4/ Write fixations (Thermal and Structural)
