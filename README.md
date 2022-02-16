@@ -9,6 +9,7 @@ Here are some other useful links:
 
 [GmSAFIR Issues](https://github.com/gmsafir/gmsafir/issues) : Please submit there your issues
 
+Compatibility between the input files created with GmSAFIR and version 2019b1 of SAFIR is treated [here](https://www.uee.uliege.be/upload/docs/application/pdf/2022-02/safir_prior_versions_-_gmsafir_compatibility.pdf)
 
 <!--
 **gmsafir/gmsafir** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
