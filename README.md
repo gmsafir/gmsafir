@@ -5,11 +5,13 @@ It is free and open-source.
 
 Here are some other useful links:
 
-[Video tutorials of GmSAFIR](https://www.youtube.com/channel/UC0E-fNxuxk0pQORHy89Lw6g/videos) provided on the SAFIR Youtube channel
+- [Video tutorials of GmSAFIR](https://www.youtube.com/channel/UC0E-fNxuxk0pQORHy89Lw6g/videos) provided on the SAFIR Youtube channel
 
-[GmSAFIR Issues](https://github.com/gmsafir/gmsafir/issues) : Please submit there your issues
+- [GmSAFIR Issues](https://github.com/gmsafir/gmsafir/issues) : Please submit there your issues
 
-Compatibility between the input files created with GmSAFIR and version 2019b1 of SAFIR is treated [here](https://www.uee.uliege.be/upload/docs/application/pdf/2022-02/safir_prior_versions_-_gmsafir_compatibility.pdf)
+- General information about SAFIR suite is found [here](https://www.uee.uliege.be/cms/c_4016387/fr/ueenew-ressources-sur-safir)  
+
+- Compatibility between the input files created with GmSAFIR and version 2019b1 of SAFIR is treated [here](https://www.uee.uliege.be/upload/docs/application/pdf/2022-02/safir_prior_versions_-_gmsafir_compatibility.pdf)
 
 <!--
 **gmsafir/gmsafir** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
