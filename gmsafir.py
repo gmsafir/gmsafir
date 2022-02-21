@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-02-11 - Version 1.0(BETA)"
+        self.version="2022-02-21 - Version 1.0(BETA)"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -64,6 +64,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.go_on=True
         #
         self.g4sfile=""
+        self.g4sfileError=""
         self.geofile=""
         self.getCmdLine() # Interpret the command line parameters
         #
@@ -71,6 +72,20 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             gmsh.finalize()
             sys.exit(127)
         #
+        # Reading the different DBs:
+        #
+        # ContexDB: internal json object in this script.
+        # to allow the on-the-fly creation of menus in the Drawing Window, this creation being based on the events caught by the "event manager".
+        # ContextDB is easier to modify and explore than the ONELAB.json object, since being defined as a tree with branches and leaves (see at the quasi end of this script).
+        # This latter is only used in the menus.
+        #
+        # SafirDB: internal json object in this script,
+        # containing the general information for the on-the-fly creation of menus in the Left Window.
+        #
+        # InspectDB: internal json object in this script
+        # contains the information for the object Inspector (essentially pushButtons in the Left Window, to request current view on the objects defined in the Drawing Window)
+        #
+        # Read InspectDB
         self.inspectDB=json.loads(inspectDBstring)
         #
         # Keep track of the default ContextDB from this script, with default values
@@ -78,19 +93,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.initCompleteContextDB(self.contextDB0)
 
         # Retrieve initial version of ContextDB
-        # ContexDB: internal json object in this script.
-        # to allow the on-the-fly creation of menus in the Drawing Window, this creation being based on the events caught by the "event manager".
-        # ContextDB is easier to modify and explore than the ONELAB.json object, since being defined as a tree with branches and leaves (see at the quasi end of this script).
-        # This latter is only used in the menus.
-        #
-        # SafirDB: internal json object in this script (similar structure to ContextDB),
-        # containing the general information for the on-the-fly creation of menus in the Left Window.
-        #
-        # InspectDB: internal json object in this script (similar structure to ContextDB)
-        # contains the information for the object Inspector (essentially pushButtons in the Left Window, to request current view on the objects defined in the Drawing Window)
-        #
         if(os.path.exists(self.g4sfile)): # load ContextDB from existing file
+            #
+            self.contextDB=json.loads(contextDBstring) # load ContextDB from this script
+            self.initCompleteContextDB(self.contextDB) # Copy Materials: same for Volume/th3D than Surface/th2D
+            self.safirDB=json.loads(safirDBstring)
+            self.initCompleteSafirDB(self.safirDB)
+            #
             self.getG4sJson(self.g4sfile) # if existing DB in input directory
+            #
         else:
             self.contextDB=json.loads(contextDBstring) # load ContextDB from this script
             self.initCompleteContextDB(self.contextDB) # Copy Materials: same for Volume/th3D than Surface/th2D
@@ -291,6 +302,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                      #
                      if(tmp1keys!={}):
                          for inb in sorted(tmp1keys):
+                             print("list_names:",tmp1keys[inb])
+                             print('list_names:',inam0,[k for k in tmp1keys[inb] if list(k.keys())[0]==inam0][0][inam0])
                              ivl=[k for k in tmp1keys[inb] if list(k.keys())[0]==inam0][0][inam0][0]
                              j=[k for k in listprops if list(k.keys())[0]==ivl+";"+ityp]
                              if(j==[]):
@@ -490,20 +503,298 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if(os.path.exists(self.INfile)):
                 gmsh.logger.write("SAFIR .IN file does exist - It will be overwritten when .IN file creation will be requested", level="warning")
 
+
     #Load ContextDB and SafirDB from the disk
-    def getG4sJson(self,f):
-        with open(self.g4sfile) as f:
+    def getG4sJson(self,file0): # Name originates from the time where G4S file was a JSON format, no more the case
+        #
+        #file0="E:\Share\Efectis\SAFIR\GMSH\G4S\\first_case\debug_JMF_20220201\\test.txt"
+        #
+        # Read G4S file (no more a JSON format) and remove commented and empty lines (or full of whitespaces)
+        with open(file0) as f:
             lines=f.readlines()
-            self.contextDB = json.loads(lines[0])
-            self.safirDB = json.loads(lines[1])
+            pattern=re.compile("^#")
+            pattern2=re.compile("^[\s]*$")
+            #
+            thelines=[]
+            for iline in lines:
+                if(re.search(pattern, iline)==None and re.search(pattern2, iline)==None and iline!="\n"):
+                    thelines.append(iline.replace('\n',''))
+        f.close()
         #
+        # Retrieve the problem type and make permutation in safirDB and contextDB accordingly
+        i0=[i for i in range(len(thelines)) if "Problem Type" in thelines[i]][0]
+        iline0=thelines[i0]
+        _,pbtyp=iline0.split(':')
+        self.pbType=pbtyp.strip()
+        #
+        # Permute safirDB
+        found=False
+        endTree=False
+        merror=""
+        listRecurs=[{'key':"",'end_lvl':0}]
+        inam="Problem Type"
+        ivl=[1]
+        ivlstr=self.pbType
+        self.safirDB['children'],listRecurs,permute,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
+        if(merror!=""):
+            self.g4sfileError=merror
+            gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
+            return
+        #
+        # Permute ContextDB
+        found=False
+        endTree=False
+        merror=""
+        listRecurs=[{'key':"",'end_lvl':0}]
+        inam="Problem Type"
+        ivl=[1]
+        ivlstr=self.pbType
+        self.contextDB['children'],listRecurs,permute,found,endTree,merror=self.permuteDB(self.contextDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
+        if(merror!=""):
+            self.g4sfileError=merror
+            gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
+            return
+        #
+        thelines.remove(iline0)
+        #
+
+        # Function to change a key and/or property value: both are handled for safirDB by permuteDB (not the case for concreteDB)
+        def changeSafirDBKeyAndProp(iprop,ival):
+            found=False
+            endTree=False
+            merror=""
+            listRecurs=[{'key':"",'end_lvl':0}]
+            inam=iprop
+            ivl=[ival]
+            ivlstr=ival
+            self.safirDB['children'],listRecurs,permute_safir,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
+            if merror!="":
+                self.g4sfileError=merror
+                gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
+                return
+        #
+        #Reindex lines to account for bracketed props
+        thelineswithprops=[]
+        multi=False
+
+        for iline in thelines:
+            #
+            pattern_beg=re.compile("=.*{.*$")
+            pattern_end=re.compile("}.*$")
+            #
+            if(not multi and re.search(pattern_beg, iline)!=None):
+                tmpl=[iline]
+                multi=True
+            #
+            elif(not multi and re.search(pattern_end, iline)!=None):
+                gmsh.logger.write(".g4s file not loaded!!! A block of properties is trying to close but was not started", level="error")
+                self.g4sfileError="error"
+                return
+            #
+            elif multi :
+                if(re.search(pattern_beg, iline)!=None): #precedent brackets have not been closed, cannot start a new one
+                    gmsh.logger.write(".g4s file not loaded!!! Last block of properties was not closed, cannot start a new one", level="error")
+                    self.g4sfileError="error"
+                    return
+                #
+                if(re.search(pattern_end, iline)!=None): # end of bracketed props
+                    tmpl.append(iline)
+                    multi=False
+                    thelineswithprops.append(tmpl)
+                    tmpl=[]
+                else: # still in the bracketed props
+                    tmpl.append(iline)
+            #
+            else: # multi=False and not(pattern_beg,pattern_end): correct single line
+                thelineswithprops.append([iline])
+        #
+        if multi: #
+            gmsh.logger.write(".g4s file not loaded!!! Last block of properties was not closed", level="error")
+            self.g4sfileError="error"
+            return
+        #
+        # Load information in safirDB and contextDB
+        for iline in thelineswithprops:
+            #
+            # Evaluate if data in the line will belong to safirDB or to ContextDB
+            isgen=True
+            #
+            for ishp in self.allShapes:
+                pattern0=re.compile("^"+ishp)
+                if(re.search(pattern0, iline[0])!=None):
+                    isgen=False
+            #
+            if isgen: #safirDB
+                #
+                if(len(iline)==1): #changes in first-level properties
+                    #
+                    iprop,ival=iline[0].split(":");iprop=iprop.strip();ival=ival.strip()
+                    tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['props']
+                    idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
+
+                    #
+                    if(idxtab!=[]): # is a SafirDB "prop"
+                        k=idxtab[0]
+                        tmp0=changeSafirDBKeyAndProp(iprop,ival)
+                        #
+
+                    else: # is a SafirDB "key"
+                        tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['children']
+                        idxtab2=[k for k in range(len(tmp0)) if tmp0[k]['key']==iprop]
+                        #
+                        if(idxtab2!=[]): # is really a key- Permute
+                            tmp0=changeSafirDBKeyAndProp(iprop,ival)
+                        #
+                        else: # is neither a "props" nor a "key"
+                            gmsh.logger.write("Problem reading the .g4s file: \""+iprop+"\" is not recognized", level="error")
+                            self.g4sfileError="error"
+                            return
+                #
+                else: #changes in first-level key and second-level properties
+                    #
+                    #Treat line[0] as a safirDB "key"
+                    #
+                    iprop0,ival=iline[0].split(":");iprop0=iprop0.strip()
+                    ival=re.sub(pattern_beg,"",ival).strip()
+                    #
+                    tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['children']
+                    idxtab2=[k for k in range(len(tmp0)) if tmp0[k]['key']==iprop0]
+                    #
+                    if(idxtab2!=[]): # is really a key- Permute
+                        tmp0=changeSafirDBKeyAndProp(iprop0,ival)
+                    #
+                    else: # is neither a "props" nor a "key"
+                        gmsh.logger.write("Problem reading the .g4s file: \""+iprop0+"\" is not recognized", level="error")
+                        self.g4sfileError="error"
+                        return
+                    #
+                    # Now treat the properties
+                    for ik in range(1,len(iline)-1):
+                        jline=iline[ik]
+                        iprop,ival=jline.split(":");iprop=iprop.strip();ival=ival.strip()
+                        tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key",iprop0)],False)['props']
+                        idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
+                        #
+                        if(idxtab!=[]): # is a SafirDB "prop"
+                            k=idxtab[0]
+                            tmp0=changeSafirDBKeyAndProp(iprop,ival)
+                        else:
+                            gmsh.logger.write("Problem reading the .g4s file: \""+iprop+"\" is not recognized", level="error")
+                            self.g4sfileError="error"
+                            return
+            #
+            else: # contextDB
+                #
+                # Differentiate btw delocalized properties (New Material/New LAX) and localized properties
+                iline0=re.sub(pattern_beg,"",iline[0]).strip()
+                #
+                if(":" in iline0):
+                    iprop0,ival0=iline0.split(":");iprop0=iprop0.strip();ival0=ival0.strip()
+                else:
+                    iprop0=iline0
+                #
+                ishp,inam0=iprop0.split('-');ishp=ishp.strip();inam0=inam0.strip()
+                #
+                if(inam0 == "New Material Definition" or inam0 == "New LAX Definition"): # delocalized properties
+                    inam=inam0
+                    ikey='ents'
+                    inb=1
+                #
+                else: # localized properties
+                    pattern_fct=re.compile("\((.)*\)$")
+                    pattern_fct2=re.compile("^(.)*\((\w)*(\s)*(\w)*(\s)*")
+                    pattern_fct3=re.compile("\)")
+                    inam=re.sub(pattern_fct,"",inam0)
+                    inb1=re.sub(pattern_fct2,"",inam0);inb=int(re.sub(pattern_fct3,"",inb1))
+                    if("Physical" in inam0):
+                        ikey='pgs'
+                    else:
+                        ikey='ents'
+                #
+                ishptot=ishp+" "+str(inb)
+                if(ikey=='pgs'):
+                    ishptot="Physical "+ishptot
+                #
+                pref_elem="ONELAB Context/"+ishptot+"/"+self.pbType+"/"+inam
+
+                #
+                if inam == "New Material Definition":
+                    _,subnam=iline[1].split(":");subnam=subnam.strip()
+                    _,typnam=iline[2].split(":");typnam=typnam.strip()
+                    pref_elem+="/"+typnam+"/"+subnam
+                    istart=3
+                else:
+                    pref_elem+="/-"
+                    istart=1
+                #
+                #
+                if inam=="New Material Definition":
+                    # Need permutation of Material Type and then of Material Sub-Category
+                    #
+                    tmp0=self.getDBValue(self.contextDB,[("children","name",ishp),("children","name",self.pbType),("children","name",inam)],False)['children']
+                    #
+                    found=False
+                    endTree=False
+                    merror=""
+                    listRecurs=[{'key':"",'end_lvl':0}]
+                    levelChange=999
+                    tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1","Material Type",[typnam],typnam,levelChange,merror)
+                    #
+                    tmp0=self.getDBValue(self.contextDB,[("children","name",ishp),("children","name",self.pbType),("children","name",inam),("children","name",typnam)],False)['children']
+                    #
+                    found=False
+                    endTree=False
+                    merror=""
+                    listRecurs=[{'key':"",'end_lvl':0}]
+                    levelChange=999
+                    tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1","Material Sub-category",[subnam],subnam,levelChange,merror)
+                    #
+                if merror!="":
+                    gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
+                    self.g4sfileError=merror
+                    return
+                #
+                # Now updates
+                toStore=[]
+                #
+                for ik in range(istart,len(iline)-1):
+                    iprop,ival=iline[ik].split(":");iprop=iprop.strip();ival=ival.strip()
+                    fullname=pref_elem+"/"+iprop
+                    toStore.append({fullname:[ival]})
+                #
+                if inam == "New Material Definition":
+                    fullname=pref_elem+"/"+"New Material Name"
+                    toStore.append({fullname:[ival0]})
+                #
+                if inam == "New LAX Definition":
+                    fullname=pref_elem+"/"+"New LAX Name"
+                    toStore.append({fullname:[ival0]})
+                #
+                self.add_or_remove=1
+                self.loadexception=True
+                self.contextDB,update_void,ierr=self.updateDB(self.contextDB,self.pbType,toStore)
+                self.loadexception=False
+                if ierr==-1:
+                    self.g4sfileError="error"
+                    return
+                #
+        #
+        #with open(self.g4sfile) as f:
+        #    lines=f.readlines()
+        #    self.contextDB = json.loads(lines[0])
+        #    self.safirDB = json.loads(lines[1])
+
+        #
+#         ikey=[k for k in range(len(self.safirDB['children'])) if 'Problem Type' in self.safirDB['children'][k]["key"]][0]
+#         self.pbType=self.safirDB['children'][ikey]["name"]
+        #
+        #Get the INfile name as global variable
         ikey=[k for k in range(len(self.safirDB['children'])) if 'Problem Type' in self.safirDB['children'][k]["key"]][0]
-        self.pbType=self.safirDB['children'][ikey]["name"]
-        #
         tmp0=self.safirDB['children'][ikey]['props']
         ikey2=[k for k in range(len(tmp0)) if 'Name of the .IN File' in tmp0[k]["name"]][0]
         self.INfile=tmp0[ikey2]["values"][0]
         #
+        # Get the number of VOIDS
         if(self.pbType=="Thermal 2D"):
             tmp0=self.getDBValue(self.contextDB,[("children","name","Curve"),("children","name","Thermal 2D"),("children","name","Void Constraint"),("children","name","-")],False)
             pgsents=[iprop for iprop in tmp0['props'] if not 'name' in list(iprop.keys())][0]
@@ -516,6 +807,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
             #if(pgsents['pgs']!={}):
             print("self.nvoids Read: value=",self.nvoids)
+
+        self.g4sfileError=""
+
 
 
     # Update the general lists: self.listMats and self.listLAX
@@ -538,7 +832,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         for i in listshps:
             tmp2=self.getDBValue(self.contextDB,[("children","name",self.allShapes[i]),("children","name",self.pbType),("children","name","New Material Definition")],False)
             rc=self.recursActionContextDB(tmp2,'list_names\tmat;'+str(i),self.listMats)
-
+        #
+        print("self.listMats=",self.listMats)
+        #
         # Update list of LAX
         if('Structural 3D' in self.pbType):
             tmp2=self.getDBValue(self.contextDB,[("children","name","Curve"),("children","name",self.pbType),("children","name","New LAX Definition")],False)
@@ -688,7 +984,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
         #
         if('Thermal 2D' in self.pbType):
-            # Special case of Torsion run
+            # Adjustments in visibility of menus, when special case of Torsion run
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Run torsion analysis")],False)
             istorsrun=tmp0["values"]==[1]
 
@@ -718,13 +1014,31 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 else:
                     tmp0[i1]['visible']=True
                     tmp0[i2]['visible']=True
-
+            #
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","DIAG CAPA")],False)
             if istorsrun:
                 tmp0['visible']=False
             else:
                 tmp0['visible']=True
-
+            #
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","TETA")],False)
+            if istorsrun:
+                tmp0['visible']=False
+            else:
+                tmp0['visible']=True
+            #
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","TINITIAL")],False)
+            if istorsrun:
+                tmp0['visible']=False
+            else:
+                tmp0['visible']=True
+            #
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","TIMEPRINT,UPTIMEPRINT")],False)
+            if istorsrun:
+                tmp0['visible']=False
+            else:
+                tmp0['visible']=True
+            #
             # Special case of TSH run
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","TEM-TSH")],False)
             istsh=tmp0["name"]=="MAKE.TSH"
@@ -744,6 +1058,21 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 tmp2['visible']=True
                 tmp3['visible']=True
 
+            #
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Type of calculation")],False)
+            print(tmp0["name"])
+            if(tmp0["name"]!="USE_CURVES"):
+                tmp0=tmp0['props']
+                i1=[ k for k in range(len(tmp0)) if "Expected name " in tmp0[k]['name']][0]
+                i2=[ k for k in range(len(tmp0)) if "IELEMTYPE" in tmp0[k]['name']][0]
+                if istorsrun:
+                    tmp0[i1]['visible']=False
+                    tmp0[i2]['visible']=False
+                else:
+                    tmp0[i1]['visible']=True
+                    tmp0[i2]['visible']=True
+            #
+        #
         basemenu=json.loads(baseparameters)
         # Run or not SAFIR exe
         menudict={}
@@ -789,6 +1118,31 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         menudict["readOnly"]=True
         moremenus.append(menudict)
 
+        #  Adjustments in visibility of menus, when special case of Torsion run
+
+        if('Thermal 2D' in self.pbType):
+            for i in range(len(moremenus)):
+                menudict=moremenus[i]
+                #
+                if("Type of calculation" in menudict["name"]):
+                    if istorsrun:
+                        moremenus[i]['visible']=False
+                    else:
+                        moremenus[i]['visible']=True
+                #
+                if("Convergence" in menudict["name"]):
+                    if istorsrun:
+                        moremenus[i]['visible']=False
+                    else:
+                        moremenus[i]['visible']=True
+                #
+                if("TEM-TSH" in menudict["name"]):
+                    if istorsrun:
+                        moremenus[i]['visible']=False
+                    else:
+                        moremenus[i]['visible']=True
+
+
         gmsh.onelab.set(json.dumps(moremenus))
         gmsh.fltk.update()
 
@@ -808,6 +1162,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         menudict["name"]=prefixname+"/00Info on current props" # prf_elem
         #print('menudict["name"]=',menudict["name"])
         menudict["values"]=["viewg4s"]
+        menudict["attributes"]={"Macro":"Action", "Aspect":"ReturnButton"}
+        moremenus.append(menudict)
+
+        # G4S Info button
+        menudict={}
+        menudict["type"]="string"
+        menudict["name"]=prefixname+"/00Reload properties" # prf_elem
+        #print('menudict["name"]=',menudict["name"])
+        menudict["values"]=["reloadprops"]
         menudict["attributes"]={"Macro":"Action", "Aspect":"ReturnButton"}
         moremenus.append(menudict)
 
@@ -1206,6 +1569,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                     jmenu['name']=inam.replace(s0,s1)
                                                     ""
                                                     if(len(s)-4==end_lvl):# This is a leaf of the tree
+#                                                         print('propnam=',propnam)
+#                                                         print('iprop[ikey][inb]=',iprop[ikey][inb])
                                                         jmenu['values']=[k for k in iprop[ikey][inb] if list(k.keys())[0]==propnam][0][propnam]
                                                         addmenus.append(jmenu)
                         #
@@ -1325,11 +1690,32 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         return tmpmenus,prf
 
 
-    def permuteDB(self,tmp0,lists,prf_categ,found,endTree,shpid,inam,ivl,ivlstr,lvl): # Recursive on all first elements when multi-elements at same level (ex. for the SAFIR general menu)
+    def changeLabelToIdxOrNumerize(self,iprop,ivl):
+        merror=""
+        if(iprop['type']=="number"):
+            if 'valueLabels' in iprop:
+                if(not ivl[0] in iprop['choices']):
+                    if ivl[0] in iprop['valueLabels']:
+                        ivl=[iprop['valueLabels'][ivl[0]]]
+                    else:
+                        merror="Problem with "+str(ivl[0])+" not found in "+str(iprop['valueLabels'])
+            #
+            try:
+                ivl=[int(str(ivl[0]))]
+            except ValueError:
+                ivl=[float(ivl[0])]
+                #
+            #
+        return merror,ivl
+
+
+    def permuteDB(self,tmp0,lists,prf_categ,found,endTree,shpid,inam,ivl,ivlstr,lvl,merror): # Recursive on all first elements when multi-elements at same level (ex. for the SAFIR general menu)
+        #Notes: for safirDB, it permutes and change prop values - for contextDB, it only permutes
+
         permute=False
         end_lvl0=[ilist['end_lvl'] for ilist in lists if ilist['key']==prf_categ][0]
 
-        if(not found):
+        if(not found and merror==""):
             #Generate the list of child sub-sets
             childsubsets={}
             for k in range(len(tmp0)):
@@ -1354,24 +1740,34 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                     #if(1>0):
                     if((lvl<999 and ilist['end_lvl']>=lvl) or(lvl==999)): # do explore only the correct level in the tree branches
-                        if("key" in tmpk0):
-                            if(ivlstr!=""):
+                        #if("key" in tmpk0):
+                        if(ivlstr!=""):
                                 tabidx=[childsubsets[ik][idx] for idx in range(len(childsubsets[ik])) if tmp0[childsubsets[ik][idx]]['name']==ivlstr]
                                 if(tabidx!=[]): #Permutation of menus
                                     found=True
                                     idx=tabidx[0]
-                                    tmp0[idx],tmp0[k0]=tmp0[k0],tmp0[idx]
-
-                                    permute=True
-                        if(tmpk0['props']!=[] and not found): # Change value outside menus
+                                    if(idx!=0):
+                                        tmp0[idx],tmp0[k0]=tmp0[k0],tmp0[idx]
+                                        permute=True
+                                    #
+                        #if(tmpk0['props']!=[] and not found): # Change value outside menus
+                        if(tmpk0['props']!=[]):
                             tabidx=[idx for idx in range(len(tmpk0['props'])) if 'name' in tmpk0['props'][idx] if inam in tmpk0['props'][idx]['name']]
                             if(tabidx!=[]):
                                 found=True
                                 #
                                 idx=tabidx[0]
-
+                                #
                                 if(ivl==-1):
                                     ivl=[tmpk0['props'][idx]['valueLabels'][ivlstr]]
+                                else:
+                                    iprop=tmpk0['props'][idx]
+                                    merror,ivl=self.changeLabelToIdxOrNumerize(iprop,ivl)
+                                    if(merror!=""):
+                                        return tmp0,lists,permute,found,endTree,merror
+                                        #
+
+                                #
                                 tmpk0['props'][idx]['values']=ivl
 
                                 # Special case of 'Beam Local Axes' in ONELAB Context: launches recreateLAXView to adjust the vectors according to the value of theta
@@ -1388,9 +1784,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     self.isViewLAX=False
 
                     if(not found and not endTree):
-                        tmpk0["children"],lists,permute,found,endTree=self.permuteDB(tmpk0["children"],lists,ilist['key'],found,endTree,shpid,inam,ivl,ivlstr,lvl)
+                        tmpk0["children"],lists,permute,found,endTree,merror=self.permuteDB(tmpk0["children"],lists,ilist['key'],found,endTree,shpid,inam,ivl,ivlstr,lvl,merror)
 
-        return tmp0,lists,permute,found,endTree
+        return tmp0,lists,permute,found,endTree,merror
 
 
     def isCorrectFormat(self,ivl,nlen,emsg0):
@@ -1444,9 +1840,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #
                     found=False
                     endTree=False
+                    merror=""
                     listRecurs=[{'key':"",'end_lvl':0}]
                     #self.safirDB['children'],listRecurs,permute_safir,found,endTree=self.permuteDB(self.safirDB['children'],listRecurs,found,endTree,inam,ivl,ivlstr,999) #Search not using indexation by levels, since no indexation in the name
-                    self.safirDB['children'],listRecurs,permute_safir,found,endTree=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999)
+
+                    self.safirDB['children'],listRecurs,permute_safir,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
                     #
                     if('Problem Type' in iparam['name']):
                         ipb=ivlstr
@@ -1455,8 +1853,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             #
                             found=False
                             endTree=False
+                            merror=""
                             listRecurs=[{'key':"",'end_lvl':0}]
-                            self.contextDB['children'],listRecurs,permute,found,endTree=self.permuteDB(self.contextDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999)
+                            self.contextDB['children'],listRecurs,permute,found,endTree,merror=self.permuteDB(self.contextDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
                             self.cleaningToClean()
                             gmsh.graphics.draw()
                             #
@@ -1485,8 +1884,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 #                          tmp0=tmp0[pbidx]["children"]
                          found=False
                          endTree=False
+                         merror=""
                          listRecurs=[{'key':"",'end_lvl':0}]
-                         tmp0,listRecurs,permute,found,endTree=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1",nameChange,newValChange,newValChangeStr,levelChange)
+                         tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1",nameChange,newValChange,newValChangeStr,levelChange,merror)
                          #
                          if(not 'CURVES' in ivlstr): # Adjust the '' in the ONELAB Context Panel according to the 'USE_XXX' in SAFIR General Menu
                              levelChange=len("ONELAB Context/ / /Flux Constraint/Flux Type".split("/"))-3
@@ -1495,8 +1895,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                              #
                              found=False
                              endTree=False
+                             merror=""
                              listRecurs=[{'key':"",'end_lvl':0}]
-                             tmp0,listRecurs,permute,found,endTree=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1",nameChange,-1,newValChangeStr,levelChange)
+                             tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1",nameChange,-1,newValChangeStr,levelChange,merror)
                          #
                     elif('Name of the .IN File' in iparam['name']):
                         self.INfile=ivl[0]
@@ -1514,17 +1915,18 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             self.recreateContextMenusFromDB(ipb,False)
 
              #Store safirDB after permutation
-            if os.path.exists(self.g4sfile):
-                with open(self.g4sfile, 'r') as f:
-                    lines=f.readlines()
-                    ctxtDB = lines[0]
-                with open(self.g4sfile, 'w') as f:
-                    f.write(ctxtDB)
-                    f.write(json.dumps(self.safirDB))
-            else:
-                with open(self.g4sfile, 'w') as f:
-                    f.write(json.dumps(self.contextDB)+"\n")
-                    f.write(json.dumps(self.safirDB))
+#             if os.path.exists(self.g4sfile):
+#                 with open(self.g4sfile, 'r') as f:
+#                     lines=f.readlines()
+#                     ctxtDB = lines[0]
+#                 with open(self.g4sfile, 'w') as f:
+#                     f.write(ctxtDB)
+#                     f.write(json.dumps(self.safirDB))
+#             else:
+#                 with open(self.g4sfile, 'w') as f:
+#                     f.write(json.dumps(self.contextDB)+"\n")
+#                     f.write(json.dumps(self.safirDB))
+            self.viewAndWriteInfog4s(2)
             #
             return 0
          #
@@ -1611,6 +2013,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                  #
                  found=False
                  endTree=False
+                 merror=""
                  listRecurs=[{'key':"",'end_lvl':0}]
                  #
                  # particular case of Rebar: we trigger the permutation in "Curve Material" from the menu "New Rebar Material Definition"
@@ -1618,7 +2021,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     shpId="-1"
                     tmp0=self.getDBValue(self.contextDB,[("children","name","Curve"),("children","name",self.pbType)],False)['children']
                    #
-                 tmp0,listRecurs,permute,found,endTree=self.permuteDB(tmp0,listRecurs,"",found,endTree,shpId,nameChange,newValChange,newValChangeStr,levelChange)
+                 tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,shpId,nameChange,newValChange,newValChangeStr,levelChange,merror)
                  self.permutespecial=False
              #
              else: # Special Case in ONELAB Context, for delocalized properties Mats and LAX
@@ -1751,17 +2154,18 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if(update_void or self.add_or_remove==1 or self.add_or_remove==0):
                 self.recreateContextMenusFromDB(self.pbType,True)
             #
-            if os.path.exists(self.g4sfile):
-                with open(self.g4sfile, 'r') as f:
-                    lines=f.readlines()
-                    sfDB = lines[1]
-                with open(self.g4sfile, 'w') as f:
-                    f.write(json.dumps(self.contextDB)+"\n")
-                    f.write(sfDB.replace("\n",""))
-            else:
-                with open(self.g4sfile, 'w') as f:
-                    f.write(json.dumps(self.contextDB)+"\n")
-                    f.write(json.dumps(self.safirDB))
+#             if os.path.exists(self.g4sfile):
+#                 with open(self.g4sfile, 'r') as f:
+#                     lines=f.readlines()
+#                     sfDB = lines[1]
+#                 with open(self.g4sfile, 'w') as f:
+#                     f.write(json.dumps(self.contextDB)+"\n")
+#                     f.write(sfDB.replace("\n",""))
+#             else:
+#                 with open(self.g4sfile, 'w') as f:
+#                     f.write(json.dumps(self.contextDB)+"\n")
+#                     f.write(json.dumps(self.safirDB))
+            self.viewAndWriteInfog4s(2)
             #
             return 0
         else:
@@ -1790,10 +2194,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         return emsg
 
 
-    #Called by "manageStoreDB"
+    #Called by manageStoreDB and by GetG4SJson
     def updateDB(self,tmpg,pbtyp,toStore):
         #
-        print('toStore=',toStore)
         ierr=0
         #
         def getParam(i):
@@ -1806,7 +2209,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             return inam,propnam,ivl
         #
         inam,propnam,ivl=getParam(0)
-
+        toStoreNames=[getParam(i)[1] for i in range(len(toStore))]
+        
         s=inam.split('/')
 
         #
@@ -1940,6 +2344,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 self.add_or_remove=2 # Update instead of Add
             if(self.add_or_remove==1 and isnewlax and islaxidx):
                 self.add_or_remove=2 # Update instead of Add
+
         #
         # not specialcase: verifications:
         else:
@@ -2043,7 +2448,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             ivaltab=ivaltab.strip().split() #split the list of mats or lax, split on spaces - ex. '   nam1   nam3 nam5    ' split as ['nam1', 'nam3', 'nam5']
                             for ival in ivaltab:
                                 tmpidx=self.idxInGeneralList(tmpl,ival,self.allShapes[idim])
-                                if(tmpidx==[]):
+                                if(tmpidx==[] and not self.loadexception):
                                     gmsh.logger.write(inewfield+" "+ival+" is not in the current list. Please define it first before allocating", level="error")
                                     ierr=-1
                                     return tmpg,update_void,ierr
@@ -2061,14 +2466,20 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 if not previous_found:
                     previous_found,tmp0=recurs_cleaning(tmp0,previous_found,"Physical",shptyp,inb,inewfield,imatlax,specialcase)
             #
+
         #
         if isVoidConstraint:
             update_void=previous_found
         #
         if(self.add_or_remove>=1):
+
             # Find the location of the property in the DB, go to the current leaf
             tmp0=self.getDBValue(tmpg,[("children","name",shptyp),("children","name",pbtyp),("children","name",iprop)],True)
+
             ik=[k for k in tmp0["props"] if not 'name' in k][0]
+            p=re.compile("^[0-9]+")
+            tmp2=[re.sub(p,"",k['name']) for k in tmp0["props"] if 'name' in k]
+            #
             if(ityp=='Physical'):
                 ikey='pgs'
             else:
@@ -2095,15 +2506,48 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 tmp1[tmp1key]=[]
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
-                    tmp1[tmp1key].append({propnam:ivl})
+                    iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
+#                     print('iprop=',iprop)
+#                     print('ivl=',ivl)
+                    merror,ivl=self.changeLabelToIdxOrNumerize(iprop,ivl)
+                    if(merror!=""):
+                        gmsh.logger.write(merror, level="error")
+                        ierr=-1
+                        return tmpg,update_void,ierr
+                    nearpropnam=[k['name'] for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
+                    tmp1[tmp1key].append({nearpropnam:ivl})
+                #
+                #Complete with props not in toStore (because visible=False)
+                for i in range(len(tmp2)):   
+                    if(not tmp2[i] in toStoreNames):
+                        ikmiss=[k for k in tmp0["props"] if 'name' in k and tmp2[i] in k['name']][0]
+                        #print('ikmiss=',ikmiss)
+                        nearpropnam=[k['name'] for k in tmp0["props"] if 'name' in k and tmp2[i] in k['name']][0]
+                        #print('nearpropnam=',nearpropnam)
+                        tmp1[tmp1key].append({nearpropnam:ikmiss['values']})
             #
-            else: # the current (ent/pg, property) has already entry(ies) defined in the DB - can only be the case for specialcase (for no specialcase, this property has bee removed)
+            else: # the current (ent/pg, property) has already entry(ies) defined in the DB - can only be the case for specialcase (for no specialcase, this property has been removed)
                 tmp1key=inb+"/"+str(imax+1)
                 tmp1[tmp1key]=[]
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
-                    tmp1[tmp1key].append({propnam:ivl})
+                    iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
+                    merror,ivl=self.changeLabelToIdxOrNumerize(iprop,ivl)
+                    if(merror!=""):
+                        gmsh.logger.write(merror, level="error")
+                        ierr=-1
+                        return tmpg,update_void,ierr
+                    nearpropnam=[k['name'] for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
+                    tmp1[tmp1key].append({nearpropnam:ivl})
                     #
+                #
+                #Complete with props not in toStore (because visible=False)
+                for i in range(len(tmp2)):   
+                    if(not tmp2[i] in toStoreNames):
+                        ikmiss=[k for k in tmp0["props"] if 'name' in k and tmp2[i] in k['name']][0]
+                        nearpropnam=[k['name'] for k in tmp0["props"] if 'name' in k and tmp2[i] in k['name']][0]
+                        tmp1[tmp1key].append({nearpropnam:ikmiss['values']})
+            #print("tmp1[tmp1key]=",tmp1[tmp1key])
         #
         #Special adjustment for VoidConstraint: increase number of voids
         if isVoidConstraint and self.add_or_remove==0 and update_void: # for Remove: update the nvoids
@@ -2471,6 +2915,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 gmsh.logger.write("Problem in void property attributes:"+str(emsg), level="error")
                 return -1,PropAtts,PropPgs,PropEnts,PropValPgs,PropValEnts,PropExtValEnts,PropExtValPgs,propstrs,ishptyp,ishptypm,nmats,uniqmatlist
 
+        tmp0=self.getDBValue(self.contextDB,[("children","name","Surface"),("children","name","Thermal 2D"),("children","name","New Material Definition"),\
+                                            ("children","name","Insulations"),("children","name","Insulation")],False)
+        print("tmp0=",tmp0)
         print('PropAtts=',PropAtts)
         print('listMats=',self.listMats)
 
@@ -2544,7 +2991,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         # Treat first Load Function with its labels, and potential 'File For'
                         for i0 in range(len(v["props"])):
                             iprop=v["props"][i0]
-                            idefprop=v["defaultprops"][i0]
+                            propnam=list(iprop.keys())[0]
+                            j0=[j for j in range(len(v["defaultprops"])) if v["defaultprops"][j]['name']==propnam][0]
+                            idefprop=v["defaultprops"][j0]
                             #
                             for k0,val0 in iprop.items():
                                 if('Load Function' in k0 and not 'File for' in k0):
@@ -2642,19 +3091,23 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         val=extval
                     #
                     elif not 'void' in igtyp and igtyp !='real_sym': #blks, flux, frtiers
+
                         # All params are valueLabels
                         ifirst=True
                         for i0 in range(len(v["props"])):
                             iprop=v["props"][i0]
-                            idefprop=v["defaultprops"][i0]
-                            #
+                            propnam=list(iprop.keys())[0]
+                            j0=[j for j in range(len(v["defaultprops"])) if v["defaultprops"][j]['name']==propnam][0]
+                            idefprop=v["defaultprops"][j0]
+                            #                                                     #
                             for k0,val0 in iprop.items():
                                 if(not 'File for' in k0):
+                                    print(k0)
                                     lbls=idefprop['valueLabels']
+                                    print(lbls)
                                     extval0=[i for i,w in lbls.items() if w==val0[0]][0]
                                     if(extval0=="User-defined"):
                                         pattern=re.compile("^[0-9]+")
-                                        propnam=list(iprop.keys())[0]
                                         str0=re.search(pattern,propnam).group(0)
                                         propnam=propnam.replace(str0,'')
                                         extval0=[v1 for jprop in v["props"] for k1,v1 in jprop.items()  if 'File for '+propnam in k1][0][0]
@@ -2671,6 +3124,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         extval=str(v['extend_val'])
                     #
                     else:
+                        print('coucou_fin:',igtyp)
                         val="1"
                         extval="1"
 
@@ -2732,14 +3186,20 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         return 0,PropAtts,PropPgs,PropEnts,PropValPgs,PropValEnts,PropExtValEnts,PropExtValPgs,propstrs,ishptyp,ishptypm,nmats,uniqmatlist
 
 
-
-    def getGenProps(self,llog):
-        checks={0:"No",1:"Yes"}
+    # Extract from internal SafirDB in two different modes: (1) iflag=1: for display as info in the GUI, (2) and iflag=2: for writing the .g4s file (new version)
+    #
+    def prepWriteGenProps(self,llog,iflag):
+        if('Thermal 2D' in self.pbType):
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Run torsion analysis")],False)
+            istorsrun=tmp0["values"]==[1]
+        else:
+            istorsrun=False
+        #
         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['props']
         for k in range(len(tmp0)):
-            if('choices' in tmp0[k]):
-                i0=[i for i in range(len(tmp0[k]['choices'])) if tmp0[k]['choices'][i]==tmp0[k]['values'][0]][0]
-                llog.append(str(tmp0[k]['name'])+" : "+str(checks[tmp0[k]['choices'][i0]]))
+            if('valueLabels' in tmp0[k]):
+                ival=[k0 for k0,v0 in tmp0[k]['valueLabels'].items() if v0==tmp0[k]['values'][0]][0]
+                llog.append(str(tmp0[k]['name'])+" : "+str(ival))
             else:
                 llog.append(str(tmp0[k]['name'])+" : "+str(tmp0[k]['values'][0]))
 
@@ -2751,65 +3211,198 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 childsubsets[ikey]=[]
             childsubsets[ikey].append(k)
 
-
         for ik in childsubsets:
             tmp1=deepcopy(tmp0[childsubsets[ik][0]])
-
-            llog.append(str(tmp1['key'])+" : "+str(tmp1['name']))
+            #
+            noprint=("Type of calculation" in tmp1['key'] or "Convergence" in tmp1['key'] or "TEM-TSH" in tmp1['key']) and istorsrun
+            #
             if(tmp1['props']!=[]):
+                if not noprint:
+                    llog.append(str(tmp1['key'])+" : "+str(tmp1['name'])+ " = {")
                 tmp2=tmp1['props']
                 for ij in range(len(tmp2)):
-                    llog.append(str(tmp2[ij]['name'])+" : "+str(tmp2[ij]['values'][0]))
+                        #llog.append(str(tmp2[ij]['name'])+" : "+str(tmp2[ij]['values'][0]))
+                        #
+                        if('valueLabels' in tmp2[ij]):
+                            ival=[k0 for k0,v0 in tmp2[ij]['valueLabels'].items() if v0==tmp2[ij]['values'][0]][0]
+                            if not (noprint or ('visible' in tmp2[ij] and tmp2[ij]['visible']==False)):
+                                llog.append(str(tmp2[ij]['name'])+" : "+str(ival))
+                        else:
+                            #
+                            if not (noprint or 'visible' in tmp2[ij] and tmp2[ij]['visible']==False):
+                                llog.append(str(tmp2[ij]['name'])+" : "+str(tmp2[ij]['values'][0]))
 
-
-    def getThermoMecaProps(self,propents,propvalents,proppgs,propvalpgs,propstrs,llog):
-
-        llog.append("");llog.append("*************** List of MATERIALS already defined (not necessarily assigned to entities/physgroups) ******")
-        for i in range(len(self.listMats)):
-             imatstr=list(self.listMats[i].keys())[0]
-             iprops=list(self.listMats[i].values())[0]
-             tmpstr,fullname=imatstr.split("/")
-             iname,idim=tmpstr.split(';')
-             idim=int(idim)
-             llog.append(" - \""+iname+"\" (gmsafir name) - "+self.allShapes[idim]+":")
-             igroup,isafirname=fullname.replace('New Material Definition-','').split('-')
-             llog.append("          - SAFIR name: \""+isafirname+"\"")
-             llog.append("          - Material Group: \""+igroup+"\"")
-             for iprop in iprops:
-                 propname=list(iprop.keys())[0]
-                 pattern=re.compile("^[0-9]+")
-                 if not "torsname" in propname and not "New Material Name" in propname:
-                     if(re.search(pattern, propname)!=None):
-                         propname=propname.replace(re.search(pattern, propname).group(0),'')
-                     propval=list(iprop.values())[0][0]
-                     llog.append("          - "+propname+" - value="+str(propval))
-        #
-        llog.append("");llog.append("*************** PROPERTIES assigned to Entities ******")
-        for k,v in propents.items():
-            if(v!=[]):
-                inam,idim=k.split(';')
-                idim=int(idim)
-                ifullname=[iflnm for (ik,iflnm) in propstrs if ik==k][0]
-                llog.append(" - "+ifullname+" : ")
-                for i in range(len(v)):
-                    llog.append("          - "+self.allShapes[idim]+" "+str(v[i])+" : "+str(propvalents[k][i]))
-        #
-        llog.append("");llog.append("*************** PROPERTIES assigned to Groups ******")
-        for k,v in proppgs.items():
-            if(v!=[]):
-                inam,idim=k.split(';')
-                idim=int(idim)
-                ifullname=[iflnm for (ik,iflnm) in propstrs if ik==k][0]
-                llog.append(" - "+ifullname+" : ")
-                for i in range(len(v)):
-                    llog.append("          - Physical "+self.allShapes[idim]+" "+str(v[i])+" : "+str(propvalpgs[k][i]))
-
+                if not noprint:
+                    llog.append("}")
+            #
+            else:
+                if not noprint:
+                    llog.append(str(tmp1['key'])+" : "+str(tmp1['name']))
             #
 
 
-    def viewInfog4s(self):
+
+    def prepWriteThermoMecaProps(self,propatts,propents,propvalents,proppgs,propvalpgs,propstrs,llog,iflag):
+
+        llog.append("");llog.append("############### List of MATERIALS already defined (not necessarily assigned to entities/physgroups) ###############")
+        for i in range(len(self.listMats)):
+            imatstr=list(self.listMats[i].keys())[0]
+            iprops=list(self.listMats[i].values())[0]
+            tmpstr,fullname=imatstr.split("/")
+            iname,idim=tmpstr.split(';')
+            idim=int(idim)
+            igroup,isafirname=fullname.replace('New Material Definition-','').split('-')
+            #
+            if(iflag==1):
+                llog.append(" - \""+iname+"\" (gmsafir name) - "+self.allShapes[idim]+":")
+                llog.append("          - SAFIR name: \""+isafirname+"\"")
+                llog.append("          - Material Group: \""+igroup+"\"")
+                for iprop in iprops:
+                    propname=list(iprop.keys())[0]
+                    pattern=re.compile("^[0-9]+")
+                    if not "torsname" in propname and not "New Material Name" in propname:
+                        if(re.search(pattern, propname)!=None):
+                            propname=propname.replace(re.search(pattern, propname).group(0),'')
+                        propval=list(iprop.values())[0][0]
+                        llog.append("          - "+propname+" - value="+str(propval))
+            #
+            else:
+                llog.append(self.allShapes[idim]+" - New Material Definition : "+iname+" = {")
+                llog.append("Material Name : "+str(isafirname))
+                llog.append("Material Group Name : "+str(igroup))
+                for iprop in iprops:
+                    propname=list(iprop.keys())[0]
+                    pattern=re.compile("^[0-9]+")
+                    if not "torsname" in propname and not "New Material Name" in propname:
+                        if(re.search(pattern, propname)!=None):
+                            propname=propname.replace(re.search(pattern, propname).group(0),'')
+                        propval=list(iprop.values())[0][0]
+                        llog.append(propname+" : "+str(propval))
+                llog.append("}");llog.append("")
+        #
+        llog.append("");llog.append("############### List of LAX already defined (not necessarily assigned to entities/physgroups) ###############")
+        #
+        for i in range(len(self.listLAX)):
+            ilaxstr=list(self.listLAX[i].keys())[0]
+            iprops=list(self.listLAX[i].values())[0]
+            tmpstr,fullname=ilaxstr.split("/")
+            iname,idim=tmpstr.split(';')
+            idim=int(idim)
+            #
+            if(iflag==1):
+                llog.append(" - \""+iname+"\" (gmsafir name) - "+self.allShapes[idim]+":")
+                for iprop in iprops:
+                    propname=list(iprop.keys())[0]
+                    pattern=re.compile("^[0-9]+")
+                    if not "New LAX Name" in propname:
+                        if(re.search(pattern, propname)!=None):
+                            propname=propname.replace(re.search(pattern, propname).group(0),'')
+                        propval=list(iprop.values())[0][0]
+                        llog.append("          - "+propname+" - value="+str(propval))
+            #
+            else:
+                llog.append(self.allShapes[idim]+" - New LAX Definition : "+iname+" = {")
+                for iprop in iprops:
+                    propname=list(iprop.keys())[0]
+                    pattern=re.compile("^[0-9]+")
+                    if not "New LAX Name" in propname:
+                        if(re.search(pattern, propname)!=None):
+                            propname=propname.replace(re.search(pattern, propname).group(0),'')
+                        propval=list(iprop.values())[0][0]
+                        llog.append(propname+" : "+str(propval))
+                llog.append("}");llog.append("")
+        #
+        llog.append("");llog.append("############### PROPERTIES assigned to Entities ###############")
+        #
+        if(iflag==1):
+            for k,v in propents.items():
+                if(v!=[]):
+                    inam,idim=k.split(';')
+                    idim=int(idim)
+                    ifullname=[iflnm for (ik,iflnm) in propstrs if ik==k][0]
+                    llog.append(" - "+ifullname+" : ")
+                    for i in range(len(v)):
+                        llog.append("          - "+self.allShapes[idim]+" "+str(v[i])+" : "+str(propvalents[k][i]))
+        else:
+            for k,v in propatts.items():
+                if(v!={}):
+                    inam,idim=k.split(';')
+                    idim=int(idim)
+                    ifullname=[iflnm for (ik,iflnm) in propstrs if ik==k][0]
+                    for k0,v0 in v.items():
+                        if('ents' in v0):
+                            llog.append(self.allShapes[idim]+" - "+ifullname+"("+self.allShapes[idim]+" "+str(v0['ents'][0])+") = {")
+                            for ik in range(len(v0['props'])):
+                                iprop=v0['props'][ik]
+                                propnam=list(iprop.keys())[0]
+                                j0=[j for j in range(len(v0["defaultprops"])) if v0["defaultprops"][j]['name']==propnam][0]
+                                idefprops=v0['defaultprops'][j0]
+                                ikey=list(iprop.keys())[0]
+                                ival0=list(iprop.values())[0][0]
+                                pattern=re.compile("^[0-9]+")
+                                if(re.search(pattern, ikey)!=None):
+                                    ikey=ikey.replace(re.search(pattern, ikey).group(0),'')
+                                if('valueLabels' in idefprops):
+                                    ival=[k1 for k1,v1 in idefprops['valueLabels'].items() if ival0==v1][0]
+                                    if not ("visible" in idefprops and idefprops['visible']==False):
+                                        llog.append(ikey+" : "+str(ival))
+                                else:
+                                    if not ("visible" in idefprops and idefprops['visible']==False):
+                                        llog.append(ikey+" : "+str(ival0))
+
+                            llog.append("}");llog.append("")
+
+        llog.append("");llog.append("############### PROPERTIES assigned to Groups ###############")
+        #
+        if(iflag==1):
+            for k,v in proppgs.items():
+                if(v!=[]):
+                    inam,idim=k.split(';')
+                    idim=int(idim)
+                    ifullname=[iflnm for (ik,iflnm) in propstrs if ik==k][0]
+                    llog.append(" - "+ifullname+" : ")
+                    for i in range(len(v)):
+                        llog.append("          - Physical "+self.allShapes[idim]+" "+str(v[i])+" : "+str(propvalpgs[k][i]))
+        else:
+            for k,v in propatts.items():
+                if(v!={}):
+                    inam,idim=k.split(';')
+                    idim=int(idim)
+                    ifullname=[iflnm for (ik,iflnm) in propstrs if ik==k][0]
+                    for k0,v0 in v.items():
+                        if('pgs' in v0):
+                            llog.append(self.allShapes[idim]+" - "+ifullname+"(Physical "+self.allShapes[idim]+" "+str(v0['pgs'][0])+") = {")
+                            for ik in range(len(v0['props'])):
+                                iprop=v0['props'][ik]
+                                propnam=list(iprop.keys())[0]
+                                j0=[j for j in range(len(v0["defaultprops"])) if v0["defaultprops"][j]['name']==propnam][0]
+                                idefprops=v0['defaultprops'][j0]
+                                ikey=list(iprop.keys())[0]
+                                ival0=list(iprop.values())[0][0]
+                                pattern=re.compile("^[0-9]+")
+                                if(re.search(pattern, ikey)!=None):
+                                    ikey=ikey.replace(re.search(pattern, ikey).group(0),'')
+                                if('valueLabels' in idefprops):
+                                    ival=[k1 for k1,v1 in idefprops['valueLabels'].items() if ival0==v1][0]
+                                    if not ("visible" in idefprops and idefprops['visible']==False):
+                                    #if(1>0):
+                                        llog.append(ikey+" : "+str(ival))
+                                else:
+                                    if not ("visible" in idefprops and idefprops['visible']==False):
+                                    #if(1>0):
+                                        llog.append(ikey+" : "+str(ival0))
+
+                            llog.append("}");llog.append("")
+            #
+
+
+
+
+    def viewAndWriteInfog4s(self,iflag):
         pattern=re.compile("[0-9]")
-        ndims=int(re.search(pattern, myapp.pbType).group(0))
+        ndims=int(re.search(pattern, self.pbType).group(0))
+        #ndims=int(re.search(pattern, myapp.pbType).group(0))
+        print("Enter viewAndWrite")
         do_regroup=False
         #
         listlog=[]
@@ -2824,17 +3417,27 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         listlog.append('##########################################################################################################')
         # Print the set of properties in safirDB (select pbType)
         listlog.append("Problem Type: "+str(self.pbType))
-        self.getGenProps(listlog)
+        self.prepWriteGenProps(listlog,iflag)
         listlog.append("");listlog.append("")
         listlog.append('##########################################################################################################')
         listlog.append('################################## THERMO-MECHANICAL PROPERTIES ###########################################')
         listlog.append('##########################################################################################################')
-        self.getThermoMecaProps(PropEnts,PropExtValEnts,PropPgs,PropExtValPgs,propstrs,listlog)
+        self.prepWriteThermoMecaProps(PropAtts,PropEnts,PropExtValEnts,PropPgs,PropExtValPgs,propstrs,listlog,iflag)
         # Print the set of properties in contextDB (get from PropAtts)x
         listlog.append("");listlog.append("")
         #
-        for ilog in listlog:
-            gmsh.logger.write(ilog, level="info")
+        if iflag==1: #Write to log window
+            for ilog in listlog:
+                gmsh.logger.write(ilog, level="info")
+        #
+        else: # Write down to G4S file
+            if self.g4sfileError=="":
+                with open(self.g4sfile, 'w') as f:
+                    for ilog in listlog:
+                        f.write(ilog+"\n")
+            else:
+                gmsh.logger.write("Still errors in reading G4S file - cannot over-write!!", level="error")
+
 
 
     def removeViewTag(self,idx):
@@ -3953,10 +4556,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         #        raise ValueError("Node "+str(inode_safir)+" has already been assigned a different value: "+fixnodes[inode_safir])
                                         #else:
                                         #    fixnodes[inode_safir]=ival
-                                           
+
                                         #TBCkecked if needs to be inside or outside the icoord-loop above
                                         #ival0=fixnodes[inode_safir]
-                                    
+
                                         for ijval in ival.split(";"):
                                             tmp['val']=['BLOCK',inode_safir,ijval]
                                             tmp['fmt']='(A10,I6,A15)'
@@ -5487,8 +6090,16 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         elif action[0] == "viewg4s":
             # user clicked on "Run"
             gmsh.onelab.setString("ONELAB/Action", [""])
-            rc=self.viewInfog4s()
+            rc=self.viewAndWriteInfog4s(1)
 
+
+        elif action[0] == "reloadprops":
+            # user clicked on "Run"
+            gmsh.onelab.setString("ONELAB/Action", [""])
+            #if(self.g4sfile!="" and os.path.exists(self.g4sfile)):
+            if(1>0):
+                self.getG4sJson(self.g4sfile)
+                self.recreateContextMenusFromDB(self.pbType,True)
         return 1
 
 
@@ -5518,7 +6129,7 @@ safirDBstring="""
 "name":"allProblemData",
 "key":"",
 "props":[
-    {"name":"Also run SAFIR?","type":"number","values":[0],"choices":[0, 1]}
+    {"name":"Also run SAFIR?","type":"number","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}}
     ],
 "children":[
     {
@@ -5527,11 +6138,11 @@ safirDBstring="""
         {"name":"Title1","type":"string","values":["Safir_Thermal_Analysis"]},
         {"name":"Title2","type":"string","values":["Mesh_from_G4S-Mesher"]},
         {"name":"PRECISION","type":"number","values":[1.0e-3],"min":0,"max":1.0e-1,"step":1.0e-3},
-        {"name":"TETA","type":"number","values":[0.9],"min":0,"max":1,"step":0.1},
-        {"name":"TINITIAL","type":"number","values":[20],"min":0,"max":1,"step":0.1},
-        {"name":"TIMEPRINT,UPTIMEPRINT","type":"string","values":["30,3600"]},
-        {"name":"Run torsion analysis","type":"number","values":[0],"choices":[0, 1]},
-        {"name":"Use matrix diag (DIAG CAPA)","type":"number","values":[1],"choices":[0, 1],"visible":true},
+        {"name":"TETA","type":"number","values":[0.9],"min":0,"max":1,"step":0.1,"visible":true},
+        {"name":"TINITIAL","type":"number","values":[20],"min":0,"max":1,"step":0.1,"visible":true},
+        {"name":"TIMEPRINT,UPTIMEPRINT","type":"string","values":["30,3600"],"visible":true},
+        {"name":"Run torsion analysis","type":"number","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"name":"Use matrix diag (DIAG CAPA)","type":"number","values":[1],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1},"visible":true},
         {"name":"Global center (Xo)","type":"number","values":[0],"min":0,"max":100,"step":1,"visible":true},
         {"name":"Global center (Yo)","type":"number","values":[0],"min":0,"max":100,"step":1,"visible":true},
         {"name":"Center of torsion (Xc)","type":"number","values":[0],"min":0,"max":100,"step":1,"visible":true},
@@ -5579,24 +6190,24 @@ safirDBstring="""
         {
         "key":"Type of calculation","name":"USE_LOCAFI","codename":"MAKE.TEMLF",
         "props":[
-            {"name":"Expected name of the structural .IN File","type":"string","values":["structural.IN"]},
-            {"name":"IELEMTYPE","type":"number","values":[1],"min":0,"max":100,"step":1}
+            {"name":"Expected name of the structural .IN File","type":"string","values":["structural.IN"],"visible":true},
+            {"name":"IELEMTYPE","type":"number","values":[1],"min":0,"max":100,"step":1,"visible":true}
         ],
         "children":[]
         },
         {
         "key":"Type of calculation","name":"USE_HASEMI","codename":"MAKE.TEMHA",
         "props":[
-            {"name":"Expected name of the structural .IN File","type":"string","values":["structural.IN"]},
-            {"name":"IELEMTYPE","type":"number","values":[1],"min":0,"max":100,"step":1}
+            {"name":"Expected name of the structural .IN File","type":"string","values":["structural.IN"],"visible":true},
+            {"name":"IELEMTYPE","type":"number","values":[1],"min":0,"max":100,"step":1,"visible":true}
         ],
         "children":[]
         },
         {
         "key":"Type of calculation","name":"USE_CFD","codename":"MAKE.TEMCD",
         "props":[
-            {"name":"Expected name of the structural .IN File","type":"string","values":["structural.IN"]},
-            {"name":"IELEMTYPE","type":"number","values":[1],"min":0,"max":100,"step":1}
+            {"name":"Expected name of the structural .IN File","type":"string","values":["structural.IN"],"visible":true},
+            {"name":"IELEMTYPE","type":"number","values":[1],"min":0,"max":100,"step":1,"visible":true}
         ],
         "children":[]
         }
@@ -5610,7 +6221,7 @@ safirDBstring="""
         {"name":"TETA","type":"number","values":[0.9],"min":0,"max":1,"step":0.1},
         {"name":"TINITIAL","type":"number","values":[20],"min":0,"max":1,"step":0.1},
         {"name":"TIMEPRINT,UPTIMEPRINT","type":"string","values":["30,3600"]},
-        {"name":"Use matrix diag (DIAG CAPA)","type":"number","values":[0],"choices":[0, 1],"visible":true},
+        {"name":"Use matrix diag (DIAG CAPA)","type":"number","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1},"visible":true},
         {"name":"Name of the .IN File","type":"string","values":["untitled.IN"]}
     ],
     "children":[
@@ -5637,7 +6248,7 @@ safirDBstring="""
         {"name":"Title1","type":"string","values":["Safir_Structural_Analysis"]},
         {"name":"Title2","type":"string","values":["Mesh_from_G4S-Mesher"]},
         {"name":"Name of the .IN File","type":"string","values":["untitled.IN"]},
-        {"type":"number","name":"Consider max displacement","values":[0],"choices":[0, 1]},
+        {"type":"number","name":"Consider max displacement","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
         {"type":"number","name":"MAX DISPL","values":[999],"min":1,"max":1000,"step":1,"visible":false},
         {"name":"PRECISION","type":"number","values":[1.0e-3],"min":0,"max":1.0e-1,"step":1.0e-3},
         {"name":"NG BEAM","type":"number","values":[2],"min":0,"max":20,"step":1},
@@ -5686,20 +6297,20 @@ safirDBstring="""
         {
         "key":"outputs","name":"PRINT",
         "props":[
-        {"type":"number","name":"PRINTDEPL Print the increment of displacement or of temperature","values":[0],"choices":[0, 1]},
+        {"type":"number","name":"PRINTDEPL Print the increment of displacement or of temperature","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
         {"type":"number","name":"PRINTDEPL Tstart","values":[0],"min":0,"max":1000,"step":1,"visible":true},
-        {"type":"number","name":"PRINTTMPRT Print the temperature in the beam fibers","values":[0],"choices":[0, 1]},
-        {"type":"number","name":"PRINTVELAC Print velocity and acceleration","values":[0],"choices":[0, 1]},
-        {"type":"number","name":"PRINTFHE Print out of balance forces","values":[0],"choices":[0, 1]},
+        {"type":"number","name":"PRINTTMPRT Print the temperature in the beam fibers","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"type":"number","name":"PRINTVELAC Print velocity and acceleration","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"type":"number","name":"PRINTFHE Print out of balance forces","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
         {"type":"number","name":"PRINTFHE Tstart","values":[0],"min":0,"max":1000,"step":1,"visible":true},
-        {"type":"number","name":"PRINTREACT Print the reactions","values":[1],"choices":[0, 1]},
-        {"type":"number","name":"PRINTMN Print the internal forces in beam elements","values":[1],"choices":[0, 1]},
-        {"type":"number","name":"PRNEIBEAM Print the stiffness EI in beam elements","values":[0],"choices":[0, 1]},
-        {"type":"number","name":"PRINTSHELL Print the stresses in shell elements","values":[0],"choices":[0, 1]},
-        {"type":"number","name":"PRNNXSHELL Print the membrane forces in shell elements","values":[0],"choices":[0, 1]},
-        {"type":"number","name":"PRNMXSHELL Print the bending moments in shell elements","values":[0],"choices":[0, 1]},
-        {"type":"number","name":"PRNEASHELL Print the membrane stiffness EA in shell elements","values":[0],"choices":[0, 1]},
-        {"type":"number","name":"PRNEISHELL Print the membrane stiffness EI in shell elements","values":[0],"choices":[0, 1]}
+        {"type":"number","name":"PRINTREACT Print the reactions","values":[1],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"type":"number","name":"PRINTMN Print the internal forces in beam elements","values":[1],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"type":"number","name":"PRNEIBEAM Print the stiffness EI in beam elements","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"type":"number","name":"PRINTSHELL Print the stresses in shell elements","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"type":"number","name":"PRNNXSHELL Print the membrane forces in shell elements","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"type":"number","name":"PRNMXSHELL Print the bending moments in shell elements","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"type":"number","name":"PRNEASHELL Print the membrane stiffness EA in shell elements","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+        {"type":"number","name":"PRNEISHELL Print the membrane stiffness EI in shell elements","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}}
         ],
         "children":[]
         }
@@ -5765,8 +6376,8 @@ contextDBstring="""
                 {
                 "key":"Temperature Type","name":"-",
                 "props":[
-                    {"name":"00Temperature","valueLabels":{"F0":0,"User-defined":1},"choices":[0,1],"type":"number","values":[0]},
-                    {"name":"01File for Temperature","type":"string","values":[""],"visible":false},
+                    {"name":"00Block","valueLabels":{"F0":0,"User-defined":1},"choices":[0,1],"type":"number","values":[0]},
+                    {"name":"01File for Block function","type":"string","values":[""],"visible":false},
                     {"ents":{},"pgs":{}}
                     ],
                 "children":[]
@@ -6950,13 +7561,20 @@ contextDBstring="""
                 {
                 "key":"BL Type","name":"-",
                 "props":[
-                {"name":"0X","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
-                {"name":"1Y","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
-                {"name":"2Z","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
-                {"name":"3Theta-X","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
-                {"name":"4Theta-Y","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
-                {"name":"5Theta-Z","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
-                {"name":"6W","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
+                {"name":"00X","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
+                {"name":"01File for X","type":"string","values":[""],"visible":false},
+                {"name":"10Y","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
+                {"name":"11File for Y","type":"string","values":[""],"visible":false},
+                {"name":"20Z","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
+                {"name":"21File for Z","type":"string","values":[""],"visible":false},
+                {"name":"30Theta-X","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
+                {"name":"31 File for Theta-X","type":"string","values":[""],"visible":false},
+                {"name":"40Theta-Y","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
+                {"name":"41 File for Theta-Y","type":"string","values":[""],"visible":false},
+                {"name":"50Theta-Z","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
+                {"name":"51 File for Theta-Z","type":"string","values":[""],"visible":false},
+                {"name":"60W","valueLabels":{"NO":0,"F0":1},"choices":[0,1],"type":"number","values":[0]},
+                {"name":"61File for W","type":"string","values":[""],"visible":false},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
@@ -6990,8 +7608,8 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"0Check=LAX from local angle, Uncheck=LAX from fix coords","type":"number","values":[1],"choices":[0, 1]},
-                {"name":"1Rotation angle (°) of Y' around X'","type":"number","values":[0],"min":-180,"max":180,"step":1,"visible":true},
+                {"name":"0Check=LAX from local angle, Uncheck=LAX from fix coords","type":"number","values":[1],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+                {"name":"1Rotation angle (deg) of Y' around X'","type":"number","values":[0],"min":-180,"max":180,"step":1,"visible":true},
                 {"name":"2Reverse X' axis","type":"number","values":[0],"choices":[0, 1],"visible":true},
                 {"name":"4Y'(dx,dy,dz)","type":"string","values":["0,0,0"],"visible":false},
                 {"ents":{},"pgs":{}}
