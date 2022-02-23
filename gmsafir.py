@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-02-21 - Version 1.0(BETA)"
+        self.version="2022-02-23 - Version 1.0(BETA)"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -2209,7 +2209,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             return inam,propnam,ivl
         #
         inam,propnam,ivl=getParam(0)
-        toStoreNames=[getParam(i)[1] for i in range(len(toStore))]
+        
+        p=re.compile("^[0-9]+")
+        toStoreNames=[re.sub(p,"",getParam(i)[1]) for i in range(len(toStore))]
         
         s=inam.split('/')
 
@@ -2496,7 +2498,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             else:
                 icond=not inb in list(tmp1.keys())
             #
-            #
+            
             if(icond): # the current (ent/pg, property) has no entry defined in the DB
                 if specialcase:
                     tmp1key=inb+"/0"
@@ -2517,8 +2519,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     nearpropnam=[k['name'] for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
                     tmp1[tmp1key].append({nearpropnam:ivl})
                 #
+                print("toStoreNames=",toStoreNames)
                 #Complete with props not in toStore (because visible=False)
-                for i in range(len(tmp2)):   
+                for i in range(len(tmp2)):  
+                    print('tmp2[i]=',tmp2[i])
                     if(not tmp2[i] in toStoreNames):
                         ikmiss=[k for k in tmp0["props"] if 'name' in k and tmp2[i] in k['name']][0]
                         #print('ikmiss=',ikmiss)
@@ -2529,6 +2533,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             else: # the current (ent/pg, property) has already entry(ies) defined in the DB - can only be the case for specialcase (for no specialcase, this property has been removed)
                 tmp1key=inb+"/"+str(imax+1)
                 tmp1[tmp1key]=[]
+                
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
@@ -6096,10 +6101,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         elif action[0] == "reloadprops":
             # user clicked on "Run"
             gmsh.onelab.setString("ONELAB/Action", [""])
-            #if(self.g4sfile!="" and os.path.exists(self.g4sfile)):
-            if(1>0):
+            if(self.g4sfile!="" and os.path.exists(self.g4sfile)):
+            #if(1>0):
                 self.getG4sJson(self.g4sfile)
                 self.recreateContextMenusFromDB(self.pbType,True)
+            else:
+                gmsh.logger.write("No existing G4S file to load", level="error")
         return 1
 
 
