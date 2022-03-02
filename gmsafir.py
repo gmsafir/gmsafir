@@ -5808,8 +5808,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         #
                         vallst=[];fmtstr="("
                         #
+                        print("ndim=",ndims,", isTherm=",self.isThermal,", len(tmpvals)=",len(tmpvals),": ",tmpvals)
                         if ndims==2 and self.isThermal:
-                            leng1=len(tmpvals)-4 #Remove from the list the material name, the torsname, the Young module and Poisson coeff (and also the material name and torsname)
+                            leng1=len(tmpvals)-5 #Remove from the list the material name, the torsname, the Young module and Poisson coeff (and also the material name and torsname)
                         #
                         elif(self.isThermal):
                             leng1=len(tmpvals)-2 #Remove from the list the material name and torsname
@@ -8090,8 +8091,8 @@ contextDBstring="""
                             {"name":"7Direction of the grain X-coord","type":"number","values":[0],"min":0,"max":1,"step":0},
                             {"name":"8Direction of the grain Y-coord","type":"number","values":[0],"min":0,"max":1,"step":0},
                             {"name":"9Direction of the grain Z-coord","type":"number","values":[1],"min":0,"max":1,"step":0},
-                            {"name":"9Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
-                            {"name":"9Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
+                            {"name":"91Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
+                            {"name":"92Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
