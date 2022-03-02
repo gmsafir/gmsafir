@@ -7021,7 +7021,7 @@ contextDBstring="""
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[4.5e7],"min":0,"max":1e9,"step":0},
                             {"name":"93Compressive strength","type":"number","values":[3e7],"min":0,"max":1,"step":0},
-                            {"ents":{},"pgs":{}}
+                            {"ents":{},"pgs":{}}    
                     ],
                     "children":[]
                     }
@@ -7034,7 +7034,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"STEELEC3EN",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[3.55e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Max Temperature","type":"number","values":[1200],"min":0,"max":2000,"step":0},
@@ -7046,7 +7046,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"PSTEELA16",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[1.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.45e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Max Temperature","type":"number","values":[1200],"min":0,"max":2000,"step":0},
@@ -7058,7 +7058,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"STEELEC2EN",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[5e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Max Temperature","type":"number","values":[1200],"min":0,"max":2000,"step":0},
@@ -7072,7 +7072,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"STEEL_WPB",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[1.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.45e8],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7082,7 +7082,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"STEELSL",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[1.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.45e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Max Temperature","type":"number","values":[1200],"min":0,"max":2000,"step":0},
@@ -7096,7 +7096,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"STEC3PROBA",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[1.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.45e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Max Temperature","type":"number","values":[1200],"min":0,"max":2000,"step":0},
@@ -7108,7 +7108,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"USER_STEEL",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[1.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.35e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Max Temperature","type":"number","values":[1200],"min":0,"max":2000,"step":0},
@@ -7125,7 +7125,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"SLS1.4301",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.35e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Ultimate tensile strength","type":"number","values":[0],"min":0,"max":2000,"step":0},
@@ -7136,7 +7136,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"SLS1.4401",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.35e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Ultimate tensile strength","type":"number","values":[0],"min":0,"max":2000,"step":0},
@@ -7147,7 +7147,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"SLS1.4404",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.35e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Ultimate tensile strength","type":"number","values":[0],"min":0,"max":2000,"step":0},
@@ -7158,7 +7158,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"SLS1.4571",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.35e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Ultimate tensile strength","type":"number","values":[0],"min":0,"max":2000,"step":0},
@@ -7169,7 +7169,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"SLS1.4003",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.35e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Ultimate tensile strength","type":"number","values":[0],"min":0,"max":2000,"step":0},
@@ -7180,7 +7180,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"SLS1.4462",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.35e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Ultimate tensile strength","type":"number","values":[0],"min":0,"max":2000,"step":0},
@@ -7191,7 +7191,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"SLS1.4311",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.35e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Ultimate tensile strength","type":"number","values":[0],"min":0,"max":2000,"step":0},
@@ -7470,7 +7470,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"USER_CONC",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[1e10],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7485,7 +7485,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL6061T6C",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7495,7 +7495,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL5083SUP",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7505,7 +7505,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL5083INF",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7515,7 +7515,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL7020SUP",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7525,7 +7525,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL7020INF",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7540,7 +7540,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"BILIN",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[2.35e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Slope of hardening branch","type":"number","values":[0],"min":0,"max":2000,"step":0},
@@ -7551,7 +7551,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"RAMBOSGOOD",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[2.1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92lp, limit of proportionality","type":"number","values":[0],"min":0,"max":2000,"step":0},
                             {"name":"93n, exponent of the law","type":"number","values":[0],"min":0,"max":2000,"step":0},
@@ -8091,7 +8091,7 @@ contextDBstring="""
                             {"name":"7Direction of the grain X-coord","type":"number","values":[0],"min":0,"max":1,"step":0},
                             {"name":"8Direction of the grain Y-coord","type":"number","values":[0],"min":0,"max":1,"step":0},
                             {"name":"9Direction of the grain Z-coord","type":"number","values":[1],"min":0,"max":1,"step":0},
-                            {"name":"91Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
+                            {"name":"91Young module","type":"number","values":[1e10],"min":0,"max":1e12,"step":0},
                             {"name":"92Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
