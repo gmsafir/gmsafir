@@ -71,6 +71,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if not self.go_on: #  Error found in the command line parameters
             gmsh.finalize()
             sys.exit(127)
+        
+        # specialCategs is defined by default - will be updated in getG4sJson if g4sfile exists:    
+        self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
+                            ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
         #
         # Reading the different DBs:
         #
@@ -113,14 +117,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         if(self.nopopup): # Batch mode
             return
-
-        if("3D" in self.pbType):
-            self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
-                            ('Shell Material','mats',2,'one'),('Shell Rebar','mats',1,'more'),('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more'), \
-                            ('Beam Section Local Axes','lax',1,'one')]
-        else:
-            self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
-                            ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
 
        # GUI Mode: Initial load the GUI's menus
         gmsh.onelab.clear()
@@ -526,6 +522,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         iline0=thelines[i0]
         _,pbtyp=iline0.split(':')
         self.pbType=pbtyp.strip()
+
+        if("3D" in self.pbType):
+            self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
+                            ('Shell Material','mats',2,'one'),('Shell Rebar','mats',1,'more'),('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more'), \
+                            ('Beam Section Local Axes','lax',1,'one')]
+        else:
+            self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
+                            ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
+
         #
         # Permute safirDB
         found=False
