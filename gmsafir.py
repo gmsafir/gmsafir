@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-02-23 - Version 1.0(BETA)"
+        self.version="2022-03-02 - Version 1.0(BETA)"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -8081,7 +8081,7 @@ contextDBstring="""
                             {"name":"3Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"4Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
                             {"name":"5Relative emission","type":"number","values":[0.8],"min":0,"max":1,"step":0},
-                            {"name":"6Ratio of Train/Transv. conduct.","type":"number","values":[2],"min":0,"max":1,"step":0},
+                            {"name":"6Ratio of Train Transv. conduct.","type":"number","values":[2],"min":0,"max":1,"step":0},
                             {"name":"7Direction of the grain X-coord","type":"number","values":[0],"min":0,"max":1,"step":0},
                             {"name":"8Direction of the grain Y-coord","type":"number","values":[0],"min":0,"max":1,"step":0},
                             {"name":"9Direction of the grain Z-coord","type":"number","values":[1],"min":0,"max":1,"step":0},
