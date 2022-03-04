@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-03-02 - Version 1.0(BETA)"
+        self.version="2022-03-04 - Version 1.0(BETA)"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -5427,6 +5427,20 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
 
         #
+        # COMEBACK
+        if not istorsrun:
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
+            convname=tmp0['name']
+            iscomeback=convname=="COMEBACK"
+            if convname=="COMEBACK":
+                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
+                val=float(tmp0['values'][0])
+                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
+        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
+#             else:
+#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
+
+        #
         #DIAG CAPA: Use matrix diag (DIAG CAPA)
         if self.isThermal and not istorsrun:
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","DIAG CAPA")],False)
@@ -5482,19 +5496,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             # OBLIQUE
             f.write(self.writeLineFortran('(A7,I6)',['OBLIQUE',NOBLIQUE])+"\n")
 
-        #
-        # COMEBACK
-        if not istorsrun:
-            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
-            convname=tmp0['name']
-            iscomeback=convname=="COMEBACK"
-            if convname=="COMEBACK":
-                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
-                val=float(tmp0['values'][0])
-                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
-        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
-#             else:
-#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
 
         #
         #MATS
@@ -7485,7 +7486,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL6061T6C",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[7e10],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7495,7 +7496,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL5083SUP",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[7e10],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7505,7 +7506,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL5083INF",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[7e10],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7515,7 +7516,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL7020SUP",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[7e10],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -7525,7 +7526,7 @@ contextDBstring="""
                     {
                     "key":"Material Sub-category","name":"AL7020INF",
                     "props":[
-                            {"name":"90f0.2","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
+                            {"name":"90f0.2","type":"number","values":[7e10],"min":0,"max":1e12,"step":0},
                             {"name":"91fp","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92e(rupture)","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
@@ -8067,7 +8068,7 @@ contextDBstring="""
                             {"name":"1Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"2Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
                             {"name":"3Relative emission","type":"number","values":[0.7],"min":0,"max":1,"step":0},
-                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[7e10],"min":0,"max":1e12,"step":0},
                             {"name":"9Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
