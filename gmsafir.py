@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-03-28 - Version 1.0(BETA)"
+        self.version="2022-03-29 - Version 1.0(BETA)"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -3442,9 +3442,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         else: # Write down to G4S file
             if self.g4sfileError=="":
-                with open(self.g4sfile, 'w') as f:
-                    for ilog in listlog:
-                        f.write(ilog+"\n")
+                if os.path.exists(self.g4sfile):
+                    with open(self.g4sfile, 'w') as f:
+                        for ilog in listlog:
+                            f.write(ilog+"\n")
+                else:
+                    gmsh.logger.write("The GEO file has not yet been created => these first changes (problem type...)  will not be taken into account until the GEO file is created", level="error")
             else:
                 gmsh.logger.write("Still errors in reading G4S file - cannot over-write!!", level="error")
 
