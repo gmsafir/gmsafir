@@ -7,7 +7,7 @@ Here are some other useful links:
 
 - [Video tutorials of GmSAFIR](https://www.youtube.com/channel/UC0E-fNxuxk0pQORHy89Lw6g/videos) provided on the SAFIR Youtube channel
 
-- [GmSAFIR Issues](https://github.com/gmsafir/gmsafir/issues) : Please submit there your issues
+- [GmSAFIR Issues](https://github.com/gmsafir/gmsafir/issues) : Please submit there your issues (Important Note: the .geo, .g4s or .IN files cannot be uploaded as is. Please, add .txt at the end of their names before uploading)
 
 - General information about SAFIR suite is found [here](https://www.uee.uliege.be/cms/c_4016387/fr/ueenew-ressources-sur-safir)  
 
