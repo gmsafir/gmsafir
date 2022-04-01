@@ -13,7 +13,7 @@ Here are some other useful links:
 
 - Compatibility between the input files created with GmSAFIR and version 2019b1 of SAFIR is treated [here](https://www.uee.uliege.be/upload/docs/application/pdf/2022-02/safir_prior_versions_-_gmsafir_compatibility.pdf)
   
-# Important Note: 
+### Important Note: 
 In the Issues, the .geo .g4s and .IN files cannot be uploaded as is. Please, add .txt at the end of their names before uploading
 
 <!--
