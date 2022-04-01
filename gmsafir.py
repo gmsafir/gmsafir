@@ -505,293 +505,298 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         #file0="E:\Share\Efectis\SAFIR\GMSH\G4S\\first_case\debug_JMF_20220201\\test.txt"
         #
+        notdebug=True # To read old G4S files, set temporarily notdebug to False
+        
         # Read G4S file (no more a JSON format) and remove commented and empty lines (or full of whitespaces)
-        with open(file0) as f:
-            lines=f.readlines()
-            pattern=re.compile("^#")
-            pattern2=re.compile("^[\s]*$")
+        if notdebug:
+            with open(file0) as f:
+                lines=f.readlines()
+                pattern=re.compile("^#")
+                pattern2=re.compile("^[\s]*$")
+                #
+                thelines=[]
+                for iline in lines:
+                    if(re.search(pattern, iline)==None and re.search(pattern2, iline)==None and iline!="\n"):
+                        thelines.append(iline.replace('\n',''))
+            f.close()
             #
-            thelines=[]
-            for iline in lines:
-                if(re.search(pattern, iline)==None and re.search(pattern2, iline)==None and iline!="\n"):
-                    thelines.append(iline.replace('\n',''))
-        f.close()
-        #
-        # Retrieve the problem type and make permutation in safirDB and contextDB accordingly
-        i0=[i for i in range(len(thelines)) if "Problem Type" in thelines[i]][0]
-        iline0=thelines[i0]
-        _,pbtyp=iline0.split(':')
-        self.pbType=pbtyp.strip()
-
-        if("3D" in self.pbType):
-            self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
-                            ('Shell Material','mats',2,'one'),('Shell Rebar','mats',1,'more'),('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more'), \
-                            ('Beam Section Local Axes','lax',1,'one')]
-        else:
-            self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
-                            ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
-
-        #
-        # Permute safirDB
-        found=False
-        endTree=False
-        merror=""
-        listRecurs=[{'key':"",'end_lvl':0}]
-        inam="Problem Type"
-        ivl=[1]
-        ivlstr=self.pbType
-        self.safirDB['children'],listRecurs,permute,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
-        if(merror!=""):
-            self.g4sfileError=merror
-            gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
-            return
-        #
-        # Permute ContextDB
-        found=False
-        endTree=False
-        merror=""
-        listRecurs=[{'key':"",'end_lvl':0}]
-        inam="Problem Type"
-        ivl=[1]
-        ivlstr=self.pbType
-        self.contextDB['children'],listRecurs,permute,found,endTree,merror=self.permuteDB(self.contextDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
-        if(merror!=""):
-            self.g4sfileError=merror
-            gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
-            return
-        #
-        thelines.remove(iline0)
-        #
-
-        # Function to change a key and/or property value: both are handled for safirDB by permuteDB (not the case for concreteDB)
-        def changeSafirDBKeyAndProp(iprop,ival):
+            # Retrieve the problem type and make permutation in safirDB and contextDB accordingly
+            i0=[i for i in range(len(thelines)) if "Problem Type" in thelines[i]][0]
+            iline0=thelines[i0]
+            _,pbtyp=iline0.split(':')
+            self.pbType=pbtyp.strip()
+    
+            if("3D" in self.pbType):
+                self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
+                                ('Shell Material','mats',2,'one'),('Shell Rebar','mats',1,'more'),('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more'), \
+                                ('Beam Section Local Axes','lax',1,'one')]
+            else:
+                self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
+                                ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
+    
+            #
+            # Permute safirDB
             found=False
             endTree=False
             merror=""
             listRecurs=[{'key':"",'end_lvl':0}]
-            inam=iprop
-            ivl=[ival]
-            ivlstr=ival
-            self.safirDB['children'],listRecurs,permute_safir,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
-            if merror!="":
+            inam="Problem Type"
+            ivl=[1]
+            ivlstr=self.pbType
+            self.safirDB['children'],listRecurs,permute,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
+            if(merror!=""):
                 self.g4sfileError=merror
                 gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
                 return
-        #
-        #Reindex lines to account for bracketed props
-        thelineswithprops=[]
-        multi=False
-
-        for iline in thelines:
             #
-            pattern_beg=re.compile("=.*{.*$")
-            pattern_end=re.compile("}.*$")
-            #
-            if(not multi and re.search(pattern_beg, iline)!=None):
-                tmpl=[iline]
-                multi=True
-            #
-            elif(not multi and re.search(pattern_end, iline)!=None):
-                gmsh.logger.write(".g4s file not loaded!!! A block of properties is trying to close but was not started", level="error")
-                self.g4sfileError="error"
+            # Permute ContextDB
+            found=False
+            endTree=False
+            merror=""
+            listRecurs=[{'key':"",'end_lvl':0}]
+            inam="Problem Type"
+            ivl=[1]
+            ivlstr=self.pbType
+            self.contextDB['children'],listRecurs,permute,found,endTree,merror=self.permuteDB(self.contextDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
+            if(merror!=""):
+                self.g4sfileError=merror
+                gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
                 return
             #
-            elif multi :
-                if(re.search(pattern_beg, iline)!=None): #precedent brackets have not been closed, cannot start a new one
-                    gmsh.logger.write(".g4s file not loaded!!! Last block of properties was not closed, cannot start a new one", level="error")
+            thelines.remove(iline0)
+            #
+    
+            # Function to change a key and/or property value: both are handled for safirDB by permuteDB (not the case for concreteDB)
+            def changeSafirDBKeyAndProp(iprop,ival):
+                found=False
+                endTree=False
+                merror=""
+                listRecurs=[{'key':"",'end_lvl':0}]
+                inam=iprop
+                ivl=[ival]
+                ivlstr=ival
+                self.safirDB['children'],listRecurs,permute_safir,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
+                if merror!="":
+                    self.g4sfileError=merror
+                    gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
+                    return
+            #
+            #Reindex lines to account for bracketed props
+            thelineswithprops=[]
+            multi=False
+    
+            for iline in thelines:
+                #
+                pattern_beg=re.compile("=.*{.*$")
+                pattern_end=re.compile("}.*$")
+                #
+                if(not multi and re.search(pattern_beg, iline)!=None):
+                    tmpl=[iline]
+                    multi=True
+                #
+                elif(not multi and re.search(pattern_end, iline)!=None):
+                    gmsh.logger.write(".g4s file not loaded!!! A block of properties is trying to close but was not started", level="error")
                     self.g4sfileError="error"
                     return
                 #
-                if(re.search(pattern_end, iline)!=None): # end of bracketed props
-                    tmpl.append(iline)
-                    multi=False
-                    thelineswithprops.append(tmpl)
-                    tmpl=[]
-                else: # still in the bracketed props
-                    tmpl.append(iline)
-            #
-            else: # multi=False and not(pattern_beg,pattern_end): correct single line
-                thelineswithprops.append([iline])
-        #
-        if multi: #
-            gmsh.logger.write(".g4s file not loaded!!! Last block of properties was not closed", level="error")
-            self.g4sfileError="error"
-            return
-        #
-        # Load information in safirDB and contextDB
-        for iline in thelineswithprops:
-            #
-            # Evaluate if data in the line will belong to safirDB or to ContextDB
-            isgen=True
-            #
-            for ishp in self.allShapes:
-                pattern0=re.compile("^"+ishp)
-                if(re.search(pattern0, iline[0])!=None):
-                    isgen=False
-            #
-            if isgen: #safirDB
-                #
-                if(len(iline)==1): #changes in first-level properties
-                    #
-                    iprop,ival=iline[0].split(":");iprop=iprop.strip();ival=ival.strip()
-                    tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['props']
-                    idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
-
-                    #
-                    if(idxtab!=[]): # is a SafirDB "prop"
-                        k=idxtab[0]
-                        tmp0=changeSafirDBKeyAndProp(iprop,ival)
-                        #
-
-                    else: # is a SafirDB "key"
-                        tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['children']
-                        idxtab2=[k for k in range(len(tmp0)) if tmp0[k]['key']==iprop]
-                        #
-                        if(idxtab2!=[]): # is really a key- Permute
-                            tmp0=changeSafirDBKeyAndProp(iprop,ival)
-                        #
-                        else: # is neither a "props" nor a "key"
-                            gmsh.logger.write("Problem reading the .g4s file: \""+iprop+"\" is not recognized", level="error")
-                            self.g4sfileError="error"
-                            return
-                #
-                else: #changes in first-level key and second-level properties
-                    #
-                    #Treat line[0] as a safirDB "key"
-                    #
-                    iprop0,ival=iline[0].split(":");iprop0=iprop0.strip()
-                    ival=re.sub(pattern_beg,"",ival).strip()
-                    #
-                    tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['children']
-                    idxtab2=[k for k in range(len(tmp0)) if tmp0[k]['key']==iprop0]
-                    #
-                    if(idxtab2!=[]): # is really a key- Permute
-                        tmp0=changeSafirDBKeyAndProp(iprop0,ival)
-                    #
-                    else: # is neither a "props" nor a "key"
-                        gmsh.logger.write("Problem reading the .g4s file: \""+iprop0+"\" is not recognized", level="error")
+                elif multi :
+                    if(re.search(pattern_beg, iline)!=None): #precedent brackets have not been closed, cannot start a new one
+                        gmsh.logger.write(".g4s file not loaded!!! Last block of properties was not closed, cannot start a new one", level="error")
                         self.g4sfileError="error"
                         return
                     #
-                    # Now treat the properties
-                    for ik in range(1,len(iline)-1):
-                        jline=iline[ik]
-                        iprop,ival=jline.split(":");iprop=iprop.strip();ival=ival.strip()
-                        tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key",iprop0)],False)['props']
+                    if(re.search(pattern_end, iline)!=None): # end of bracketed props
+                        tmpl.append(iline)
+                        multi=False
+                        thelineswithprops.append(tmpl)
+                        tmpl=[]
+                    else: # still in the bracketed props
+                        tmpl.append(iline)
+                #
+                else: # multi=False and not(pattern_beg,pattern_end): correct single line
+                    thelineswithprops.append([iline])
+            #
+            if multi: #
+                gmsh.logger.write(".g4s file not loaded!!! Last block of properties was not closed", level="error")
+                self.g4sfileError="error"
+                return
+            #
+            # Load information in safirDB and contextDB
+            for iline in thelineswithprops:
+                #
+                # Evaluate if data in the line will belong to safirDB or to ContextDB
+                isgen=True
+                #
+                for ishp in self.allShapes:
+                    pattern0=re.compile("^"+ishp)
+                    if(re.search(pattern0, iline[0])!=None):
+                        isgen=False
+                #
+                if isgen: #safirDB
+                    #
+                    if(len(iline)==1): #changes in first-level properties
+                        #
+                        iprop,ival=iline[0].split(":");iprop=iprop.strip();ival=ival.strip()
+                        tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['props']
                         idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
+    
                         #
                         if(idxtab!=[]): # is a SafirDB "prop"
                             k=idxtab[0]
                             tmp0=changeSafirDBKeyAndProp(iprop,ival)
-                        else:
-                            gmsh.logger.write("Problem reading the .g4s file: \""+iprop+"\" is not recognized", level="error")
+                            #
+    
+                        else: # is a SafirDB "key"
+                            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['children']
+                            idxtab2=[k for k in range(len(tmp0)) if tmp0[k]['key']==iprop]
+                            #
+                            if(idxtab2!=[]): # is really a key- Permute
+                                tmp0=changeSafirDBKeyAndProp(iprop,ival)
+                            #
+                            else: # is neither a "props" nor a "key"
+                                gmsh.logger.write("Problem reading the .g4s file: \""+iprop+"\" is not recognized", level="error")
+                                self.g4sfileError="error"
+                                return
+                    #
+                    else: #changes in first-level key and second-level properties
+                        #
+                        #Treat line[0] as a safirDB "key"
+                        #
+                        iprop0,ival=iline[0].split(":");iprop0=iprop0.strip()
+                        ival=re.sub(pattern_beg,"",ival).strip()
+                        #
+                        tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['children']
+                        idxtab2=[k for k in range(len(tmp0)) if tmp0[k]['key']==iprop0]
+                        #
+                        if(idxtab2!=[]): # is really a key- Permute
+                            tmp0=changeSafirDBKeyAndProp(iprop0,ival)
+                        #
+                        else: # is neither a "props" nor a "key"
+                            gmsh.logger.write("Problem reading the .g4s file: \""+iprop0+"\" is not recognized", level="error")
                             self.g4sfileError="error"
                             return
-            #
-            else: # contextDB
+                        #
+                        # Now treat the properties
+                        for ik in range(1,len(iline)-1):
+                            jline=iline[ik]
+                            iprop,ival=jline.split(":");iprop=iprop.strip();ival=ival.strip()
+                            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key",iprop0)],False)['props']
+                            idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
+                            #
+                            if(idxtab!=[]): # is a SafirDB "prop"
+                                k=idxtab[0]
+                                tmp0=changeSafirDBKeyAndProp(iprop,ival)
+                            else:
+                                gmsh.logger.write("Problem reading the .g4s file: \""+iprop+"\" is not recognized", level="error")
+                                self.g4sfileError="error"
+                                return
                 #
-                # Differentiate btw delocalized properties (New Material/New LAX) and localized properties
-                iline0=re.sub(pattern_beg,"",iline[0]).strip()
-                #
-                if(":" in iline0):
-                    iprop0,ival0=iline0.split(":");iprop0=iprop0.strip();ival0=ival0.strip()
-                else:
-                    iprop0=iline0
-                #
-                ishp,inam0=iprop0.split('-');ishp=ishp.strip();inam0=inam0.strip()
-                #
-                if(inam0 == "New Material Definition" or inam0 == "New LAX Definition"): # delocalized properties
-                    inam=inam0
-                    ikey='ents'
-                    inb=1
-                #
-                else: # localized properties
-                    pattern_fct=re.compile("\((.)*\)$")
-                    pattern_fct2=re.compile("^(.)*\((\w)*(\s)*(\w)*(\s)*")
-                    pattern_fct3=re.compile("\)")
-                    inam=re.sub(pattern_fct,"",inam0)
-                    inb1=re.sub(pattern_fct2,"",inam0);inb=int(re.sub(pattern_fct3,"",inb1))
-                    if("Physical" in inam0):
-                        ikey='pgs'
+                else: # contextDB
+                    #
+                    # Differentiate btw delocalized properties (New Material/New LAX) and localized properties
+                    iline0=re.sub(pattern_beg,"",iline[0]).strip()
+                    #
+                    if(":" in iline0):
+                        iprop0,ival0=iline0.split(":");iprop0=iprop0.strip();ival0=ival0.strip()
                     else:
+                        iprop0=iline0
+                    #
+                    ishp,inam0=iprop0.split('-');ishp=ishp.strip();inam0=inam0.strip()
+                    #
+                    if(inam0 == "New Material Definition" or inam0 == "New LAX Definition"): # delocalized properties
+                        inam=inam0
                         ikey='ents'
-                #
-                ishptot=ishp+" "+str(inb)
-                if(ikey=='pgs'):
-                    ishptot="Physical "+ishptot
-                #
-                pref_elem="ONELAB Context/"+ishptot+"/"+self.pbType+"/"+inam
-
-                #
-                if inam == "New Material Definition":
-                    _,subnam=iline[1].split(":");subnam=subnam.strip()
-                    _,typnam=iline[2].split(":");typnam=typnam.strip()
-                    pref_elem+="/"+typnam+"/"+subnam
-                    istart=3
-                else:
-                    pref_elem+="/-"
-                    istart=1
-                #
-                #
-                if inam=="New Material Definition":
-                    # Need permutation of Material Type and then of Material Sub-Category
+                        inb=1
                     #
-                    tmp0=self.getDBValue(self.contextDB,[("children","name",ishp),("children","name",self.pbType),("children","name",inam)],False)['children']
+                    else: # localized properties
+                        pattern_fct=re.compile("\((.)*\)$")
+                        pattern_fct2=re.compile("^(.)*\((\w)*(\s)*(\w)*(\s)*")
+                        pattern_fct3=re.compile("\)")
+                        inam=re.sub(pattern_fct,"",inam0)
+                        inb1=re.sub(pattern_fct2,"",inam0);inb=int(re.sub(pattern_fct3,"",inb1))
+                        if("Physical" in inam0):
+                            ikey='pgs'
+                        else:
+                            ikey='ents'
                     #
-                    found=False
-                    endTree=False
-                    merror=""
-                    listRecurs=[{'key':"",'end_lvl':0}]
-                    levelChange=999
-                    tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1","Material Type",[typnam],typnam,levelChange,merror)
+                    ishptot=ishp+" "+str(inb)
+                    if(ikey=='pgs'):
+                        ishptot="Physical "+ishptot
                     #
-                    tmp0=self.getDBValue(self.contextDB,[("children","name",ishp),("children","name",self.pbType),("children","name",inam),("children","name",typnam)],False)['children']
+                    pref_elem="ONELAB Context/"+ishptot+"/"+self.pbType+"/"+inam
+    
                     #
-                    found=False
-                    endTree=False
-                    merror=""
-                    listRecurs=[{'key':"",'end_lvl':0}]
-                    levelChange=999
-                    tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1","Material Sub-category",[subnam],subnam,levelChange,merror)
+                    if inam == "New Material Definition":
+                        _,subnam=iline[1].split(":");subnam=subnam.strip()
+                        _,typnam=iline[2].split(":");typnam=typnam.strip()
+                        pref_elem+="/"+typnam+"/"+subnam
+                        istart=3
+                    else:
+                        pref_elem+="/-"
+                        istart=1
                     #
-                if merror!="":
-                    gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
-                    self.g4sfileError=merror
-                    return
-                #
-                # Now updates
-                toStore=[]
-                #
-                for ik in range(istart,len(iline)-1):
-                    iprop,ival=iline[ik].split(":");iprop=iprop.strip();ival=ival.strip()
-                    fullname=pref_elem+"/"+iprop
-                    toStore.append({fullname:[ival]})
-                #
-                if inam == "New Material Definition":
-                    fullname=pref_elem+"/"+"New Material Name"
-                    toStore.append({fullname:[ival0]})
-                #
-                if inam == "New LAX Definition":
-                    fullname=pref_elem+"/"+"New LAX Name"
-                    toStore.append({fullname:[ival0]})
-                #
-                self.add_or_remove=1
-                self.loadexception=True
-                self.contextDB,update_void,ierr=self.updateDB(self.contextDB,self.pbType,toStore)
-                self.loadexception=False
-                if ierr==-1:
-                    self.g4sfileError="error"
-                    return
-                #
-        #
-        #with open(self.g4sfile) as f:
-        #    lines=f.readlines()
-        #    self.contextDB = json.loads(lines[0])
-        #    self.safirDB = json.loads(lines[1])
-
-        #
-#         ikey=[k for k in range(len(self.safirDB['children'])) if 'Problem Type' in self.safirDB['children'][k]["key"]][0]
-#         self.pbType=self.safirDB['children'][ikey]["name"]
+                    #
+                    if inam=="New Material Definition":
+                        # Need permutation of Material Type and then of Material Sub-Category
+                        #
+                        tmp0=self.getDBValue(self.contextDB,[("children","name",ishp),("children","name",self.pbType),("children","name",inam)],False)['children']
+                        #
+                        found=False
+                        endTree=False
+                        merror=""
+                        listRecurs=[{'key':"",'end_lvl':0}]
+                        levelChange=999
+                        tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1","Material Type",[typnam],typnam,levelChange,merror)
+                        #
+                        tmp0=self.getDBValue(self.contextDB,[("children","name",ishp),("children","name",self.pbType),("children","name",inam),("children","name",typnam)],False)['children']
+                        #
+                        found=False
+                        endTree=False
+                        merror=""
+                        listRecurs=[{'key':"",'end_lvl':0}]
+                        levelChange=999
+                        tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1","Material Sub-category",[subnam],subnam,levelChange,merror)
+                        #
+                    if merror!="":
+                        gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
+                        self.g4sfileError=merror
+                        return
+                    #
+                    # Now updates
+                    toStore=[]
+                    #
+                    for ik in range(istart,len(iline)-1):
+                        iprop,ival=iline[ik].split(":");iprop=iprop.strip();ival=ival.strip()
+                        fullname=pref_elem+"/"+iprop
+                        toStore.append({fullname:[ival]})
+                    #
+                    if inam == "New Material Definition":
+                        fullname=pref_elem+"/"+"New Material Name"
+                        toStore.append({fullname:[ival0]})
+                    #
+                    if inam == "New LAX Definition":
+                        fullname=pref_elem+"/"+"New LAX Name"
+                        toStore.append({fullname:[ival0]})
+                    #
+                    self.add_or_remove=1
+                    self.loadexception=True
+                    self.contextDB,update_void,ierr=self.updateDB(self.contextDB,self.pbType,toStore)
+                    self.loadexception=False
+                    if ierr==-1:
+                        self.g4sfileError="error"
+                        return
+                    #
+        # DEBUG
+        else:
+            with open(self.g4sfile) as f:
+                lines=f.readlines()
+                self.contextDB = json.loads(lines[0])
+                self.safirDB = json.loads(lines[1])
+    
+            #
+            ikey=[k for k in range(len(self.safirDB['children'])) if 'Problem Type' in self.safirDB['children'][k]["key"]][0]
+            self.pbType=self.safirDB['children'][ikey]["name"]
+        # END DEBUG
         #
         #Get the INfile name as global variable
         ikey=[k for k in range(len(self.safirDB['children'])) if 'Problem Type' in self.safirDB['children'][k]["key"]][0]
@@ -5623,7 +5628,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(self.writeLineFortran('(A10)',['END_FRONT'])+"\n")
 
             # 7/ Write Voids (Thermal 2D)
-            if(ndims==2 and self.nvoids>0):
+            if(ndims==2 and self.nvoids>0 and not itorsrun):
                 for ivoid,tmpvoid in INvoids.items():
                     f.write(self.writeLineFortran('(A10)',['VOID'])+"\n")
                     for i in range(len(tmpvoid)):
