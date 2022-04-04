@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-03-29 - Version 1.0(BETA)"
+        self.version="2022-04-04 - Version 1.0(BETA)"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -711,9 +711,17 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     else: # localized properties
                         pattern_fct=re.compile("\((.)*\)$")
                         pattern_fct2=re.compile("^(.)*\((\w)*(\s)*(\w)*(\s)*")
+                        pattern_fct2b=re.compile("^(.)*\((\w)*(\s)*")
                         pattern_fct3=re.compile("\)")
+                        print ("inam0=",inam0)
                         inam=re.sub(pattern_fct,"",inam0)
-                        inb1=re.sub(pattern_fct2,"",inam0);inb=int(re.sub(pattern_fct3,"",inb1))
+                        print ("inam0=",inam0)
+                        print ("inam=",inam)
+                        inb1=re.sub(pattern_fct2,"",inam0)
+                        if(inb1==")"):
+                            inb1=re.sub(pattern_fct2b,"",inam0)
+                        print ("inb1=",inb1)
+                        inb=int(re.sub(pattern_fct3,"",inb1))
                         if("Physical" in inam0):
                             ikey='pgs'
                         else:
