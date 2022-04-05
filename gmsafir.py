@@ -3455,7 +3455,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         else: # Write down to G4S file
             if self.g4sfileError=="":
-                if os.path.exists(self.g4sfile):
+                if self.g4sfile!="":
                     with open(self.g4sfile, 'w') as f:
                         for ilog in listlog:
                             f.write(ilog+"\n")
