@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-04-04 - Version 1.0(BETA)"
+        self.version="2022-04-07 - Version 1.0(BETA)"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -5443,20 +5443,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
 
         #
-        # COMEBACK
-        if not istorsrun:
-            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
-            convname=tmp0['name']
-            iscomeback=convname=="COMEBACK"
-            if convname=="COMEBACK":
-                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
-                val=float(tmp0['values'][0])
-                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
-        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
-#             else:
-#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
-
-        #
         #DIAG CAPA: Use matrix diag (DIAG CAPA)
         if self.isThermal and not istorsrun:
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","DIAG CAPA")],False)
@@ -5513,6 +5499,22 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             f.write(self.writeLineFortran('(A7,I6)',['OBLIQUE',NOBLIQUE])+"\n")
 
 
+
+        #
+        # COMEBACK
+        if not istorsrun:
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
+            convname=tmp0['name']
+            iscomeback=convname=="COMEBACK"
+            if convname=="COMEBACK":
+                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
+                val=float(tmp0['values'][0])
+                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
+        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
+#             else:
+#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
+        #
+        
         #
         #MATS
         f.write(self.writeLineFortran('(A4,I3)',['NMAT',len(self.listMats)])+"\n")
