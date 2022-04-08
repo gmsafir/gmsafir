@@ -5638,7 +5638,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(self.writeLineFortran('(A10)',['END_FRONT'])+"\n")
 
             # 7/ Write Voids (Thermal 2D)
-            if(ndims==2 and self.nvoids>0 and not itorsrun):
+            if(ndims==2 and self.nvoids>0 and not istorsrun):
                 for ivoid,tmpvoid in INvoids.items():
                     f.write(self.writeLineFortran('(A10)',['VOID'])+"\n")
                     for i in range(len(tmpvoid)):
