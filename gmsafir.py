@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-04-07 - Version 1.0(BETA)"
+        self.version="2022-04-12 - Version 1.0(BETA)"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -71,8 +71,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if not self.go_on: #  Error found in the command line parameters
             gmsh.finalize()
             sys.exit(127)
-        
-        # specialCategs is defined by default - will be updated in getG4sJson if g4sfile exists:    
+
+        # specialCategs is defined by default - will be updated in getG4sJson if g4sfile exists:
         self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
                             ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
         #
@@ -99,10 +99,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # Retrieve initial version of ContextDB
         if(os.path.exists(self.g4sfile)): # load ContextDB from existing file
             #
-            self.contextDB=json.loads(contextDBstring) # load ContextDB from this script
-            self.initCompleteContextDB(self.contextDB) # Copy Materials: same for Volume/th3D than Surface/th2D
-            self.safirDB=json.loads(safirDBstring)
-            self.initCompleteSafirDB(self.safirDB)
+#             self.contextDB=json.loads(contextDBstring) # load ContextDB from this script
+#             self.initCompleteContextDB(self.contextDB) # Copy Materials: same for Volume/th3D than Surface/th2D
+#             self.safirDB=json.loads(safirDBstring)
+#             self.initCompleteSafirDB(self.safirDB)
             #
             self.getG4sJson(self.g4sfile) # if existing DB in input directory
             #
@@ -503,10 +503,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
     #Load ContextDB and SafirDB from the disk
     def getG4sJson(self,file0): # Name originates from the time where G4S file was a JSON format, no more the case
         #
+        self.contextDB=json.loads(contextDBstring) # load ContextDB from this script
+        self.initCompleteContextDB(self.contextDB) # Copy Materials: same for Volume/th3D than Surface/th2D
+        self.safirDB=json.loads(safirDBstring)
+        self.initCompleteSafirDB(self.safirDB)
         #file0="E:\Share\Efectis\SAFIR\GMSH\G4S\\first_case\debug_JMF_20220201\\test.txt"
         #
         notdebug=True # To read old G4S files, set temporarily notdebug to False
-        
+
         # Read G4S file (no more a JSON format) and remove commented and empty lines (or full of whitespaces)
         if notdebug:
             with open(file0) as f:
@@ -525,7 +529,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             iline0=thelines[i0]
             _,pbtyp=iline0.split(':')
             self.pbType=pbtyp.strip()
-    
+
             if("3D" in self.pbType):
                 self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
                                 ('Shell Material','mats',2,'one'),('Shell Rebar','mats',1,'more'),('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more'), \
@@ -533,7 +537,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             else:
                 self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
                                 ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
-    
+
             #
             # Permute safirDB
             found=False
@@ -565,7 +569,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             thelines.remove(iline0)
             #
-    
+
             # Function to change a key and/or property value: both are handled for safirDB by permuteDB (not the case for concreteDB)
             def changeSafirDBKeyAndProp(iprop,ival):
                 found=False
@@ -584,7 +588,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #Reindex lines to account for bracketed props
             thelineswithprops=[]
             multi=False
-    
+
             for iline in thelines:
                 #
                 pattern_beg=re.compile("=.*{.*$")
@@ -639,13 +643,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         iprop,ival=iline[0].split(":");iprop=iprop.strip();ival=ival.strip()
                         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['props']
                         idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
-    
+
                         #
                         if(idxtab!=[]): # is a SafirDB "prop"
                             k=idxtab[0]
                             tmp0=changeSafirDBKeyAndProp(iprop,ival)
                             #
-    
+
                         else: # is a SafirDB "key"
                             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['children']
                             idxtab2=[k for k in range(len(tmp0)) if tmp0[k]['key']==iprop]
@@ -732,7 +736,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         ishptot="Physical "+ishptot
                     #
                     pref_elem="ONELAB Context/"+ishptot+"/"+self.pbType+"/"+inam
-    
+
                     #
                     if inam == "New Material Definition":
                         _,subnam=iline[1].split(":");subnam=subnam.strip()
@@ -763,6 +767,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         merror=""
                         listRecurs=[{'key':"",'end_lvl':0}]
                         levelChange=999
+                        print("tmp0 before=",tmp0)
                         tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1","Material Sub-category",[subnam],subnam,levelChange,merror)
                         #
                     if merror!="":
@@ -800,7 +805,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 lines=f.readlines()
                 self.contextDB = json.loads(lines[0])
                 self.safirDB = json.loads(lines[1])
-    
+
             #
             ikey=[k for k in range(len(self.safirDB['children'])) if 'Problem Type' in self.safirDB['children'][k]["key"]][0]
             self.pbType=self.safirDB['children'][ikey]["name"]
@@ -2072,7 +2077,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
              #
              print ("permute=",permute)
          #
-         self.recreateContextMenusFromDB(self.pbType,False)
+         #self.recreateContextMenusFromDB(self.pbType,False)
+         self.recreateContextMenusFromDB(self.pbType,True) # DEBUG
          return 0
 
 
@@ -2170,6 +2176,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #print ("iparam=",iparam)
         if(ierr==0):
             if(update_void or self.add_or_remove==1 or self.add_or_remove==0):
+                self.getG4sJson(self.g4sfile) #DEBUG
                 self.recreateContextMenusFromDB(self.pbType,True)
             #
 #             if os.path.exists(self.g4sfile):
@@ -2227,10 +2234,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             return inam,propnam,ivl
         #
         inam,propnam,ivl=getParam(0)
-        
+
         p=re.compile("^[0-9]+")
         toStoreNames=[re.sub(p,"",getParam(i)[1]) for i in range(len(toStore))]
-        
+
         s=inam.split('/')
 
         #
@@ -2516,7 +2523,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             else:
                 icond=not inb in list(tmp1.keys())
             #
-            
+
             if(icond): # the current (ent/pg, property) has no entry defined in the DB
                 if specialcase:
                     tmp1key=inb+"/0"
@@ -2526,6 +2533,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 tmp1[tmp1key]=[]
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
+                    print("inam,propnam,ivl=",inam,propnam,ivl)
+                    print("tmp0['props'']=",tmp0["props"])
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
 #                     print('iprop=',iprop)
 #                     print('ivl=',ivl)
@@ -2539,7 +2548,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 #
                 print("toStoreNames=",toStoreNames)
                 #Complete with props not in toStore (because visible=False)
-                for i in range(len(tmp2)):  
+                for i in range(len(tmp2)):
                     print('tmp2[i]=',tmp2[i])
                     if(not tmp2[i] in toStoreNames):
                         ikmiss=[k for k in tmp0["props"] if 'name' in k and tmp2[i] in k['name']][0]
@@ -2551,7 +2560,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             else: # the current (ent/pg, property) has already entry(ies) defined in the DB - can only be the case for specialcase (for no specialcase, this property has been removed)
                 tmp1key=inb+"/"+str(imax+1)
                 tmp1[tmp1key]=[]
-                
+
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
@@ -2565,7 +2574,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #
                 #
                 #Complete with props not in toStore (because visible=False)
-                for i in range(len(tmp2)):   
+                for i in range(len(tmp2)):
                     if(not tmp2[i] in toStoreNames):
                         ikmiss=[k for k in tmp0["props"] if 'name' in k and tmp2[i] in k['name']][0]
                         nearpropnam=[k['name'] for k in tmp0["props"] if 'name' in k and tmp2[i] in k['name']][0]
@@ -5514,7 +5523,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 #             else:
 #                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
         #
-        
+
         #
         #MATS
         f.write(self.writeLineFortran('(A4,I3)',['NMAT',len(self.listMats)])+"\n")
@@ -5890,11 +5899,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 raise ValueError("Incorrect number of lines")
                             tmpl=re.split('\s+',lines[1].replace('\n',''))
                             if(len(tmpl)!=11):
-                                raise ValueError("Second line shall contain 9 parameters: T,lambda,c,rho,q,Tstart,Tend,hc,hf,emissiv,r")
+                                raise ValueError("Second line shall contain 11 parameters: T,k,c,rho,w,Tstart,Tend,hh,hu,emissiv,r")
                             for iline in lines[2:]:
                                 tmpl=re.split('\s+',iline.replace('\n',''))
+                                print("tmpl=",tmpl)
                                 if(len(tmpl)!=4):
-                                    raise ValueError("From third line on, it shall contain 4 parameters: T,lambda,c,rho")
+                                    raise ValueError("From third line on, it shall contain 4 parameters: T,k,c,rho")
                             # Success in reading
                             for iline in lines:
                                 f.write(iline)
@@ -6128,6 +6138,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             gmsh.onelab.setString("ONELAB/Action", [""])
             if(self.g4sfile!="" and os.path.exists(self.g4sfile)):
             #if(1>0):
+                gmsh.onelab.clear()
                 self.getG4sJson(self.g4sfile)
                 self.recreateContextMenusFromDB(self.pbType,True)
             else:
@@ -7040,7 +7051,7 @@ contextDBstring="""
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Yield strength","type":"number","values":[4.5e7],"min":0,"max":1e9,"step":0},
                             {"name":"93Compressive strength","type":"number","values":[3e7],"min":0,"max":1,"step":0},
-                            {"ents":{},"pgs":{}}    
+                            {"ents":{},"pgs":{}}
                     ],
                     "children":[]
                     }
@@ -8138,19 +8149,19 @@ contextDBstring="""
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
+                    },
+                    {
+                    "key":"Material Sub-category","name":"User-defined",
+                    "props":[
+                            {"name":"HIDDEN torsname","type":"string","values":["ELASTIC"]},
+                            {"name":"0Filename","type":"string","values":[""]},
+                            {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
+                            {"name":"9Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
+                            {"ents":{},"pgs":{}}
+                    ],
+                    "children":[]
                     }
-                ]},
-                {
-                "key":"Material Type","name":"User-defined",
-                "props":[
-                        {"name":"HIDDEN torsname","type":"string","values":["ELASTIC"]},
-                        {"name":"0Filename","type":"string","values":[""]},
-                        {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
-                        {"name":"9Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
-                        {"ents":{},"pgs":{}}
-                ],
-                "children":[]
-                }
+                ]}
             ]}
         ]},
         {
