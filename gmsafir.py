@@ -507,7 +507,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.initCompleteContextDB(self.contextDB) # Copy Materials: same for Volume/th3D than Surface/th2D
         self.safirDB=json.loads(safirDBstring)
         self.initCompleteSafirDB(self.safirDB)
-        #file0="E:\Share\Efectis\SAFIR\GMSH\G4S\\first_case\debug_JMF_20220201\\test.txt"
         #
         notdebug=True # To read old G4S files, set temporarily notdebug to False
 
@@ -799,7 +798,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         self.g4sfileError="error"
                         return
                     #
-        # DEBUG
         else:
             with open(self.g4sfile) as f:
                 lines=f.readlines()
@@ -809,7 +807,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             ikey=[k for k in range(len(self.safirDB['children'])) if 'Problem Type' in self.safirDB['children'][k]["key"]][0]
             self.pbType=self.safirDB['children'][ikey]["name"]
-        # END DEBUG
         #
         #Get the INfile name as global variable
         ikey=[k for k in range(len(self.safirDB['children'])) if 'Problem Type' in self.safirDB['children'][k]["key"]][0]
@@ -2176,7 +2173,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #print ("iparam=",iparam)
         if(ierr==0):
             if(update_void or self.add_or_remove==1 or self.add_or_remove==0):
-                self.getG4sJson(self.g4sfile) #DEBUG
+                #self.getG4sJson(self.g4sfile) #DEBUG
                 self.recreateContextMenusFromDB(self.pbType,True)
             #
 #             if os.path.exists(self.g4sfile):
@@ -3283,7 +3280,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             tmpstr,fullname=imatstr.split("/")
             iname,idim=tmpstr.split(';')
             idim=int(idim)
-            igroup,isafirname=fullname.replace('New Material Definition-','').split('-')
+            if not 'User-defined' in fullname:
+                igroup,isafirname=fullname.replace('New Material Definition-','').split('-')
+            else:
+                igroup="Generic"
+                isafirname="User-defined"
             #
             if(iflag==1):
                 llog.append(" - \""+iname+"\" (gmsafir name) - "+self.allShapes[idim]+":")
@@ -5902,12 +5903,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 raise ValueError("Second line shall contain 11 parameters: T,k,c,rho,w,Tstart,Tend,hh,hu,emissiv,r")
                             for iline in lines[2:]:
                                 tmpl=re.split('\s+',iline.replace('\n',''))
-                                print("tmpl=",tmpl)
+                                while '' in tmpl:
+                                    tmpl.remove('')
                                 if(len(tmpl)!=4):
                                     raise ValueError("From third line on, it shall contain 4 parameters: T,k,c,rho")
                             # Success in reading
                             for iline in lines:
-                                f.write(iline)
+                                #f.write(iline)
+                                f.write(self.writeLineFortran('(A12)',[iline.replace('\n','')])+"\n")
                         except Exception as emsg:
                             raise ValueError("User-defined material: Pb in file "+fname+": "+str(emsg))
                         f0.close()
