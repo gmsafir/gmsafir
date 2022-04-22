@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-04-12 - Version 1.0(BETA)"
+        self.version="2022-04-12 - Version 1.0"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
