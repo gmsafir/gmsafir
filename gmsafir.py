@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-04-22 - Version 1.0"
+        self.version="2022-04-27 - Version 1.0"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -5719,7 +5719,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                      f.write(self.writeLineFortran('(A10)',[ifile])+"\n")
                      f.write(self.writeLineFortran('(A10,F10.3)',["THICKNESS",float(thick)])+"\n")
-                     f.write(self.writeLineFortran('(A10,F10.3)',["ZZERO",float(zzero)])+"\n")
+                     f.write(self.writeLineFortran('(A10,F10.3)',["Z0",float(zzero)])+"\n")
                      iglomat=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imatstr+";2"][0]
                      f.write(self.writeLineFortran('(A10,I3)',["MATERIAL",iglomat+1])+"\n")
                      f.write(self.writeLineFortran('(A10,I3)',["REBARS",nbar])+"\n")
