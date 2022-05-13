@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-04-27 - Version 1.0"
+        self.version="2022-05-13 - Version 1.0"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -298,8 +298,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                      #
                      if(tmp1keys!={}):
                          for inb in sorted(tmp1keys):
-                             print("list_names:",tmp1keys[inb])
-                             print('list_names:',inam0,[k for k in tmp1keys[inb] if list(k.keys())[0]==inam0][0][inam0])
+                             #print("list_names:",tmp1keys[inb])
+                             #print('list_names:',inam0,[k for k in tmp1keys[inb] if list(k.keys())[0]==inam0][0][inam0])
                              ivl=[k for k in tmp1keys[inb] if list(k.keys())[0]==inam0][0][inam0][0]
                              j=[k for k in listprops if list(k.keys())[0]==ivl+";"+ityp]
                              if(j==[]):
@@ -716,14 +716,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         pattern_fct2=re.compile("^(.)*\((\w)*(\s)*(\w)*(\s)*")
                         pattern_fct2b=re.compile("^(.)*\((\w)*(\s)*")
                         pattern_fct3=re.compile("\)")
-                        print ("inam0=",inam0)
+                        #print ("inam0=",inam0)
                         inam=re.sub(pattern_fct,"",inam0)
-                        print ("inam0=",inam0)
-                        print ("inam=",inam)
+                        #print ("inam0=",inam0)
+                        #print ("inam=",inam)
                         inb1=re.sub(pattern_fct2,"",inam0)
                         if(inb1==")"):
                             inb1=re.sub(pattern_fct2b,"",inam0)
-                        print ("inb1=",inb1)
+                        #print ("inb1=",inb1)
                         inb=int(re.sub(pattern_fct3,"",inb1))
                         if("Physical" in inam0):
                             ikey='pgs'
@@ -766,7 +766,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         merror=""
                         listRecurs=[{'key':"",'end_lvl':0}]
                         levelChange=999
-                        print("tmp0 before=",tmp0)
+                        #print("tmp0 before=",tmp0)
                         tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1","Material Sub-category",[subnam],subnam,levelChange,merror)
                         #
                     if merror!="":
@@ -1080,7 +1080,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
             #
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Type of calculation")],False)
-            print(tmp0["name"])
             if(tmp0["name"]!="USE_CURVES"):
                 tmp0=tmp0['props']
                 i1=[ k for k in range(len(tmp0)) if "Expected name " in tmp0[k]['name']][0]
@@ -1221,6 +1220,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         else:
             ient=itag
 
+        print("ishp=",ishp)
+        
         #Select the 2 points of the Curve
         shpedges=gmsh.model.getBoundary([(1, ient)],recursive=True)
         x=[];y=[];z=[]
@@ -1232,9 +1233,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         x0=0.5*(x[0]+x[1]);y0=0.5*(y[0]+y[1]);z0=0.5*(z[0]+z[1])
 
         # First axis - scaled to Curve length
-        VP=[]
+        #VP=[]
         Xp=np.array([(x[1]-x[0]), (y[1]-y[0]), (z[1]-z[0])], dtype=np.float64)
-        VP.append(Xp)
+        #VP.append(Xp)
         normXp=LA.norm(Xp)
         Xp=Xp/normXp
         # Calculate matrix passing from X-axis to local Xp-axis
@@ -1279,6 +1280,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             normXp=LA.norm(Xp)
             Xp=Xp/normXp
         #
+        else:
+            VP.append(Xp)
+        #
         if(checklax==1): #4th point determined by LAX with rotation angle
             print("theta_degrees=",theta_degrees)
             #
@@ -1307,9 +1311,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
         else:  #4th point determined by LAX with fix coordinates
             #
-            VP=[]
+            #VP=[]
             # A priori normalized Yp:
             Yp=np.array([float(Yp_str[0]), float(Yp_str[1]), float(Yp_str[2])], dtype=np.float64)
+            print('Xp=',Xp)
+            print('Yp=',Yp)
             if np.linalg.norm(Yp)==0:
                 gmsh.logger.write("User-defined Y-Axis has zero coordinates!", level="error")
             if np.linalg.norm(np.cross(Xp,Yp))==0:
@@ -1321,9 +1327,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             # new Yp
             Yp=np.cross(Zp,Xp)
             #
-            VP.append(Xp);VP.append(Yp);VP.append(Zp)
+            #VP.append(Xp);VP.append(Yp);VP.append(Zp)
+            VP.append(Yp);VP.append(Zp)
 
-        #
         # Re-create the list-based postpro view
 
         lstaxes=["x'","y'","z'"]
@@ -2530,8 +2536,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 tmp1[tmp1key]=[]
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
-                    print("inam,propnam,ivl=",inam,propnam,ivl)
-                    print("tmp0['props'']=",tmp0["props"])
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
 #                     print('iprop=',iprop)
 #                     print('ivl=',ivl)
@@ -2543,10 +2547,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     nearpropnam=[k['name'] for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
                     tmp1[tmp1key].append({nearpropnam:ivl})
                 #
-                print("toStoreNames=",toStoreNames)
+                #print("toStoreNames=",toStoreNames)
                 #Complete with props not in toStore (because visible=False)
                 for i in range(len(tmp2)):
-                    print('tmp2[i]=',tmp2[i])
                     if(not tmp2[i] in toStoreNames):
                         ikmiss=[k for k in tmp0["props"] if 'name' in k and tmp2[i] in k['name']][0]
                         #print('ikmiss=',ikmiss)
@@ -2946,7 +2949,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         tmp0=self.getDBValue(self.contextDB,[("children","name","Surface"),("children","name","Thermal 2D"),("children","name","New Material Definition"),\
                                             ("children","name","Insulations"),("children","name","Insulation")],False)
-        print("tmp0=",tmp0)
+        #print("tmp0=",tmp0)
         print('PropAtts=',PropAtts)
         print('listMats=',self.listMats)
 
