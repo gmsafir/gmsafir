@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-05-13 - Version 1.0"
+        self.version="2022-05-24 - Version 1.0"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -852,13 +852,16 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         for i in listshps:
             tmp2=self.getDBValue(self.contextDB,[("children","name",self.allShapes[i]),("children","name",self.pbType),("children","name","New Material Definition")],False)
             rc=self.recursActionContextDB(tmp2,'list_names\tmat;'+str(i),self.listMats)
+            self.listMats= sorted(self.listMats, key=lambda d: (list(d.keys())[0].upper(),list(d.keys())[0]))
         #
         print("self.listMats=",self.listMats)
+        #exit(127)
         #
         # Update list of LAX
         if('Structural 3D' in self.pbType):
             tmp2=self.getDBValue(self.contextDB,[("children","name","Curve"),("children","name",self.pbType),("children","name","New LAX Definition")],False)
             rc=self.recursActionContextDB(tmp2,'list_names\tlax;1',self.listLAX)
+            self.listLAX= sorted(self.listLAX, key=lambda d: (list(d.keys())[0].upper(),list(d.keys())[0]))
             print('init: self.listLAX=',self.listLAX)
 
 
