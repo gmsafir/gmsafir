@@ -19,7 +19,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-05-24 - Version 1.0"
+        self.version="2022-07-04 - Version 1.0"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -5458,6 +5458,20 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             f.write(self.writeLineFortran('(A11,F11.4)',['TINITIAL',val])+"\n")
             #
 
+        # COMEBACK
+        if not istorsrun:
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
+            convname=tmp0['name']
+            iscomeback=convname=="COMEBACK"
+            if convname=="COMEBACK":
+                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
+                val=float(tmp0['values'][0])
+                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
+        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
+#             else:
+#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
+        #
+
         #
         #DIAG CAPA: Use matrix diag (DIAG CAPA)
         if self.isThermal and not istorsrun:
@@ -5517,20 +5531,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
 
         #
-        # COMEBACK
-        if not istorsrun:
-            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
-            convname=tmp0['name']
-            iscomeback=convname=="COMEBACK"
-            if convname=="COMEBACK":
-                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
-                val=float(tmp0['values'][0])
-                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
-        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
-#             else:
-#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
-        #
-
         #
         #MATS
         f.write(self.writeLineFortran('(A4,I3)',['NMAT',len(self.listMats)])+"\n")
@@ -6012,10 +6012,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             gmsh.logger.write("Launch SAFIR exe... ", level="info")
             #
             INfile_noext=os.path.splitext(self.INfile)[0]
-            cmd="cd "+self.dir+";"+os.environ['SAFIREXE']+" "+INfile_noext
+            cmd='cd \"'+self.dir+'\"&'+os.environ['SAFIREXE']+' '+INfile_noext
+            print('cmd=',cmd)
             p = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, shell=True)
             while p.poll() is None:
-                iline = p.stdout.readline()
+                iline = p.stdout.readline().decode(errors='replace')
+#             if(1>0):
+#                 iline=p.stdout.read().decode(errors='replace')
                 gmsh.logger.write(iline, level="info")
             #
         return 0
