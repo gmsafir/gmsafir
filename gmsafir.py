@@ -14,12 +14,13 @@ import numpy as np
 from numpy import linalg as LA
 import subprocess
 
+
 class Myapp: # Use of class only in order to share 'params' as a global variable with the "event manager" below (not working properly without class)
     def __init__(self, parent=None):
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-07-04 - Version 1.0"
+        self.version="2022-07-05 - Version 1.0"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -4564,7 +4565,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         # 2/ Prepare imposed temperatures for writing (separately Thermal and Structural)
         INfixnodes=[]
-
+        singlenodes=[]
+        
         if(self.isThermal): #(Thermal)
             fixnodes={}
             try:
@@ -4601,11 +4603,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                                         #TBCkecked if needs to be inside or outside the icoord-loop above
                                         #ival0=fixnodes[inode_safir]
-
-                                        for ijval in ival.split(";"):
-                                            tmp['val']=['BLOCK',inode_safir,ijval]
-                                            tmp['fmt']='(A10,I6,A15)'
-                                            INfixnodes.append(tmp)
+                                        if (singlenodes==[] or not inode in singlenodes):
+                                            singlenodes.append(inode)
+                                        
+                                            for ijval in ival.split(";"):
+                                                tmp['val']=['BLOCK',inode_safir,ijval]
+                                                tmp['fmt']='(A10,I6,A15)'
+                                                INfixnodes.append(tmp)
 
             except Exception as emsg:
                 gmsh.logger.write("Pb in getting fixations by node:"+str(emsg), level="error")
@@ -4642,15 +4646,18 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     #    fixnodes[inode]=ival
         #
             #for inode,ival in fixnodes.items():
-                                    for ijval in ival.split(";"):
-                                        ivaltab=ijval.split("/")[0].split(' - ')
-                                        tmp={}
-                                        tmp['val']=['BLOCK',inode]+ivaltab[0:ndofmax]
-                                        tmp['fmt']='(A10,I6,'
-                                        for i0 in range(ndofmax):
-                                            tmp['fmt']+=',A15'
-                                        tmp['fmt']+=")"
-                                        INfixnodes.append(tmp)
+                                    if (singlenodes==[] or not inode in singlenodes):
+                                        singlenodes.append(inode)
+                                        
+                                        for ijval in ival.split(";"):
+                                            ivaltab=ijval.split("/")[0].split(' - ')
+                                            tmp={}
+                                            tmp['val']=['BLOCK',inode]+ivaltab[0:ndofmax]
+                                            tmp['fmt']='(A10,I6,'
+                                            for i0 in range(ndofmax):
+                                                tmp['fmt']+=',A15'
+                                            tmp['fmt']+=")"
+                                            INfixnodes.append(tmp)
 
 
         # 4/ Prepare F.E. for writing (separately Thermal nd Structural)
