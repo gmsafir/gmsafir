@@ -4584,7 +4584,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 ival=ElemVals[igtypdim][i]
                                 #
                                 if(ival!="-1"):
-                                    tmp={}
+                                    
                                     inodesperelem=self.allElemTypesNbNodes[allElemTypes[kdims][i]]
                                     #
                                     for icoord in range(inodesperelem):
@@ -4605,12 +4605,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         #ival0=fixnodes[inode_safir]
                                         if (singlenodes==[] or not inode in singlenodes):
                                             singlenodes.append(inode)
+                                            print(inode_safir)
                                         
                                             for ijval in ival.split(";"):
+                                                tmp={}
                                                 tmp['val']=['BLOCK',inode_safir,ijval]
                                                 tmp['fmt']='(A10,I6,A15)'
                                                 INfixnodes.append(tmp)
-
+                            
+                            print('INfixnodes=',INfixnodes)
             except Exception as emsg:
                 gmsh.logger.write("Pb in getting fixations by node:"+str(emsg), level="error")
                 return -1
