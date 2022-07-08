@@ -20,7 +20,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-07-05 - Version 1.0"
+        self.version="2022-07-08 - Version 1.0"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -5855,10 +5855,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         #
                         print("ndim=",ndims,", isTherm=",self.isThermal,", len(tmpvals)=",len(tmpvals),": ",tmpvals)
                         if ndims==2 and self.isThermal:
-                            leng1=len(tmpvals)-5 #Remove from the list the material name, the torsname, the Young module and Poisson coeff (and also the material name and torsname)
+                            leng1=len(tmpvals)-5 #Remove from the list the material name, the torsname, the Young module and Poisson coeff
                         #
                         elif(self.isThermal):
-                            leng1=len(tmpvals)-2 #Remove from the list the material name and torsname
+                            leng1=len(tmpvals)-3 #Remove from the list the material name and torsname
                         else:
                             leng1=len(tmpvals)-1 # Remove from the list the material name (no torsname)
                         #
