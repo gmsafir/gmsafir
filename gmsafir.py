@@ -5731,29 +5731,33 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                      ikey=INsectionShells[i]
                      imat,irebar=ikey.split("//")
                      ifile,thick,zzero,imatstr=imat.split(' - ')
-                     nbar,matrebar,sectrebar,levrebar,strangles=irebar.split('/')
-
+                     if(irebar!="-1"):
+                         nbar,matrebar,sectrebar,levrebar,strangles=irebar.split('/')
+                     else:
+                         nbar="0"
                      f.write(self.writeLineFortran('(A10)',[ifile])+"\n")
                      f.write(self.writeLineFortran('(A10,F10.3)',["THICKNESS",float(thick)])+"\n")
                      f.write(self.writeLineFortran('(A10,F10.3)',["Z0",float(zzero)])+"\n")
                      iglomat=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imatstr+";2"][0]
                      f.write(self.writeLineFortran('(A10,I3)',["MATERIAL",iglomat+1])+"\n")
                      f.write(self.writeLineFortran('(A10,I3)',["REBARS",nbar])+"\n")
-                     imattab=matrebar.strip().split() #Split on spaces
-                     isecttab=sectrebar.strip().split() #Split on spaces
-                     ilevtab=levrebar.strip().split() #Split on spaces
-                     angles=ast.literal_eval(strangles)
                      #
-                     for k in range(len(imattab)):
-                         iglomat=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imattab[k]+";1"][0]
-                         f.write(self.writeLineFortran('(A20,I3)',["REBARMAT",iglomat+1])+"\n")
-                         f.write(self.writeLineFortran('(A20,F10.3)',["SECTION",float(isecttab[k])])+"\n")
-                         f.write(self.writeLineFortran('(A20,F10.3)',["LEVEL",float(ilevtab[k])])+"\n")
-                         iangle=[val for i,val in angles.items() if i==k][0]
-                         if(type(iangle)==list):
-                            f.write(self.writeLineFortran('(A20,F10.3,F10.3,F10.3)',["NORMAL",iangle[0],iangle[1],iangle[2]])+"\n")
-                         else:
-                            f.write(self.writeLineFortran('(A20,F10.3)',["ANGLE",iangle])+"\n")
+                     if(nbar!="0"):
+                         imattab=matrebar.strip().split() #Split on spaces
+                         isecttab=sectrebar.strip().split() #Split on spaces
+                         ilevtab=levrebar.strip().split() #Split on spaces
+                         angles=ast.literal_eval(strangles)
+                         #
+                         for k in range(len(imattab)):
+                             iglomat=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imattab[k]+";1"][0]
+                             f.write(self.writeLineFortran('(A20,I3)',["REBARMAT",iglomat+1])+"\n")
+                             f.write(self.writeLineFortran('(A20,F10.3)',["SECTION",float(isecttab[k])])+"\n")
+                             f.write(self.writeLineFortran('(A20,F10.3)',["LEVEL",float(ilevtab[k])])+"\n")
+                             iangle=[val for i,val in angles.items() if i==k][0]
+                             if(type(iangle)==list):
+                                f.write(self.writeLineFortran('(A20,F10.3,F10.3,F10.3)',["NORMAL",iangle[0],iangle[1],iangle[2]])+"\n")
+                             else:
+                                f.write(self.writeLineFortran('(A20,F10.3)',["ANGLE",iangle])+"\n")
                      #
                 for i in range(len(INelemShells)):
                     f.write(self.writeLineFortran(INelemShells[i]['fmt'],INelemShells[i]['val'])+"\n")
