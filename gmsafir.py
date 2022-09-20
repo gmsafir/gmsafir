@@ -4666,6 +4666,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # 4/ Prepare F.E. for writing (separately Thermal nd Structural)
         if(self.isThermal): # (Thermal)
             INelems=[]
+            
+            # inode=allNodeTags.index(allElemNodeTags[ndims][i][icoord]) is slow
+            _allNodeTags_index_allElemNodeTags = {}
+            for ndims, _ElemNodeTag in enumerate(allElemNodeTags):
+                for i, __ElemNodeTag in enumerate(_ElemNodeTag):
+                    for icoord, ___ElemNodeTag in enumerate(__ElemNodeTag): 
+                        _allNodeTags_index_allElemNodeTags[f"{ndims} {i} {icoord}"] = int(___ElemNodeTag-1)
+            
             try:
                 if(ndims==2):
                     nnodesperelemmax=4
@@ -4679,7 +4687,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     inodesperelem=self.allElemTypesNbNodes[allElemTypes[ndims][i]]
                     ncoords=[] #number of nodes for the elems, completed for SAFIR to 4 (dim=2) or to 8 (dim=3)
                     for icoord in range(inodesperelem):
-                        inode=allNodeTags.index(allElemNodeTags[ndims][i][icoord])
+                        #inode=allNodeTags.index(allElemNodeTags[ndims][i][icoord]) # slow
+                        inode = _allNodeTags_index_allElemNodeTags[f"{ndims} {i} {icoord}"]
                         if istsh:
                             inode_safir=correspnodes.index(inode)
                         else:
@@ -5033,38 +5042,34 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 ipref='FLUX'
                             else:
                                 ipref='F'
-                            #
+                            
+                            # Préparation des variables : on a besoin d'un vecteur frtierfaceS
+                            frtierfaceS = []
+                            frtierfaceSi = []
                             for i in range(nelemsm):
                                 if(ElemVals[igtypdim][i]!="-1"):
                                     ielem=allElemTags[ndimsm][i]
                                     ientity=allElemEntityTags[ndimsm][i]
-
                                     frtierface=allElemNodeTags[ndimsm][i]
                                     frtierface.sort()
-                                    found=False
-                                    im=0
-                                    faceConstraints=['NO' for i0 in range(nfacesperelemmax)]
-                                    while(not found and im<nelems):
-                                        ielemnodes=allElemNodeTags[ndims][im]
-                                        ielemtype=allElemTypes[ndims][im]
-                                        idx=im+1 # get the elem index, not the tag, to write in the outfile
-                                        ifaces=self.getOrderedFaces(ielemtype,ielemnodes)
-                                        for ifa in range(len(ifaces)):
-                                            elemface=ifaces[ifa]
-                                            elemface.sort()
-                                            if(frtierface==elemface):
-                                                found=True
-                                                ifa0=ifa
-
-                                        if(not found):
-                                                im+=1
-                            #            print 'im=',im,', / nelems=',nelems,found
-                                    if(found):
-                            #            print 'nodes:',ielemnodes
-                            #            print 'ielemtype: ',ielemtype
-                            #            print 'faces:',ifaces
-                            #            print 'ifa=',ifa0
+                                    frtierfaceS.append(frtierface)
+                                    frtierfaceSi.append(i)
+                            # Boucle de recherche
+                            for im in range(nelems):
+                                ielemnodes = allElemNodeTags[ndims][im]
+                                ielemtype=allElemTypes[ndims][im]
+                                ifaces=self.getOrderedFaces(ielemtype,ielemnodes)
+                                found=False
+                                faceConstraints=['NO' for i0 in range(nfacesperelemmax)]
+                                for ifa in range(len(ifaces)):
+                                    elemface=ifaces[ifa]
+                                    elemface.sort()
+                                    try:
+                                        j = frtierfaceS.index(elemface)
+                                        idx=im+1
+                                        ifa0=ifa
                                         tmp={}
+                                        i = frtierfaceSi[j]
                                         faceConstraints[ifa0]=ElemVals[igtypdim][i]
                                         strtmp=""
                                         for it in range(nfacesperelemmax-1):
@@ -5073,7 +5078,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         flst=[ipref,idx]+faceConstraints
                                         tmp['val']=flst
                                         tmp['fmt']=ffmt
-                                        INfrontiers.append(tmp)
+                                        if(found):
+                                            INfrontiers[-1] = tmp
+                                        else:
+                                            INfrontiers.append(tmp)
+                                        found=True
+                                    except:
+                                        pass
+                            del frtierfaceS
+                            del frtierfaceSi
 
             except Exception as emsg:
                 gmsh.logger.write("Pb in preparing constraints flxs,frtiers for writing:"+str(emsg), level="error")
