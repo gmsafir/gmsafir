@@ -20,7 +20,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-09-20 - Version 1.0"
+        self.version="2022-09-21 - Version 1.0"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -1227,7 +1227,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         print("ishp=",ishp)
         
         #Select the 2 points of the Curve
-        shpedges=gmsh.model.getBoundary([(1, ient)],recursive=True)
+        #shpedges=gmsh.model.getBoundary([(1, ient)],recursive=True)
+        shpedges=gmsh.model.getBoundary([(1, ient)],combined=False)
+        
         x=[];y=[];z=[]
         for ie in range(2):
             inode=abs(int(shpedges[ie][1]))
@@ -1251,12 +1253,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         tmp0=self.getDBValue(self.contextDB,[("children","name","Curve"),("children","name",self.pbType),("children","name","New LAX Definition"),("children","name","-")],False)
 
-        # theta value comes from new choice and change in first index of self.listLAX, due to permutation in menu 'LAX Names Choice'
-        if self.permutespecial:
-            lax_id=0
         # theta value comes from a loop on self.listLAX in manageInspect, to display all LAX
-        elif self.LAXspecial:
+
+        if self.LAXspecial:
             lax_id=self.laxid
+        # theta value comes from new choice and change in first index of self.listLAX, due to permutation in menu 'LAX Names Choice'
+        elif self.permutespecial:
+            lax_id=0
         #
         if self.permutespecial or self.LAXspecial:
             checklax=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Check=LAX from" in list(k.keys())[0]][0][0]
@@ -1334,6 +1337,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #VP.append(Xp);VP.append(Yp);VP.append(Zp)
             VP.append(Yp);VP.append(Zp)
 
+        for i in range(3):
+            print(VP[i])
+            
         # Re-create the list-based postpro view
 
         lstaxes=["x'","y'","z'"]
@@ -1356,6 +1362,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             gmsh.view.addListData(self.LAXtag, "VP", self.nVPsLAX, self.pointLAX)
             gmsh.graphics.draw()
         #
+        
         return(Yp[0],Yp[1],Yp[2])
 
 
@@ -3632,7 +3639,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         #
 
                         self.isViewLAX=True
+                        #
+                        print("Curve "+str(itag)+": ")
                         (xp0,yp0,zp0)=self.recreateLAXView("Curve "+str(itag))
+                        #
                         self.isViewLAX=False
                         #
                         if(i==nugtyps-1):
