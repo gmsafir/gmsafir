@@ -1,4 +1,4 @@
-## GmSAFIR (current version 2022-09-21) ⚡
+## GmSAFIR (current version 2022-10-26) ⚡
 GmSAFIR is a GUI-preprocessor that enables to facilitate the creation of input files to SAFIR model.   
 It is meant to be used starting with SAFIR version 2022a0 and future versions.  
 It is free and open-source.  
