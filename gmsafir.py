@@ -20,7 +20,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-09-21 - Version 1.0"
+        self.version="2022-10-26 - Version 1.0"
         self.authors="Univ. of Liege & Efectis France"
 
         # Symmetries and voids
@@ -2184,12 +2184,25 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         return ierr
                     toStore.append({inam:ivl})
         #
+        print("self.add_or_remove before updateDB=",self.add_or_remove)
         self.contextDB,update_void,ierr=self.updateDB(self.contextDB,self.pbType,toStore)
+        
+        
+# Eval DEBUG
+        shptyp="Volume";pbtyp="Thermal 3D";iprop0="Volume Material"
+        tmp3=self.getDBValue(self.contextDB,[("children","name",shptyp),("children","name",pbtyp),("children","name",iprop0)],True)
+        ik=[k for k in tmp3["props"] if not 'name' in k][0]
+        ikey='ents'
+        tmp4=ik[ikey]
+        print('tmp1 in manageDB=',tmp4)
+        #
+        
         #
         #print("all_previous_found=",all_previous_found)
                     #print ("iparam=",iparam)
         if(ierr==0):
-            if(update_void or self.add_or_remove==1 or self.add_or_remove==0):
+            print("self.add_or_remove after updateDB=",self.add_or_remove)
+            if(update_void or self.add_or_remove==1 or self.add_or_remove==0 or 1>0):
                 #self.getG4sJson(self.g4sfile) #DEBUG
                 self.recreateContextMenusFromDB(self.pbType,True)
             #
@@ -2204,10 +2217,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 #                 with open(self.g4sfile, 'w') as f:
 #                     f.write(json.dumps(self.contextDB)+"\n")
 #                     f.write(json.dumps(self.safirDB))
+            print('Now write to G4S file...')
             self.viewAndWriteInfog4s(2)
             #
             return 0
         else:
+            print('error d\'update')
             return ierr
 
 
@@ -2247,6 +2262,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             propnam=s
             return inam,propnam,ivl
         #
+        print('toStore=',toStore)
         inam,propnam,ivl=getParam(0)
 
         p=re.compile("^[0-9]+")
@@ -2314,9 +2330,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
              return prev,tmpg
         #
 
+
         # Added a specialcase is defined for Mats and LAX: the only properties that are unlocalized properties
         specialcase='New Material Definition' in inam or 'New LAX Definition' in inam  or 'New Rebar Material Definition' in inam
-        print('specialcase=',specialcase)
+        #
         previous_found=False;update_void=False
         isnewmat=False;isnewlax=False;ismatidx=False;islaxidx=False
 
@@ -2515,9 +2532,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if(self.add_or_remove>=1):
 
             # Find the location of the property in the DB, go to the current leaf
+            iprop0=iprop
             tmp0=self.getDBValue(tmpg,[("children","name",shptyp),("children","name",pbtyp),("children","name",iprop)],True)
 
-            ik=[k for k in tmp0["props"] if not 'name' in k][0]
+            ik=[k for k in range(len(tmp0["props"])) if not 'name' in tmp0["props"][k]][0]
             p=re.compile("^[0-9]+")
             tmp2=[re.sub(p,"",k['name']) for k in tmp0["props"] if 'name' in k]
             #
@@ -2525,7 +2543,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 ikey='pgs'
             else:
                 ikey='ents'
-            tmp1=ik[ikey]
+            tmp1=tmp0["props"][ik][ikey]
             #
             # Finds in tmp1 if the current (ent/pg, property) already has an entry defined in the DB
             if specialcase:
@@ -2537,7 +2555,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             else:
                 icond=not inb in list(tmp1.keys())
             #
-
+            
             if(icond): # the current (ent/pg, property) has no entry defined in the DB
                 if specialcase:
                     tmp1key=inb+"/0"
@@ -2602,6 +2620,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if(specialcase):
             self.updateGeneralLists()
             self.permutespecial=True
+
 
         return tmpg,update_void,ierr
 
@@ -3378,26 +3397,27 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     ifullname=[iflnm for (ik,iflnm) in propstrs if ik==k][0]
                     for k0,v0 in v.items():
                         if('ents' in v0):
-                            llog.append(self.allShapes[idim]+" - "+ifullname+"("+self.allShapes[idim]+" "+str(v0['ents'][0])+") = {")
-                            for ik in range(len(v0['props'])):
-                                iprop=v0['props'][ik]
-                                propnam=list(iprop.keys())[0]
-                                j0=[j for j in range(len(v0["defaultprops"])) if v0["defaultprops"][j]['name']==propnam][0]
-                                idefprops=v0['defaultprops'][j0]
-                                ikey=list(iprop.keys())[0]
-                                ival0=list(iprop.values())[0][0]
-                                pattern=re.compile("^[0-9]+")
-                                if(re.search(pattern, ikey)!=None):
-                                    ikey=ikey.replace(re.search(pattern, ikey).group(0),'')
-                                if('valueLabels' in idefprops):
-                                    ival=[k1 for k1,v1 in idefprops['valueLabels'].items() if ival0==v1][0]
-                                    if not ("visible" in idefprops and idefprops['visible']==False):
-                                        llog.append(ikey+" : "+str(ival))
-                                else:
-                                    if not ("visible" in idefprops and idefprops['visible']==False):
-                                        llog.append(ikey+" : "+str(ival0))
-
-                            llog.append("}");llog.append("")
+                            for ient in range(len(v0['ents'])):
+                                llog.append(self.allShapes[idim]+" - "+ifullname+"("+self.allShapes[idim]+" "+str(v0['ents'][ient])+") = {")
+                                for ik in range(len(v0['props'])):
+                                    iprop=v0['props'][ik]
+                                    propnam=list(iprop.keys())[0]
+                                    j0=[j for j in range(len(v0["defaultprops"])) if v0["defaultprops"][j]['name']==propnam][0]
+                                    idefprops=v0['defaultprops'][j0]
+                                    ikey=list(iprop.keys())[0]
+                                    ival0=list(iprop.values())[0][0]
+                                    pattern=re.compile("^[0-9]+")
+                                    if(re.search(pattern, ikey)!=None):
+                                        ikey=ikey.replace(re.search(pattern, ikey).group(0),'')
+                                    if('valueLabels' in idefprops):
+                                        ival=[k1 for k1,v1 in idefprops['valueLabels'].items() if ival0==v1][0]
+                                        if not ("visible" in idefprops and idefprops['visible']==False):
+                                            llog.append(ikey+" : "+str(ival))
+                                    else:
+                                        if not ("visible" in idefprops and idefprops['visible']==False):
+                                            llog.append(ikey+" : "+str(ival0))
+    
+                                llog.append("}");llog.append("")
 
         llog.append("");llog.append("############### PROPERTIES assigned to Groups ###############")
         #
@@ -3418,29 +3438,30 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     ifullname=[iflnm for (ik,iflnm) in propstrs if ik==k][0]
                     for k0,v0 in v.items():
                         if('pgs' in v0):
-                            llog.append(self.allShapes[idim]+" - "+ifullname+"(Physical "+self.allShapes[idim]+" "+str(v0['pgs'][0])+") = {")
-                            for ik in range(len(v0['props'])):
-                                iprop=v0['props'][ik]
-                                propnam=list(iprop.keys())[0]
-                                j0=[j for j in range(len(v0["defaultprops"])) if v0["defaultprops"][j]['name']==propnam][0]
-                                idefprops=v0['defaultprops'][j0]
-                                ikey=list(iprop.keys())[0]
-                                ival0=list(iprop.values())[0][0]
-                                pattern=re.compile("^[0-9]+")
-                                if(re.search(pattern, ikey)!=None):
-                                    ikey=ikey.replace(re.search(pattern, ikey).group(0),'')
-                                if('valueLabels' in idefprops):
-                                    ival=[k1 for k1,v1 in idefprops['valueLabels'].items() if ival0==v1][0]
-                                    if not ("visible" in idefprops and idefprops['visible']==False):
-                                    #if(1>0):
-                                        llog.append(ikey+" : "+str(ival))
-                                else:
-                                    if not ("visible" in idefprops and idefprops['visible']==False):
-                                    #if(1>0):
-                                        llog.append(ikey+" : "+str(ival0))
-
-                            llog.append("}");llog.append("")
-            #
+                            for ipg in range(len(v0['pgs'])):
+                                llog.append(self.allShapes[idim]+" - "+ifullname+"(Physical "+self.allShapes[idim]+" "+str(v0['pgs'][ipg])+") = {")
+                                for ik in range(len(v0['props'])):
+                                    iprop=v0['props'][ik]
+                                    propnam=list(iprop.keys())[0]
+                                    j0=[j for j in range(len(v0["defaultprops"])) if v0["defaultprops"][j]['name']==propnam][0]
+                                    idefprops=v0['defaultprops'][j0]
+                                    ikey=list(iprop.keys())[0]
+                                    ival0=list(iprop.values())[0][0]
+                                    pattern=re.compile("^[0-9]+")
+                                    if(re.search(pattern, ikey)!=None):
+                                        ikey=ikey.replace(re.search(pattern, ikey).group(0),'')
+                                    if('valueLabels' in idefprops):
+                                        ival=[k1 for k1,v1 in idefprops['valueLabels'].items() if ival0==v1][0]
+                                        if not ("visible" in idefprops and idefprops['visible']==False):
+                                        #if(1>0):
+                                            llog.append(ikey+" : "+str(ival))
+                                    else:
+                                        if not ("visible" in idefprops and idefprops['visible']==False):
+                                        #if(1>0):
+                                            llog.append(ikey+" : "+str(ival0))
+    
+                                llog.append("}");llog.append("")
+                #
 
 
 
@@ -3449,7 +3470,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         pattern=re.compile("[0-9]")
         ndims=int(re.search(pattern, self.pbType).group(0))
         #ndims=int(re.search(pattern, myapp.pbType).group(0))
-        print("Enter viewAndWrite")
+        print("Enter viewAndWrite iflag=",iflag)
         do_regroup=False
         #
         listlog=[]
