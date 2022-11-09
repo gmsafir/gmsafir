@@ -4323,7 +4323,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         for index, NodeTag in enumerate(allNodeTags):
             allNodeTags_index[NodeTag] = index
         print(allNodeTags)
-        exit()
+        #exit()
 
         # Verifications for Structural 3D:
         if(not self.isThermal and ndims==3):
