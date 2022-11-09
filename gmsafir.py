@@ -20,7 +20,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-10-26 - Version 1.0"
+        self.version="2022-11-08 - Version 1.0"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -4317,7 +4317,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         nelemsm=len(allElemTags[ndimsm])
         nalldims=[k for k in range(ndims+1)]
         nallelems=[len(allElemTags[nalldims[k]]) for k in range(ndims+1)]
-
+        
+        #allNodeTags.index() is slow when often called it can be can be replaced by
+        allNodeTags_index = np.empty((len(allNodeTags)+1), dtype=np.int64)
+        for index, NodeTag in enumerate(allNodeTags):
+            allNodeTags_index[NodeTag] = index
+        print(allNodeTags)
+        exit()
 
         # Verifications for Structural 3D:
         if(not self.isThermal and ndims==3):
@@ -4697,14 +4703,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         # 4/ Prepare F.E. for writing (separately Thermal nd Structural)
         if(self.isThermal): # (Thermal)
-            INelems=[]
-            
-            # inode=allNodeTags.index(allElemNodeTags[ndims][i][icoord]) is slow
-            _allNodeTags_index_allElemNodeTags = {}
-            for ndims, _ElemNodeTag in enumerate(allElemNodeTags):
-                for i, __ElemNodeTag in enumerate(_ElemNodeTag):
-                    for icoord, ___ElemNodeTag in enumerate(__ElemNodeTag): 
-                        _allNodeTags_index_allElemNodeTags[f"{ndims} {i} {icoord}"] = int(___ElemNodeTag-1)
+            INelems=[]                        
             
             try:
                 if(ndims==2):
@@ -4719,8 +4718,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     inodesperelem=self.allElemTypesNbNodes[allElemTypes[ndims][i]]
                     ncoords=[] #number of nodes for the elems, completed for SAFIR to 4 (dim=2) or to 8 (dim=3)
                     for icoord in range(inodesperelem):
-                        #inode=allNodeTags.index(allElemNodeTags[ndims][i][icoord]) # slow
-                        inode = _allNodeTags_index_allElemNodeTags[f"{ndims} {i} {icoord}"]
+                        inode=allNodeTags_index[allElemNodeTags[ndims][i][icoord]]
                         if istsh:
                             inode_safir=correspnodes.index(inode)
                         else:
