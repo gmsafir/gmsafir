@@ -391,10 +391,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
     def getCmdLine(self):
         msg0=""""
             Correct syntax is one of these options:
-            1/ GUI mode in current directory: python g4s.py
-            2/ GUI mode: python g4s.py [file name of a GEO file (fullpath)]
-            3/ GUI mode: python g4s.py [directory name containing 0 or 1 GEO file]
-            4/ Batch mode: python g4s.py [directory name containing 1 or more GEO files] -nopopup
+            1/ GUI mode in current directory: python gmsafir.py 
+            2/ GUI mode: python gmsafir.py [file name of a GEO file (fullpath)]
+            3/ GUI mode: python gmsafir.py [directory name containing 0 or 1 GEO file]
+            4/ Batch mode: python gmsafir.py [directory name containing 1 or more GEO files] -nopopup
             """
         # Manage input file
         if len(sys.argv)==2:
@@ -5511,20 +5511,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             f.write(self.writeLineFortran('(A11,F11.4)',['TINITIAL',val])+"\n")
             #
 
-        # COMEBACK
-        if not istorsrun:
-            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
-            convname=tmp0['name']
-            iscomeback=convname=="COMEBACK"
-            if convname=="COMEBACK":
-                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
-                val=float(tmp0['values'][0])
-                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
-        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
-#             else:
-#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
-        #
-
         #
         #DIAG CAPA: Use matrix diag (DIAG CAPA)
         if self.isThermal and not istorsrun:
@@ -5575,13 +5561,27 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             # NLOAD
             f.write(self.writeLineFortran('(A5,I6)',['NLOAD',NLOAD])+"\n")
             #
-            # HYDROST
-            f.write(self.writeLineFortran('(A7,I6)',['HYDROST',NHYDROST])+"\n")
-            #
             # OBLIQUE
             f.write(self.writeLineFortran('(A7,I6)',['OBLIQUE',NOBLIQUE])+"\n")
-
-
+        
+        #
+        # COMEBACK
+        if not istorsrun:
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
+            convname=tmp0['name']
+            iscomeback=convname=="COMEBACK"
+            if convname=="COMEBACK":
+                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
+                val=float(tmp0['values'][0])
+                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
+        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
+#             else:
+#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
+        #
+        if(not self.isThermal):
+            #
+            # HYDROST
+            f.write(self.writeLineFortran('(A7,I6)',['HYDROST',NHYDROST])+"\n")
 
         #
         #
@@ -5856,13 +5856,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if(not self.isThermal):
             #
             # Write Loads (Structural)
+            f.write(self.writeLineFortran('(A5)',['LOADS'])+"\n")
             if(len(INelemLoads)>0):
-                f.write(self.writeLineFortran('(A5)',['LOADS'])+"\n")
                 for ifunc in INelemLoads:
                     f.write(self.writeLineFortran('(A10,A10)',['FUNCTION',ifunc])+"\n")
                     for i in range(len(INelemLoads[ifunc])):
                         f.write(self.writeLineFortran(INelemLoads[ifunc][i]['fmt'],INelemLoads[ifunc][i]['val'])+"\n")
-                    f.write(self.writeLineFortran('(A10)',['END_LOAD'])+"\n")
+            f.write(self.writeLineFortran('(A10)',['END_LOAD'])+"\n")
 
             # Write Beam Hydrostatic Loads (Structural)
             if(len(INelemHydrost)>0):
@@ -8812,7 +8812,7 @@ if not myapp.nopopup:
     while myapp.eventLoop():
         pass
 else:
-    gmsh.logger.write("Run G4S in Batch mode", level="info")
+    gmsh.logger.write("Run GmSAFIR in Batch mode", level="info")
     tmpfiles2=[k for k in os.listdir(myapp.dir) if (re.search('.g4s$',k)!=None)]
     #
     if(tmpfiles2!=[]):
