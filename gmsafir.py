@@ -5561,6 +5561,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             # NLOAD
             f.write(self.writeLineFortran('(A5,I6)',['NLOAD',NLOAD])+"\n")
             #
+            # HYDROST
+            f.write(self.writeLineFortran('(A7,I6)',['HYDROST',NHYDROST])+"\n")
+
+            #
             # OBLIQUE
             f.write(self.writeLineFortran('(A7,I6)',['OBLIQUE',NOBLIQUE])+"\n")
         
@@ -5577,11 +5581,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
 #             else:
 #                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
-        #
-        if(not self.isThermal):
-            #
-            # HYDROST
-            f.write(self.writeLineFortran('(A7,I6)',['HYDROST',NHYDROST])+"\n")
 
         #
         #
@@ -5854,16 +5853,17 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
 
         if(not self.isThermal):
+            f.write(self.writeLineFortran('(A5)',['LOADS'])+"\n")
             #
             # Write Loads (Structural)
-            f.write(self.writeLineFortran('(A5)',['LOADS'])+"\n")
             if(len(INelemLoads)>0):
                 for ifunc in INelemLoads:
                     f.write(self.writeLineFortran('(A10,A10)',['FUNCTION',ifunc])+"\n")
                     for i in range(len(INelemLoads[ifunc])):
                         f.write(self.writeLineFortran(INelemLoads[ifunc][i]['fmt'],INelemLoads[ifunc][i]['val'])+"\n")
-            f.write(self.writeLineFortran('(A10)',['END_LOAD'])+"\n")
-
+                    f.write(self.writeLineFortran('(A10)',['END_LOAD'])+"\n")
+            else:
+                f.write(self.writeLineFortran('(A10)',['END_LOAD'])+"\n")
             # Write Beam Hydrostatic Loads (Structural)
             if(len(INelemHydrost)>0):
                 for ifuncwght in INelemHydrost:
