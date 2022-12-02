@@ -115,8 +115,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             self.initCompleteSafirDB(self.safirDB)
             self.pbType="Thermal 2D" #Initialization of problem type
 
-        self.isThermal="Thermal" in self.pbType
-
         if(self.nopopup): # Batch mode
             return
 
@@ -396,6 +394,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             3/ GUI mode: python gmsafir.py [directory name containing 0 or 1 GEO file]
             4/ Batch mode: python gmsafir.py [directory name containing 1 or more GEO files] -nopopup
             """
+        
         # Manage input file
         if len(sys.argv)==2:
             arg0=sys.argv[1]
@@ -476,6 +475,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 #                 f.close()
 #                 gmsh.open(self.geofile)
         #
+       
         elif len(sys.argv)==3:
             arg0=sys.argv[1]
             arg1=sys.argv[2]
@@ -8813,38 +8813,35 @@ if not myapp.nopopup:
         pass
 else:
     gmsh.logger.write("Run GmSAFIR in Batch mode", level="info")
+    tmpfiles=[k for k in os.listdir(myapp.dir) if (re.search('.geo$',k)!=None)]
     tmpfiles2=[k for k in os.listdir(myapp.dir) if (re.search('.g4s$',k)!=None)]
     #
     if(tmpfiles2!=[]):
-        if(len(tmpfiles2)==1):
-            myapp.g4sfile=os.path.join(myapp.dir,tmpfiles2[0])
-            gmsh.logger.write("Ok, found a single G4S file, "+os.path.basename(myapp.g4sfile)+" : use it for batch mode.", level="info")
-            myapp.getG4sJson(myapp.g4sfile) # if existing DB in input director
+        for ig4s in tmpfiles2:
+            myapp.g4sfile=os.path.join(myapp.dir,ig4s)
+            gfile=myapp.g4sfile.replace('g4s','geo')
             #
-            tmpfiles=[k for k in os.listdir(myapp.dir) if (re.search('.geo$',k)!=None)]
-            if(tmpfiles!=[]):
-                gmsh.logger.write("Ok, found the following GEO files, process them in batch mode:\n"+str(tmpfiles), level="info")
+            if(os.path.exists(gfile)):
+                gmsh.open(os.path.join(myapp.dir,gfile))
+                myapp.getG4sJson(myapp.g4sfile)
+                myapp.INfile=gfile.replace(".geo",".IN")
+                myapp.isThermal="Thermal" in myapp.pbType
+                pattern=re.compile("[0-9]")
+                ndims=int(re.search(pattern, myapp.pbType).group(0))
+                gmsh.model.geo.synchronize()
+                gmsh.model.geo.synchronize()
                 #
-                for gfile in tmpfiles:
-                    gmsh.open(os.path.join(myapp.dir,gfile))
-                    myapp.INfile=gfile.replace(".geo",".IN")
-                    pattern=re.compile("[0-9]")
-                    ndims=int(re.search(pattern, myapp.pbType).group(0))
-                    gmsh.model.geo.synchronize()
-                    #
-                    if(ndims==2):
-                        gmsh.model.mesh.generate(2)
-                    if(ndims==3):
-                        gmsh.model.mesh.generate(3)
-                    #
-                    myapp.createIN()
-        #
-        else:
-            msg="-- Batch mode: Too many G4S files in the directory - keep only one --"
-            gmsh.logger.write(msg+"\n", level="error")
+                if(ndims==2):
+                    gmsh.model.mesh.generate(2)
+                if(ndims==3):
+                    gmsh.model.mesh.generate(3)
+                #
+                myapp.createIN()
+            else:
+                gmsh.logger.write("No GEO found in the folder associated with G4S file "+ig4s, level="warning")
     #
     else:
-        msg="-- Batch mode: No G4S file in the directory - need one --"
+        msg="-- Batch mode: No G4S file in the directory - need at least one --"
         gmsh.logger.write(msg+"\n", level="error")
 
 
