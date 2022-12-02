@@ -389,39 +389,74 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
     def getCmdLine(self):
         msg0=""""
             Correct syntax is one of these options:
-            1/ GUI mode in current directory: python gmsafir.py 
+            1/ GUI mode in current directory: python gmsafir.py
             2/ GUI mode: python gmsafir.py [file name of a GEO file (fullpath)]
             3/ GUI mode: python gmsafir.py [directory name containing 0 or 1 GEO file]
-            4/ Batch mode: python gmsafir.py [directory name containing 1 or more GEO files] -nopopup
+            4/ Batch mode: python gmsafir.py [full_path_directory] -nopopup: process all couples (GEO,G4S) found in the directory
+            5/ Batch mode: python gmsafir.py [full_path_G4Sfile] -nopopup: process all GEO files found in the directory with this G4S file
             """
-        
-        # Manage input file
-        if len(sys.argv)==2:
-            arg0=sys.argv[1]
 
-            if("-help" in arg0):
-                msg=""
-                gmsh.logger.write(msg0, level="info")
-                self.go_on=False
-            #
-            if(re.search('.geo$',arg0)!=None): #Input is suposed to be a GEO file
-                self.geofile=arg0
-                self.dir=os.path.dirname(self.geofile)
-                if(os.path.exists(self.geofile)):
-                    gmsh.logger.write("Ok, this .geo file does exist - The run directory is the directory containing this geofile", level="info")
-                    gmsh.open(self.geofile)
+        # GUI MODE
+        if(not "-nopopup" in sys.argv):
+            # Manage input file
+            if len(sys.argv)==2:
+                arg0=sys.argv[1]
+    
+                if("-help" in arg0):
+                    msg=""
+                    gmsh.logger.write(msg0, level="info")
+                    self.go_on=False
                 #
-#                 else:
-#                     gmsh.logger.write("GEO file doesn't exist yet", level="info")
-#                     f=open(self.geofile,"w")
-#                     f.write("SetFactory('OpenCASCADE');\n")
-#                     f.close()
-
+                if(re.search('.geo$',arg0)!=None): #Input is suposed to be a GEO file
+                    self.geofile=arg0
+                    self.dir=os.path.dirname(self.geofile)
+                    if(os.path.exists(self.geofile)):
+                        gmsh.logger.write("Ok, this .geo file does exist - The run directory is the directory containing this geofile", level="info")
+                        gmsh.open(self.geofile)
+                    #
+    #                 else:
+    #                     gmsh.logger.write("GEO file doesn't exist yet", level="info")
+    #                     f=open(self.geofile,"w")
+    #                     f.write("SetFactory('OpenCASCADE');\n")
+    #                     f.close()
+    
+                #
+                elif(os.path.isdir(arg0)): #input is supposed to be a directory
+                    self.dir=arg0
+                    # Get potential  GEO file
+                    tmpfiles=[k for k in os.listdir(arg0) if (re.search('.geo$',k)!=None)]
+                    if(tmpfiles!=[]): # there exists at least 1 GEO file
+                        if(len(tmpfiles)==1):
+                            gfile=tmpfiles[0]
+                            self.geofile=os.path.join(self.dir,gfile)
+                            gmsh.logger.write("Ok, found a single GEO file in this directory, "+os.path.basename(self.geofile)+" - It will be used", level="info")
+                            gmsh.open(self.geofile)
+                            #
+                        elif(len(tmpfiles)>1):
+                            msg="-- Too many GEO files in the directory - Need to specify one"
+                            gmsh.logger.write(msg+"\n"+msg0, level="info")
+    #                         self.go_on=False
+                    #
+                    else: # no GEO file
+                        gmsh.logger.write("No GEO file found in the directory", level="info")
+    #                     gfile="untitled.geo"
+    #                     self.geofile=os.path.join(self.dir,gfile)
+    #                     f=open(self.geofile,"w")
+    #                     f.write("SetFactory('OpenCASCADE');\n")
+    #                     f.close()
+    #                     gmsh.open(self.geofile)
+                        #
+                else:
+                    msg="""
+                    Input is neither a valid directory nor a GEO file
+                    """
+                    gmsh.logger.write(msg+"\n"+msg0, level="error")
+                    self.go_on=False
             #
-            elif(os.path.isdir(arg0)): #input is supposed to be a directory
-                self.dir=arg0
-                # Get potential  GEO file
-                tmpfiles=[k for k in os.listdir(arg0) if (re.search('.geo$',k)!=None)]
+            elif len(sys.argv)==1:
+                #gmsh.logger.write("Start with no parameters", level="info")
+                self.dir=os.getcwd()
+                tmpfiles=[k for k in os.listdir(self.dir) if (re.search('.geo$',k)!=None)]
                 if(tmpfiles!=[]): # there exists at least 1 GEO file
                     if(len(tmpfiles)==1):
                         gfile=tmpfiles[0]
@@ -432,74 +467,60 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     elif(len(tmpfiles)>1):
                         msg="-- Too many GEO files in the directory - Need to specify one"
                         gmsh.logger.write(msg+"\n"+msg0, level="info")
-#                         self.go_on=False
+    #                     self.go_on=False
                 #
                 else: # no GEO file
                     gmsh.logger.write("No GEO file found in the directory", level="info")
-#                     gfile="untitled.geo"
-#                     self.geofile=os.path.join(self.dir,gfile)
-#                     f=open(self.geofile,"w")
-#                     f.write("SetFactory('OpenCASCADE');\n")
-#                     f.close()
-#                     gmsh.open(self.geofile)
-                    #
-            else:
-                msg="""
-                Input is neither a valid directory nor a GEO file
-                """
-                gmsh.logger.write(msg+"\n"+msg0, level="error")
-                self.go_on=False
-        #
-        elif len(sys.argv)==1:
-            #gmsh.logger.write("Start with no parameters", level="info")
-            self.dir=os.getcwd()
-            tmpfiles=[k for k in os.listdir(self.dir) if (re.search('.geo$',k)!=None)]
-            if(tmpfiles!=[]): # there exists at least 1 GEO file
-                if(len(tmpfiles)==1):
-                    gfile=tmpfiles[0]
-                    self.geofile=os.path.join(self.dir,gfile)
-                    gmsh.logger.write("Ok, found a single GEO file in this directory, "+os.path.basename(self.geofile)+" - It will be used", level="info")
-                    gmsh.open(self.geofile)
-                    #
-                elif(len(tmpfiles)>1):
-                    msg="-- Too many GEO files in the directory - Need to specify one"
-                    gmsh.logger.write(msg+"\n"+msg0, level="info")
-#                     self.go_on=False
+    #                 gfile="untitled.geo"
+    #                 self.geofile=os.path.join(self.dir,gfile)
+    #                 f=open(self.geofile,"w")
+    #                 f.write("SetFactory('OpenCASCADE');\n")
+    #                 f.close()
+    #                 gmsh.open(self.geofile)
             #
-            else: # no GEO file
-                gmsh.logger.write("No GEO file found in the directory", level="info")
-#                 gfile="untitled.geo"
-#                 self.geofile=os.path.join(self.dir,gfile)
-#                 f=open(self.geofile,"w")
-#                 f.write("SetFactory('OpenCASCADE');\n")
-#                 f.close()
-#                 gmsh.open(self.geofile)
-        #
-       
-        elif len(sys.argv)==3:
-            arg0=sys.argv[1]
-            arg1=sys.argv[2]
-            if(arg1!="-nopopup" or (not os.path.isdir(arg0))):
+    
+            elif len(sys.argv)==3:
+                arg0=sys.argv[1]
+                arg1=sys.argv[2]
+                if(arg1!="-nopopup" or (not os.path.isdir(arg0))):
+                    msg="-- Incorrect parameters in command line -- "
+                    gmsh.logger.write(msg+"\n"+msg0, level="error")
+                    self.go_on=False
+                else:
+                    self.dir=arg0
+                    self.nopopup=True
+            else:
                 msg="-- Incorrect parameters in command line -- "
                 gmsh.logger.write(msg+"\n"+msg0, level="error")
                 self.go_on=False
-            else:
-                self.dir=arg0
-                self.nopopup=True
+    
+            # Look for the G4S file and IN file
+            if self.go_on:
+                #gfile=os.path.basename(self.geofile)
+                self.g4sfile=self.geofile.replace(".geo",".g4s")
+                if(os.path.exists(self.g4sfile)):
+                    gmsh.logger.write("G4S file corresponding to this GEO file does already exist - It will be used", level="info")
+                self.INfile=self.geofile.replace(".geo",".IN")
+                if(os.path.exists(self.INfile)):
+                    gmsh.logger.write("SAFIR .IN file does exist - It will be overwritten when .IN file creation will be requested", level="warning")
+        
+        # BATCH MODE
         else:
-            msg="-- Incorrect parameters in command line -- "
-            gmsh.logger.write(msg+"\n"+msg0, level="error")
-            self.go_on=False
+            if len(sys.argv)==3:
+                arg0=sys.argv[1]
+                arg1=sys.argv[2]
+                if(arg1!="-nopopup"):
+                    msg="-- Incorrect parameters in command line -- "
+                    gmsh.logger.write(msg+"\n"+msg0, level="error")
+                    self.go_on=False
+                else:
+                    self.dir=arg0
+                    self.nopopup=True
+            else:
+                msg="-- Incorrect parameters in command line -- "
+                gmsh.logger.write(msg+"\n"+msg0, level="error")
+                self.go_on=False 
 
-        # Look for the G4S file and IN file
-        if self.go_on:
-            #gfile=os.path.basename(self.geofile)
-            self.g4sfile=self.geofile.replace(".geo",".g4s")
-            if(os.path.exists(self.g4sfile)):
-                gmsh.logger.write("G4S file corresponding to this GEO file does already exist - It will be used", level="info")
-            self.INfile=self.geofile.replace(".geo",".IN")
-            if(os.path.exists(self.INfile)):
-                gmsh.logger.write("SAFIR .IN file does exist - It will be overwritten when .IN file creation will be requested", level="warning")
 
 
     #Load ContextDB and SafirDB from the disk
@@ -1226,11 +1247,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             ient=itag
 
         print("ishp=",ishp)
-        
+
         #Select the 2 points of the Curve
         #shpedges=gmsh.model.getBoundary([(1, ient)],recursive=True)
         shpedges=gmsh.model.getBoundary([(1, ient)],combined=False)
-        
+
         x=[];y=[];z=[]
         for ie in range(2):
             inode=abs(int(shpedges[ie][1]))
@@ -1340,7 +1361,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         for i in range(3):
             print(VP[i])
-            
+
         # Re-create the list-based postpro view
 
         lstaxes=["x'","y'","z'"]
@@ -1363,7 +1384,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             gmsh.view.addListData(self.LAXtag, "VP", self.nVPsLAX, self.pointLAX)
             gmsh.graphics.draw()
         #
-        
+
         return(Yp[0],Yp[1],Yp[2])
 
 
@@ -2187,8 +2208,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         print("self.add_or_remove before updateDB=",self.add_or_remove)
         self.contextDB,update_void,ierr=self.updateDB(self.contextDB,self.pbType,toStore)
-        
-        
+
+
 # Eval DEBUG
         shptyp="Volume";pbtyp="Thermal 3D";iprop0="Volume Material"
         tmp3=self.getDBValue(self.contextDB,[("children","name",shptyp),("children","name",pbtyp),("children","name",iprop0)],True)
@@ -2197,7 +2218,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         tmp4=ik[ikey]
         print('tmp1 in manageDB=',tmp4)
         #
-        
+
         #
         #print("all_previous_found=",all_previous_found)
                     #print ("iparam=",iparam)
@@ -2556,7 +2577,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             else:
                 icond=not inb in list(tmp1.keys())
             #
-            
+
             if(icond): # the current (ent/pg, property) has no entry defined in the DB
                 if specialcase:
                     tmp1key=inb+"/0"
@@ -3417,7 +3438,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     else:
                                         if not ("visible" in idefprops and idefprops['visible']==False):
                                             llog.append(ikey+" : "+str(ival0))
-    
+
                                 llog.append("}");llog.append("")
 
         llog.append("");llog.append("############### PROPERTIES assigned to Groups ###############")
@@ -3460,7 +3481,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         if not ("visible" in idefprops and idefprops['visible']==False):
                                         #if(1>0):
                                             llog.append(ikey+" : "+str(ival0))
-    
+
                                 llog.append("}");llog.append("")
                 #
 
@@ -4317,7 +4338,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         nelemsm=len(allElemTags[ndimsm])
         nalldims=[k for k in range(ndims+1)]
         nallelems=[len(allElemTags[nalldims[k]]) for k in range(ndims+1)]
-        
+
         #allNodeTags.index() is slow when often called it can be can be replaced by
         allNodeTags_index = np.empty((len(allNodeTags)+1), dtype=np.int64)
         for index, NodeTag in enumerate(allNodeTags):
@@ -4604,7 +4625,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # 2/ Prepare imposed temperatures for writing (separately Thermal and Structural)
         INfixnodes=[]
         singlenodes=[]
-        
+
         if(self.isThermal): #(Thermal)
             fixnodes={}
             try:
@@ -4622,7 +4643,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 ival=ElemVals[igtypdim][i]
                                 #
                                 if(ival!="-1"):
-                                    
+
                                     inodesperelem=self.allElemTypesNbNodes[allElemTypes[kdims][i]]
                                     #
                                     for icoord in range(inodesperelem):
@@ -4644,13 +4665,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         if (singlenodes==[] or not inode in singlenodes):
                                             singlenodes.append(inode)
                                             print(inode_safir)
-                                        
+
                                             for ijval in ival.split(";"):
                                                 tmp={}
                                                 tmp['val']=['BLOCK',inode_safir,ijval]
                                                 tmp['fmt']='(A10,I6,A15)'
                                                 INfixnodes.append(tmp)
-                            
+
                             print('INfixnodes=',INfixnodes)
             except Exception as emsg:
                 gmsh.logger.write("Pb in getting fixations by node:"+str(emsg), level="error")
@@ -4689,7 +4710,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #for inode,ival in fixnodes.items():
                                     if (singlenodes==[] or not inode in singlenodes):
                                         singlenodes.append(inode)
-                                        
+
                                         for ijval in ival.split(";"):
                                             ivaltab=ijval.split("/")[0].split(' - ')
                                             tmp={}
@@ -4703,8 +4724,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         # 4/ Prepare F.E. for writing (separately Thermal nd Structural)
         if(self.isThermal): # (Thermal)
-            INelems=[]                        
-            
+            INelems=[]
+
             try:
                 if(ndims==2):
                     nnodesperelemmax=4
@@ -5072,7 +5093,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 ipref='FLUX'
                             else:
                                 ipref='F'
-                            
+
                             # Préparation des variables : on a besoin d'un vecteur frtierfaceS
                             frtierfaceS = []
                             frtierfaceSi = []
@@ -5567,7 +5588,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             # OBLIQUE
             f.write(self.writeLineFortran('(A7,I6)',['OBLIQUE',NOBLIQUE])+"\n")
-        
+
         #
         # COMEBACK
         if not istorsrun:
@@ -8807,16 +8828,45 @@ print(sys.argv)
 
 myapp=Myapp()
 
-if not myapp.nopopup:
+if not myapp.nopopup: # GUI MODE
     gmsh.fltk.initialize()
     while myapp.eventLoop():
         pass
-else:
+else: # BATCH MODE
     gmsh.logger.write("Run GmSAFIR in Batch mode", level="info")
-    tmpfiles=[k for k in os.listdir(myapp.dir) if (re.search('.geo$',k)!=None)]
-    tmpfiles2=[k for k in os.listdir(myapp.dir) if (re.search('.g4s$',k)!=None)]
     #
-    if(tmpfiles2!=[]):
+
+    if(re.search('.g4s$',myapp.dir)!=None): # process all GEO files found in the directory with this G4S file
+        #
+        myapp.g4sfile=myapp.dir
+        myapp.dir=os.path.dirname(myapp.dir)
+        #
+        tmpfiles2=[k for k in os.listdir(myapp.dir) if (re.search('.g4s$',k)!=None)]
+        gmsh.logger.write("Ok, G4S file, "+os.path.basename(myapp.g4sfile)+" is used for all GEO files in the directory.", level="info")
+        myapp.getG4sJson(myapp.g4sfile) # if existing DB in input director
+        #
+        tmpfiles=[k for k in os.listdir(myapp.dir) if (re.search('.geo$',k)!=None)]
+        if(tmpfiles!=[]):
+            gmsh.logger.write("Ok, found the following GEO files, process them in batch mode:\n"+str(tmpfiles), level="info")
+            #
+            for gfile in tmpfiles:
+                gmsh.open(os.path.join(myapp.dir,gfile))
+                myapp.INfile=gfile.replace(".geo",".IN")
+                myapp.isThermal="Thermal" in myapp.pbType
+                pattern=re.compile("[0-9]")
+                ndims=int(re.search(pattern, myapp.pbType).group(0))
+                gmsh.model.geo.synchronize()
+                #
+                if(ndims==2):
+                    gmsh.model.mesh.generate(2)
+                if(ndims==3):
+                    gmsh.model.mesh.generate(3)
+                #
+                myapp.createIN()
+    #
+    elif(os.path.isdir(myapp.dir)): # process all couples (GEO,G4S) found in the directory
+        tmpfiles=[k for k in os.listdir(myapp.dir) if (re.search('.geo$',k)!=None)]
+        tmpfiles2=[k for k in os.listdir(myapp.dir) if (re.search('.g4s$',k)!=None)]
         for ig4s in tmpfiles2:
             myapp.g4sfile=os.path.join(myapp.dir,ig4s)
             gfile=myapp.g4sfile.replace('g4s','geo')
