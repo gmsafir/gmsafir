@@ -115,6 +115,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             self.initCompleteSafirDB(self.safirDB)
             self.pbType="Thermal 2D" #Initialization of problem type
 
+        self.isThermal="Thermal" in self.pbType
+
         if(self.nopopup): # Batch mode
             return
 
@@ -398,6 +400,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         # GUI MODE
         if(not "-nopopup" in sys.argv):
+                                                      
             # Manage input file
             if len(sys.argv)==2:
                 arg0=sys.argv[1]
@@ -457,6 +460,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 #gmsh.logger.write("Start with no parameters", level="info")
                 self.dir=os.getcwd()
                 tmpfiles=[k for k in os.listdir(self.dir) if (re.search('.geo$',k)!=None)]
+                
                 if(tmpfiles!=[]): # there exists at least 1 GEO file
                     if(len(tmpfiles)==1):
                         gfile=tmpfiles[0]
@@ -520,7 +524,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 msg="-- Incorrect parameters in command line -- "
                 gmsh.logger.write(msg+"\n"+msg0, level="error")
                 self.go_on=False 
-
 
 
     #Load ContextDB and SafirDB from the disk
