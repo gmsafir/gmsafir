@@ -20,7 +20,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-12-02 - Version 1.0"
+        self.version="2022-12-05 - Version 1.0"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -5899,11 +5899,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(self.writeLineFortran('(A10)',['END_HYDRO'])+"\n")
 
             # Write Mass (Structural)
+            f.write(self.writeLineFortran('(A10)',['MASS'])+"\n")
             if(len(INelemMass)>0):
-                f.write(self.writeLineFortran('(A10)',['MASS'])+"\n")
                 for i in range(len(INelemMass)):
                     f.write(self.writeLineFortran(INelemMass[i]['fmt'],INelemMass[i]['val'])+"\n")
-                f.write(self.writeLineFortran('(A10)',['END_MASS'])+"\n")
+            f.write(self.writeLineFortran('(A10)',['END_MASS'])+"\n")
 
         #
         # Write materials (Thermal and Structural)
