@@ -21,7 +21,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-12-05 - Version 1.0"
+        self.version="2022-12-12 - Version 1.0"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -5495,7 +5495,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         # FINAL WRITING OF .IN FILE (F.E., materials and constraints)
         #
-        # 1/ Write header
+        # 1/ SERIES 1 (thermal and meca) - Comments
         f=open(os.path.join(self.dir,self.INfile),'w')
         #
         f.write("InputFile created with GMSH-SAFIR Interface\n")
@@ -5506,9 +5506,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Title2")],False)
         f.write(tmp0['values'][0]+"\n")
         f.write("\n")
+        
+        # SERIES 2 (thermal and meca) - Quantity of nodes
         f.write(self.writeLineFortran('(A10,I6)',['NNODE',len(INnodes)])+"\n")
+        
+        
+        # SERIES 3 (thermal and meca) - Quantity of dimensions
         f.write(self.writeLineFortran('(A10,I6)',['NDIM',ndims])+"\n")
         #
+        # SERIES 4 (thermal and meca) - Degrees of freedom
         if(self.isThermal):
             f.write(self.writeLineFortran('(A10,I6)',['NDOFMAX',1])+"\n")
         else:
@@ -5519,11 +5525,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 #         f.write(self.writeLineFortran('(A11)',['END_NDDL'])+"\n")
         #
 
+        # SERIES 5 (thermal and meca) - Number of cores (OBSOLETE)
+        
 #         # OBSOLETE - Only 1 SOLVER left = PARDISO
 #         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","name","PARDISO"),("props","name","NCORES")],False)
 #         val=tmp0['values'][0]
 #         f.write(self.writeLineFortran('(A10,I11)',['NCORES',val])+"\n")
 
+
+        # SERIES 6 (thermal) - Thermal calculation
         if self.isThermal and not istorsrun:
             f.write(self.writeLineFortran('(A10)',['TEMPERAT'])+"\n")
             #
@@ -5536,7 +5546,40 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             f.write(self.writeLineFortran('(A11,F11.4)',['TINITIAL',val])+"\n")
             #
 
-        #
+
+        # SERIES 6 (meca) - Loads
+        if(not self.isThermal):
+            # Loads
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Mode")],False)
+            modename=tmp0['name']
+            modecode=tmp0['codename']
+            f.write(self.writeLineFortran('(A15)',[modecode])+"\n")
+            #
+            # NLOAD
+            f.write(self.writeLineFortran('(A5,I6)',['NLOAD',NLOAD])+"\n")
+            #
+            # HYDROST
+            f.write(self.writeLineFortran('(A7,I6)',['HYDROST',NHYDROST])+"\n")
+
+        # SERIES 7 (meca) - Inclined supports 
+        if(not self.isThermal):
+            # OBLIQUE
+            f.write(self.writeLineFortran('(A7,I6)',['OBLIQUE',NOBLIQUE])+"\n")
+        
+        # SERIES 7 (thermal) and SERIES 8 (meca) - Convergence strategy (COMEBACK)
+        if not istorsrun:
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
+            convname=tmp0['name']
+            iscomeback=convname=="COMEBACK"
+            if convname=="COMEBACK":
+                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
+                val=float(tmp0['values'][0])
+                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
+        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
+#             else:
+#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
+
+        # SERIES 8 (thermal) - Diagonal capacity
         #DIAG CAPA: Use matrix diag (DIAG CAPA)
         if self.isThermal and not istorsrun:
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","DIAG CAPA")],False)
@@ -5544,6 +5587,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if hasdcapa:
                 f.write(self.writeLineFortran('(A10)',['DIAG_CAPA'])+"\n")
         #
+ 
+        # SERIES 9 (thermal) - Storage of results
         if(ndims==2 and self.isThermal):
             if(temtyp!="NOMAKE"):
                 tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Type of calculation")],False)
@@ -5570,48 +5615,17 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 elif(sufftem=="TEM"):
                     preftype="BEAM_TYPE"
                 f.write(self.writeLineFortran('(A10,I6)',[preftype,ielem])+"\n")
-
         #
         else:
             typcal="USE_CURVES"
-
-
-        if(not self.isThermal):
-            # Loads
-            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Mode")],False)
-            modename=tmp0['name']
-            modecode=tmp0['codename']
-            f.write(self.writeLineFortran('(A15)',[modecode])+"\n")
-            #
-            # NLOAD
-            f.write(self.writeLineFortran('(A5,I6)',['NLOAD',NLOAD])+"\n")
-            #
-            # HYDROST
-            f.write(self.writeLineFortran('(A7,I6)',['HYDROST',NHYDROST])+"\n")
-
-            #
-            # OBLIQUE
-            f.write(self.writeLineFortran('(A7,I6)',['OBLIQUE',NOBLIQUE])+"\n")
-
         #
-        # COMEBACK
-        if not istorsrun:
-            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
-            convname=tmp0['name']
-            iscomeback=convname=="COMEBACK"
-            if convname=="COMEBACK":
-                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
-                val=float(tmp0['values'][0])
-                f.write(self.writeLineFortran('(A15,F15.1)',[convname,val])+"\n")
-        # Next lines commented (2021-09-06) for sake of compatibility with SAFIR2019
-#             else:
-#                 f.write(self.writeLineFortran('(A15)',[convname])+"\n")
-
-        #
-        #
+        
+        # SERIES 10 (thermal) and SERIES 9 (meca) - Materials
         #MATS
         f.write(self.writeLineFortran('(A4,I3)',['NMAT',len(self.listMats)])+"\n")
         #
+                
+        # SERIES 11 (thermal) and SERIES 10 (meca) - Elements
         f.write(self.writeLineFortran('(A11)',['ELEMENTS'])+"\n")
         #
         if(self.isThermal): # Header (Thermal)
@@ -5672,10 +5686,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             # Springs (TBD)
             #
-
-        #
         f.write(self.writeLineFortran('(A11)',['END_ELEM'])+"\n")
         #
+        
+        # SERIES 12 (thermal) and SERIES 11 (meca) - Nodes
         # 2/ Write down all nodes (Thermal and Structural)
         f.write(self.writeLineFortran('(A10)',['NODES'])+"\n")
         for i in range(len(INnodes)):
@@ -5688,7 +5702,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             f.write(self.writeLineFortran(INnodes[i]['fmt'],ivals)+"\n")
 
         #
-        # 3/ Write nodelines (Thermal 2D only)
+        
+        # SERIES 13 (thermal) - Nodeline
+        # Write nodelines (Thermal 2D only)
         if(ndims==2 and self.isThermal and not istsh):
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Global center (Yo)")],False)
             y0=tmp0['values'][0]
@@ -5705,7 +5721,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(self.writeLineFortran('(A10,F5.1,F5.1)',['YC_ZC',float(yc),float(zc)])+"\n")
             #
             #
-        # 4/ Write fixations (Thermal and Structural)
+        # SERIES 14 (thermal) - Imposed termperatures, and SERIES 12 (meca) - Supports and imposed 
+        # Write fixations (Thermal and Structural)
         f.write(self.writeLineFortran('(A10)',['FIXATIONS'])+"\n")
         #
         for i in range(len(INfixnodes)):
@@ -5715,54 +5732,19 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             f.write(self.writeLineFortran(SAMEnodes[i]['fmt'],SAMEnodes[i]['val'])+"\n")
         f.write(self.writeLineFortran('(A10)',['END_FIX'])+"\n")
 
+
+        # SERIES 15 (thermal) - Solid elements
         # Write F.E. and constraints, separately for Thermal and Structural
-        if(self.isThermal): # Write F.E. and constraints (Thermal)
+        if(self.isThermal):
             # 5/ Write elems (Thermal)
             f.write(self.writeLineFortran('(A10)',['NODOFSOLID'])+"\n")
             for i in range(len(INelems)):
                 f.write(self.writeLineFortran(INelems[i]['fmt'],INelems[i]['val'])+"\n")
 
-            #6 /Write Frontiers (Thermal)
-            if not istorsrun:
-                f.write(self.writeLineFortran('(A10)',['FRONTIER'])+"\n")
-                for i in range(len(INfrontiers)):
-                    f.write(self.writeLineFortran(INfrontiers[i]['fmt'],INfrontiers[i]['val'])+"\n")
-                    #
-                f.write(self.writeLineFortran('(A10)',['END_FRONT'])+"\n")
 
-            # 7/ Write Voids (Thermal 2D)
-            if(ndims==2 and self.nvoids>0 and not istorsrun):
-                for ivoid,tmpvoid in INvoids.items():
-                    f.write(self.writeLineFortran('(A10)',['VOID'])+"\n")
-                    for i in range(len(tmpvoid)):
-                        f.write(self.writeLineFortran(tmpvoid[i]['fmt'],tmpvoid[i]['val'])+"\n")
-                    f.write(self.writeLineFortran('(A10)',['END_VOID'])+"\n")
 
-            #8/ Write Symmetries (Thermal)
-            f.write(self.writeLineFortran('(A10)',['SYMMETRY'])+"\n")
-
-            # Write Realsym (Thermal 2D)
-            if(ndims==2):
-                try:
-                    for k,v in syms['real_sym;1'].items():
-                        f.write(self.writeLineFortran('(A10,I6,I6)',['REALSYM',v[0],v[1]])+"\n")
-                except Exception as emsg:
-                    gmsh.logger.write("Pb in writing real symmetry axis:"+str(emsg), level="error")
-                    return -1
-
-            #Write VoidSym (Thermal 2D)
-            if(ndims==2 and self.nvoids>0):
-                try:
-                    for k,v in syms['void_sym;1'].items():
-                        val=symvals['void_sym;1'][k]
-                        f.write(self.writeLineFortran('(A10,I6,I6,I6)',['SYMVOID',v[0],v[1],val])+"\n")
-                except Exception as emsg:
-                    gmsh.logger.write("Pb in writing void symmetry axis:"+str(emsg), level="error")
-                    return -1
-
-            f.write(self.writeLineFortran('(A10)',['END_SYM'])+"\n")
-        #
-        else:  # Write F.E. and constraints (Structural)
+        # SERIES 12 (meca) - Beam elements
+        if(not self.isThermal):
             #
             # Write Beams (Structural)
             if(len(INelemBeams)>0):
@@ -5782,6 +5764,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 for i in range(len(INelemBeams)):
                     f.write(self.writeLineFortran(INelemBeams[i]['fmt'],INelemBeams[i]['val'])+"\n")
 
+
+        # SERIES 15 (meca) - Solid elements
+        if(not self.isThermal):
             # Write Solid (Structural)
             if(len(INelemSolid)>0):
                 f.write(self.writeLineFortran('(A10)',['NODOFSOLID'])+"\n")
@@ -5790,6 +5775,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     f.write(self.writeLineFortran(INelemSolid[i]['fmt'],INelemSolid[i]['val'])+"\n")
 
             #
+        # SERIES 16 (meca) - Shell elements
+        if(not self.isThermal):
             # Write Shells (Structural)
             if(len(INelemShells)>0):
                 f.write(self.writeLineFortran('(A10)',['NODOFSHELL'])+"\n")
@@ -5830,6 +5817,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     f.write(self.writeLineFortran(INelemShells[i]['fmt'],INelemShells[i]['val'])+"\n")
             #
 
+        # SERIES 17 (meca) -Truss elements
+        if(not self.isThermal):
             # Write Truss (Structural)
             if(len(INelemTruss)>0):
                 f.write(self.writeLineFortran('(A10)',['NODOFTRUSS'])+"\n")
@@ -5847,14 +5836,65 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     f.write(self.writeLineFortran(INelemTruss[i]['fmt'],INelemTruss[i]['val'])+"\n")
 
             #
-            # Write Oblique Supports (Structural) (also ok with Pardiso solver, though documentation says only possible with Cholesky solver)
+
+        # SERIES 16 (thermal) - Frontiers
+        if(self.isThermal):
+            #6 /Write Frontiers (Thermal)
+            if not istorsrun:
+                f.write(self.writeLineFortran('(A10)',['FRONTIER'])+"\n")
+                for i in range(len(INfrontiers)):
+                    f.write(self.writeLineFortran(INfrontiers[i]['fmt'],INfrontiers[i]['val'])+"\n")
+                    #
+                f.write(self.writeLineFortran('(A10)',['END_FRONT'])+"\n")
+
+        # SERIES 17 (thermal) - Voids
+        if(self.isThermal):
+            # 7/ Write Voids (Thermal 2D)
+            if(ndims==2 and self.nvoids>0 and not istorsrun):
+                for ivoid,tmpvoid in INvoids.items():
+                    f.write(self.writeLineFortran('(A10)',['VOID'])+"\n")
+                    for i in range(len(tmpvoid)):
+                        f.write(self.writeLineFortran(tmpvoid[i]['fmt'],tmpvoid[i]['val'])+"\n")
+                    f.write(self.writeLineFortran('(A10)',['END_VOID'])+"\n")
+
+        # SERIES 18 (thermal) - Symmetries
+        if(self.isThermal):
+            #8/ Write Symmetries (Thermal)
+            f.write(self.writeLineFortran('(A10)',['SYMMETRY'])+"\n")
+
+            # Write Realsym (Thermal 2D)
+            if(ndims==2):
+                try:
+                    for k,v in syms['real_sym;1'].items():
+                        f.write(self.writeLineFortran('(A10,I6,I6)',['REALSYM',v[0],v[1]])+"\n")
+                except Exception as emsg:
+                    gmsh.logger.write("Pb in writing real symmetry axis:"+str(emsg), level="error")
+                    return -1
+
+            #Write VoidSym (Thermal 2D)
+            if(ndims==2 and self.nvoids>0):
+                try:
+                    for k,v in syms['void_sym;1'].items():
+                        val=symvals['void_sym;1'][k]
+                        f.write(self.writeLineFortran('(A10,I6,I6,I6)',['SYMVOID',v[0],v[1],val])+"\n")
+                except Exception as emsg:
+                    gmsh.logger.write("Pb in writing void symmetry axis:"+str(emsg), level="error")
+                    return -1
+
+            f.write(self.writeLineFortran('(A10)',['END_SYM'])+"\n")
+            
+        # SERIES 19 (meca) - Oblique supports
+            # Write Oblique Supports (Structural)
+        if(not self.isThermal):
             if(len(INOblique)>0):
                 for i in range(len(INOblique)):
                     f.write(self.writeLineFortran(INOblique[i]['fmt'],INOblique[i]['val'])+"\n")
                 f.write(self.writeLineFortran('(A10)',['END_INCLIN'])+"\n")
 
 
+        # SERIES 20 (meca) - Relaxation
             # Write Beam Relaxations (Structural)
+        if(not self.isThermal):
             if(len(INelemRelax)>0):
                 f.write(self.writeLineFortran('(A10)',['RELAX_ELEM'])+"\n")
                 f.write(self.writeLineFortran('(A15)',['BEAMS'])+"\n")
@@ -5863,12 +5903,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(self.writeLineFortran('(A9)',['END_BEAMS'])+"\n")
                 f.write(self.writeLineFortran('(A9)',['END_RELAX'])+"\n")
 
+
         #
-        #
+        # SERIES 19 (thermal) and SERIES 21 (meca) - Precision
         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","PRECISION")],False)
         prec=float(tmp0['values'][0])
         f.write(self.writeLineFortran('(A9,E10.1)',['PRECISION',prec])+"\n")
 
+        # SERIES 22 (meca) - Limiting displacement
         if(not self.isThermal):
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Consider max displacement")],False)
             if tmp0['values'][0]==1 :
@@ -5877,6 +5919,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(self.writeLineFortran('(A9,E10.1)',['MAX_DISPL',maxdispl])+"\n")
         #
 
+        # SERIES 23 (meca) - Loads
         if(not self.isThermal):
             f.write(self.writeLineFortran('(A5)',['LOADS'])+"\n")
             #
@@ -5889,7 +5932,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     f.write(self.writeLineFortran('(A10)',['END_LOAD'])+"\n")
             else:
                 f.write(self.writeLineFortran('(A10)',['END_LOAD'])+"\n")
+                
+
+        # SERIES 24 (meca) - Hydrostatic loads                
             # Write Beam Hydrostatic Loads (Structural)
+        if(not self.isThermal):
             if(len(INelemHydrost)>0):
                 for ifuncwght in INelemHydrost:
                     ifunc,iweight=ifuncwght.split(',')
@@ -5899,6 +5946,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         f.write(self.writeLineFortran(INelemHydrost[ifuncwght][i]['fmt'],INelemHydrost[ifuncwght][i]['val'])+"\n")
                 f.write(self.writeLineFortran('(A10)',['END_HYDRO'])+"\n")
 
+        # SERIES 25 (meca) - Mass characteristics
+        if(not self.isThermal):
             # Write Mass (Structural)
             f.write(self.writeLineFortran('(A10)',['MASS'])+"\n")
             if(len(INelemMass)>0):
@@ -5907,21 +5956,23 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             f.write(self.writeLineFortran('(A10)',['END_MASS'])+"\n")
 
         #
+        # SERIES 20 (thermal) and SERIES 26 (meca) - Materials
         # Write materials (Thermal and Structural)
-        #
         f.write(self.writeLineFortran('(A10)',['MATERIALS'])+"\n")
+        
         try:
             #
             for i in range(len(self.listMats)):
                 iprop=self.listMats[i]
                 imatstr=list(iprop.keys())[0]
                 imat=imatstr.split('/')[1].split("-")[-1].upper()
+                imatg4s="! "+imatstr.split(';')[0]
                 tmpvals=list(iprop.values())[0]
                 #
                 if not istorsrun:
                     #
                     if not 'User-defined' in imatstr:
-                        f.write(self.writeLineFortran('(A10)',[imat])+"\n")
+                        f.write(self.writeLineFortran('(A10,A10)',[imat,imatg4s])+"\n")
                         #
                         vallst=[];fmtstr="("
                         #
@@ -5996,9 +6047,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 if(len(tmpl)!=4):
                                     raise ValueError("From third line on, it shall contain 4 parameters: T,k,c,rho")
                             # Success in reading
+                            firstline=True
                             for iline in lines:
                                 #f.write(iline)
-                                f.write(self.writeLineFortran('(A12)',[iline.replace('\n','')])+"\n")
+                                if(firstline):
+                                    f.write(self.writeLineFortran('(A12,A12)',[iline.replace('\n',''),imatg4s])+"\n")
+                                    firstline=False
+                                else:
+                                    f.write(self.writeLineFortran('(A12)',[iline.replace('\n','')])+"\n")
                         except Exception as emsg:
                             raise ValueError("User-defined material: Pb in file "+fname+": "+str(emsg))
                         f0.close()
@@ -6010,7 +6066,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     # Write imat and not torsname, because SAFIR knows that, and this name is just for better viewing materials in the .IN file
                     if("DEFINED" in imat):
                         imat="USER-DEFINED"
-                    f.write(self.writeLineFortran('(A12)',[imat])+"\n")
+                    f.write(self.writeLineFortran('(A12,A12)',[imat,imatg4s])+"\n")
                     #
                     if(not "INSULATION" in torsname):
                         #
@@ -6032,8 +6088,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             gmsh.logger.write("Pb in writing materials:"+str(emsg), level="error")
             return -1
 
+        # SERIES 21 (thermal) and SERIES 27 (meca) - Time discretization
         # Write final elements in .IN file (run duration...)
-
         if not (self.isThermal and istorsrun):
             f.write(self.writeLineFortran('(A10)',['TIME'])+"\n")
             #
@@ -6054,6 +6110,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             f.write(self.writeLineFortran('(A10)',['END_TIME'])+"\n")
             #
+
+        # SERIES 28 (meca) - Thermal elongation
             if not self.isThermal:
                 tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Thermal elongation")],False)
                 valnum=tmp0['values'][0]
@@ -6061,6 +6119,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 val0=[k for k,v in lbls.items() if v==valnum][0]
                 f.write(self.writeLineFortran('(A7)',[val0])+"\n")
             #
+            
+        # SERIES 22 (thermal) and SERIES 29 (meca) - Output results
             f.write(self.writeLineFortran('(A10)',['IMPRESSION'])+"\n")
             f.write(self.writeLineFortran('(A10)',['TIMEPRINT'])+"\n")
             #
