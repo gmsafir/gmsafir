@@ -1,4 +1,3 @@
-# Test line for changes
 # coding: utf-8
 import os
 import gmsh
@@ -21,7 +20,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-12-12 - Version 1.0"
+        self.version="2022-12-13 - Version 1.0"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -49,7 +48,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.isViewLAX=False
         self.LAXspecial=False
         self.launchSAFIR=False
-
         self.SolidFilename="" # Global variable
         #
         self.permutespecial=False # will allow to monitor if the permutation comes for specialcase or not, important for the creation of GUI menus from the DB
@@ -67,7 +65,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.go_on=True
         #
         self.g4sfile=""
-        self.g4sfileError=""
+        self.previousErrors=[] # check existing errors before launching the IN file creation
+        self.g4sfileError="" # check existing errors before overwriting the G4S file 
         self.geofile=""
         self.getCmdLine() # Interpret the command line parameters
         #
@@ -576,7 +575,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             self.safirDB['children'],listRecurs,permute,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
             if(merror!=""):
                 self.g4sfileError=merror
-                gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
+                gmsh.logger.write(msg0+" "+merror, level="error")
                 return
             #
             # Permute ContextDB
@@ -590,7 +589,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             self.contextDB['children'],listRecurs,permute,found,endTree,merror=self.permuteDB(self.contextDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
             if(merror!=""):
                 self.g4sfileError=merror
-                gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
+                gmsh.logger.write(msg0+" "+merror, level="error")
                 return
             #
             thelines.remove(iline0)
@@ -608,7 +607,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 self.safirDB['children'],listRecurs,permute_safir,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
                 if merror!="":
                     self.g4sfileError=merror
-                    gmsh.logger.write(".g4s file not loaded!!! "+merror, level="error")
+                    gmsh.logger.write(msg0+" "+merror, level="error")
                     return
             #
             #Reindex lines to account for bracketed props
@@ -1349,11 +1348,28 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             Yp=np.array([float(Yp_str[0]), float(Yp_str[1]), float(Yp_str[2])], dtype=np.float64)
             print('Xp=',Xp)
             print('Yp=',Yp)
+            msg0="LAX problem"
             if np.linalg.norm(Yp)==0:
                 gmsh.logger.write("User-defined Y-Axis has zero coordinates!", level="error")
+                #
+                if not msg0 in self.previousErrors:
+                    self.previousErrors.append(msg0)
+                 #
+                return(0,0,0)
+            else:
+                if msg0 in self.previousErrors:
+                    self.previousErrors.remove(msg0)
+            #
             if np.linalg.norm(np.cross(Xp,Yp))==0:
                 gmsh.logger.write("Tangent Axis and user-defined Y-Axis cannot be colinear !", level="error")
+                if not msg0 in self.previousErrors:
+                    self.previousErrors.append(msg0)                
+                #
                 return(Yp[0],Yp[1],Yp[2])
+            else:
+                if msg0 in self.previousErrors:
+                    self.previousErrors.remove(msg0)
+            #            
             normYp=LA.norm(Yp)
             Yp=Yp/normYp
             Zp=np.cross(Xp,Yp)
@@ -4174,6 +4190,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if(rc!=0):
             return rc
 
+        
         # TBD - Verification on entities/physgroups:check that each entity/phys group has only one property type (Material,...)
 
         # Verifications for Thermal:
@@ -4330,6 +4347,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             except Exception as emsg:
                 gmsh.logger.write("Pb with properties:"+str(emsg), level="error")
                 return -1
+
 
 #         for iprop in propstrs:
 #             igtypdim=iprop[0]
@@ -5493,6 +5511,16 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             NOBLIQUE=len(INOblique)
         #
         #
+
+# LAST VERIF
+        print("self.g4sfileError=",self.g4sfileError)
+        print("self.previousErrors=",self.previousErrors)
+        
+        if self.g4sfileError!="" or self.previousErrors!=[]:
+            gmsh.logger.write("Problem with previously existing errors - Solve them before proceeding to the IN file creation", level="error")
+            return -1
+
+
         # FINAL WRITING OF .IN FILE (F.E., materials and constraints)
         #
         # 1/ SERIES 1 (thermal and meca) - Comments
