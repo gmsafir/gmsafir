@@ -20,7 +20,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-12-13 - Version 1.0"
+        self.version="2022-12-16 - Version 1.0"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -66,7 +66,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         self.g4sfile=""
         self.previousErrors=[] # check existing errors before launching the IN file creation
-        self.g4sfileError="" # check existing errors before overwriting the G4S file 
+        self.g4sfileError="" # check existing errors before overwriting the G4S file
         self.geofile=""
         self.getCmdLine() # Interpret the command line parameters
         #
@@ -122,6 +122,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
        # GUI Mode: Initial load the GUI's menus
         gmsh.onelab.clear()
+        self.oldmenus=[]
         #
         self.updateGeneralLists()
         self.loadContextDB(self.contextDB,self.pbType,True)
@@ -180,6 +181,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #rc=self.recursActionContextDB(tmp2,'add_name_lax lax',[])
         tmp2=self.getDBValue(tmpg0,[("children","name","Curve"),("children","name","Structural 3D"),("children","name","New LAX Definition")],False)
         rc=self.recursActionContextDB(tmp2,'add_name_lax lax',[])
+
 
 
     #Perform different actions recursively in the leaves of ContextDB: 'find_path_to_name', 'list_names', 'filefor', 'cut', 'add_name', 'permute_simple'
@@ -400,11 +402,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         # GUI MODE
         if(not "-nopopup" in sys.argv):
-                                                      
+
             # Manage input file
             if len(sys.argv)==2:
                 arg0=sys.argv[1]
-    
+
                 if("-help" in arg0):
                     msg=""
                     gmsh.logger.write(msg0, level="info")
@@ -422,7 +424,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
     #                     f=open(self.geofile,"w")
     #                     f.write("SetFactory('OpenCASCADE');\n")
     #                     f.close()
-    
+
                 #
                 elif(os.path.isdir(arg0)): #input is supposed to be a directory
                     self.dir=arg0
@@ -460,7 +462,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 #gmsh.logger.write("Start with no parameters", level="info")
                 self.dir=os.getcwd()
                 tmpfiles=[k for k in os.listdir(self.dir) if (re.search('.geo$',k)!=None)]
-                
+
                 if(tmpfiles!=[]): # there exists at least 1 GEO file
                     if(len(tmpfiles)==1):
                         gfile=tmpfiles[0]
@@ -482,7 +484,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
     #                 f.close()
     #                 gmsh.open(self.geofile)
             #
-    
+
             elif len(sys.argv)==3:
                 arg0=sys.argv[1]
                 arg1=sys.argv[2]
@@ -497,7 +499,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 msg="-- Incorrect parameters in command line -- "
                 gmsh.logger.write(msg+"\n"+msg0, level="error")
                 self.go_on=False
-    
+
             # Look for the G4S file and IN file
             if self.go_on:
                 #gfile=os.path.basename(self.geofile)
@@ -507,7 +509,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 self.INfile=self.geofile.replace(".geo",".IN")
                 if(os.path.exists(self.INfile)):
                     gmsh.logger.write("SAFIR .IN file does exist - It will be overwritten when .IN file creation will be requested", level="warning")
-        
+
         # BATCH MODE
         else:
             if len(sys.argv)==3:
@@ -523,7 +525,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             else:
                 msg="-- Incorrect parameters in command line -- "
                 gmsh.logger.write(msg+"\n"+msg0, level="error")
-                self.go_on=False 
+                self.go_on=False
 
 
     #Load ContextDB and SafirDB from the disk
@@ -856,6 +858,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         self.g4sfileError=""
 
+
+        tmp0=self.getDBValue(self.contextDB,[("children","name","Curve"),("children","name","Thermal 2D"),("children","name","Frontier Constraint")],False)
 
 
     # Update the general lists: self.listMats and self.listLAX
@@ -1363,13 +1367,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if np.linalg.norm(np.cross(Xp,Yp))==0:
                 gmsh.logger.write("Tangent Axis and user-defined Y-Axis cannot be colinear !", level="error")
                 if not msg0 in self.previousErrors:
-                    self.previousErrors.append(msg0)                
+                    self.previousErrors.append(msg0)
                 #
                 return(Yp[0],Yp[1],Yp[2])
             else:
                 if msg0 in self.previousErrors:
                     self.previousErrors.remove(msg0)
-            #            
+            #
             normYp=LA.norm(Yp)
             Yp=Yp/normYp
             Zp=np.cross(Xp,Yp)
@@ -1411,12 +1415,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
     # Recreate thg GUI menus (ONELAB.json object) from the ContextDB, SafirDB and InspectDB
     def recreateContextMenusFromDB(self,ipb,do_add_from_pgsents):
         #
+        
+        self.oldmenus=deepcopy(json.loads(gmsh.onelab.get().replace("\\","/"))["onelab"]["parameters"])
         gmsh.onelab.clear()
         #
         # Load now the updates from DBs to menus
 #        print('listmat before=',self.listMats)
         self.updateGeneralLists()
 #        print('listmat after=',self.listMats)
+
         self.loadContextDB(self.contextDB,ipb,do_add_from_pgsents)
         self.loadSafirDB()
         self.loadInspectDB(ipb)
@@ -1494,8 +1501,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 listRecurs=[{'key':prf_categ,'name':prf_elem,'data':[],'end_lvl':0}]
 
                 listRecurs,menus=self.getLeaves(tmp0,prf_categ,prf_elem0,prf_elem,max_lvl,listRecurs,menus,do_writeprf) #recursively for SafirDB (ContextDB, with a single key per level, would not require recursion)
-
-                print([(ilist['key'],ilist['name']) for ilist in listRecurs])
 
             else: # do_props_only
                 for i in range(len(tmp0[idx]['props'])):
@@ -1625,6 +1630,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                 #
                                                 imenu=menus[i]
                                                 inam=imenu['name']
+                                                inamtab=inam.split("/")
                                                 specialcase='New Material Definition' in inam or 'New Rebar Material Definition' in inam or 'New LAX Definition' in inam
                                                 #
                                                 if(specialcase): # No update for specialcase, update has already been done
@@ -1635,23 +1641,36 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                     jnb=inb
                                                     exclude_inb=False
                                                 #
+                                               
                                                 if (not self.updateStr in inam) and (not self.removeStr in inam) and (not self.drawStr in inam) and (not 'HIDDEN' in inam) and (not exclude_inb): # Note: we don't recopy the buttons, they will be kept in a 'Template' mode
-                                                    s=inam.split("/")
-                                                    propnam=s[len(s)-1]
-                                                    s0=s[1]
-                                                    shptyp=s0.replace("Physical ","").split(" ")[0]
-                                                    s1=shptyp+ " "+jnb
-                                                    #print('inam=',inam)
-                                                    if(ikey=="pgs"):
-                                                        s1="Physical "+s1
-                                                    jmenu=deepcopy(imenu)
-                                                    jmenu['name']=inam.replace(s0,s1)
-                                                    ""
-                                                    if(len(s)-4==end_lvl):# This is a leaf of the tree
-#                                                         print('propnam=',propnam)
-#                                                         print('iprop[ikey][inb]=',iprop[ikey][inb])
-                                                        jmenu['values']=[k for k in iprop[ikey][inb] if list(k.keys())[0]==propnam][0][propnam]
-                                                        addmenus.append(jmenu)
+                                                    if(len(inamtab)-4==end_lvl):# This is a leaf of the tree
+                                                        propnam=inamtab[len(inamtab)-1]
+                                                        s0=inamtab[1]
+                                                        shptyp=s0.replace("Physical ","").split(" ")[0]
+                                                        s1=shptyp+ " "+jnb
+                                                        #print('inam=',inam)
+                                                        if(ikey=="pgs"):
+                                                            s1="Physical "+s1
+                                                        #
+                                                        jnam=inam.replace(s0,s1)
+                                                        #
+                                                        # If inb not already existing in oldmenus, reload inb from contextDB
+                                                        if([km0 for km0 in self.oldmenus if jnam in km0['name']]==[]):
+                                                            jmenu=deepcopy(imenu)
+                                                            jmenu['name']=jnam
+                                                            jmenu['values']=[k for k in iprop[ikey][inb] if list(k.keys())[0]==propnam][0][propnam]
+                                                            # Conditional "visible":True for couple (User-defined,File for):
+                                                            if('valueLabels' in imenu and 'User-defined' in imenu['valueLabels']):
+                                                                print("imenu=",imenu)
+                                                                iudef=[v0 for k0,v0 in imenu['valueLabels'].items() if k0=="User-defined"][0]
+                                                                kmenu=[k for k in menus if(prf in k['name'] and 'File for' in k['name'])][0]
+                                                                if(jmenu['values'][0]==iudef):
+                                                                    kmenu['visible']=True
+                                                                else:
+                                                                    kmenu['visible']=False
+                                                            #
+                                                            addmenus.append(jmenu)
+
                         #
                         menus+=addmenus
         #
@@ -4190,7 +4209,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if(rc!=0):
             return rc
 
-        
+
         # TBD - Verification on entities/physgroups:check that each entity/phys group has only one property type (Material,...)
 
         # Verifications for Thermal:
@@ -5515,7 +5534,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 # LAST VERIF
         print("self.g4sfileError=",self.g4sfileError)
         print("self.previousErrors=",self.previousErrors)
-        
+
         if self.g4sfileError!="" or self.previousErrors!=[]:
             gmsh.logger.write("Problem with previously existing errors - Solve them before proceeding to the IN file creation", level="error")
             return -1
@@ -5534,11 +5553,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Title2")],False)
         f.write(tmp0['values'][0]+"\n")
         f.write("\n")
-        
+
         # SERIES 2 (thermal and meca) - Quantity of nodes
         f.write(self.writeLineFortran('(A10,I6)',['NNODE',len(INnodes)])+"\n")
-        
-        
+
+
         # SERIES 3 (thermal and meca) - Quantity of dimensions
         f.write(self.writeLineFortran('(A10,I6)',['NDIM',ndims])+"\n")
         #
@@ -5554,7 +5573,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
 
         # SERIES 5 (thermal and meca) - Number of cores (OBSOLETE)
-        
+
 #         # OBSOLETE - Only 1 SOLVER left = PARDISO
 #         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","name","PARDISO"),("props","name","NCORES")],False)
 #         val=tmp0['values'][0]
@@ -5589,11 +5608,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             # HYDROST
             f.write(self.writeLineFortran('(A7,I6)',['HYDROST',NHYDROST])+"\n")
 
-        # SERIES 7 (meca) - Inclined supports 
+        # SERIES 7 (meca) - Inclined supports
         if(not self.isThermal):
             # OBLIQUE
             f.write(self.writeLineFortran('(A7,I6)',['OBLIQUE',NOBLIQUE])+"\n")
-        
+
         # SERIES 7 (thermal) and SERIES 8 (meca) - Convergence strategy (COMEBACK)
         if not istorsrun:
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence")],False)
@@ -5615,7 +5634,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if hasdcapa:
                 f.write(self.writeLineFortran('(A10)',['DIAG_CAPA'])+"\n")
         #
- 
+
         # SERIES 9 (thermal) - Storage of results
         if(ndims==2 and self.isThermal):
             if(temtyp!="NOMAKE"):
@@ -5647,12 +5666,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         else:
             typcal="USE_CURVES"
         #
-        
+
         # SERIES 10 (thermal) and SERIES 9 (meca) - Materials
         #MATS
         f.write(self.writeLineFortran('(A4,I3)',['NMAT',len(self.listMats)])+"\n")
         #
-                
+
         # SERIES 11 (thermal) and SERIES 10 (meca) - Elements
         f.write(self.writeLineFortran('(A11)',['ELEMENTS'])+"\n")
         #
@@ -5716,7 +5735,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
         f.write(self.writeLineFortran('(A11)',['END_ELEM'])+"\n")
         #
-        
+
         # SERIES 12 (thermal) and SERIES 11 (meca) - Nodes
         # 2/ Write down all nodes (Thermal and Structural)
         f.write(self.writeLineFortran('(A10)',['NODES'])+"\n")
@@ -5730,7 +5749,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             f.write(self.writeLineFortran(INnodes[i]['fmt'],ivals)+"\n")
 
         #
-        
+
         # SERIES 13 (thermal) - Nodeline
         # Write nodelines (Thermal 2D only)
         if(ndims==2 and self.isThermal and not istsh):
@@ -5749,7 +5768,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(self.writeLineFortran('(A10,F5.1,F5.1)',['YC_ZC',float(yc),float(zc)])+"\n")
             #
             #
-        # SERIES 14 (thermal) - Imposed termperatures, and SERIES 12 (meca) - Supports and imposed 
+        # SERIES 14 (thermal) - Imposed termperatures, and SERIES 12 (meca) - Supports and imposed
         # Write fixations (Thermal and Structural)
         f.write(self.writeLineFortran('(A10)',['FIXATIONS'])+"\n")
         #
@@ -5910,7 +5929,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     return -1
 
             f.write(self.writeLineFortran('(A10)',['END_SYM'])+"\n")
-            
+
         # SERIES 19 (meca) - Oblique supports
             # Write Oblique Supports (Structural)
         if(not self.isThermal):
@@ -5960,9 +5979,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     f.write(self.writeLineFortran('(A10)',['END_LOAD'])+"\n")
             else:
                 f.write(self.writeLineFortran('(A10)',['END_LOAD'])+"\n")
-                
 
-        # SERIES 24 (meca) - Hydrostatic loads                
+
+        # SERIES 24 (meca) - Hydrostatic loads
             # Write Beam Hydrostatic Loads (Structural)
         if(not self.isThermal):
             if(len(INelemHydrost)>0):
@@ -5987,7 +6006,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # SERIES 20 (thermal) and SERIES 26 (meca) - Materials
         # Write materials (Thermal and Structural)
         f.write(self.writeLineFortran('(A10)',['MATERIALS'])+"\n")
-        
+
         try:
             #
             for i in range(len(self.listMats)):
@@ -6147,7 +6166,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 val0=[k for k,v in lbls.items() if v==valnum][0]
                 f.write(self.writeLineFortran('(A7)',[val0])+"\n")
             #
-            
+
         # SERIES 22 (thermal) and SERIES 29 (meca) - Output results
             f.write(self.writeLineFortran('(A10)',['IMPRESSION'])+"\n")
             f.write(self.writeLineFortran('(A10)',['TIMEPRINT'])+"\n")
@@ -6898,8 +6917,8 @@ contextDBstring="""
                 {
                 "key":"Flux Type","name":"-",
                 "props":[
-                    {"name":"00Flux","valueLabels":{"HASEMI":0,"LOCAFI":1,"CFD":2,"User-defined":3},"choices":[0,1,2,3],"type":"number","values":[0]},
-                    {"name":"01File for Flux","type":"string","values":[""],"visible":false},
+                    {"name":"0Flux","valueLabels":{"HASEMI":0,"LOCAFI":1,"CFD":2,"User-defined":3},"choices":[0,1,2,3],"type":"number","values":[0]},
+                    {"name":"1File for Flux","type":"string","values":[""],"visible":false},
                     {"ents":{},"pgs":{}}
                     ],
                 "children":[]
@@ -6913,8 +6932,8 @@ contextDBstring="""
                 {
                 "key":"Frontier Type","name":"-",
                 "props":[
-                    {"name":"00Temperature","valueLabels":{"FISO":0,"F20":1,"HYDROCARB":2,"HCM":3, "ASTME119":4, "RWS":5,"User-defined":6},"choices":[0,1,2,3,4,5,6],"type":"number","values":[0]},
-                    {"name":"01File for Temperature","type":"string","values":[""],"visible":false},
+                    {"name":"0Temperature","valueLabels":{"FISO":0,"F20":1,"HYDROCARB":2,"HCM":3, "ASTME119":4, "RWS":5,"User-defined":6},"choices":[0,1,2,3,4,5,6],"type":"number","values":[0]},
+                    {"name":"1File for Temperature","type":"string","values":[""],"visible":false},
                     {"ents":{},"pgs":{}}
                     ],
                 "children":[]
@@ -6928,8 +6947,8 @@ contextDBstring="""
                 {
                 "key":"Temperature Type","name":"-",
                 "props":[
-                    {"name":"00Temperature","valueLabels":{"FISO":0,"F20":1,"F100":2,"HYDROCARB":3,"HCM":4, "ASTME119":5, "RWS":6,"User-defined":7},"choices":[0,1,2,3,4,5,6,7],"type":"number","values":[0]},
-                    {"name":"01File for Temperature","type":"string","values":[""],"visible":false},
+                    {"name":"0Temperature","valueLabels":{"FISO":0,"F20":1,"F100":2,"HYDROCARB":3,"HCM":4, "ASTME119":5, "RWS":6,"User-defined":7},"choices":[0,1,2,3,4,5,6,7],"type":"number","values":[0]},
+                    {"name":"1File for Temperature","type":"string","values":[""],"visible":false},
                     {"ents":{},"pgs":{}}
                     ],
                 "children":[]
