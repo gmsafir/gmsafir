@@ -13,7 +13,9 @@ from datetime import datetime
 import numpy as np
 from numpy import linalg as LA
 import subprocess
-
+import matplotlib as mpl
+import matplotlib.pylab as plt
+import random
 
 class Myapp: # Use of class only in order to share 'params' as a global variable with the "event manager" below (not working properly without class)
     def __init__(self, parent=None):
@@ -51,7 +53,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.SolidFilename="" # Global variable
         #
         self.permutespecial=False # will allow to monitor if the permutation comes for specialcase or not, important for the creation of GUI menus from the DB
-
+        self.randshuffle=[k for k in range(256)]
+        random.shuffle(self.randshuffle)
+        
         # Make other solver invisible
         for i in range(5):
             gmsh.option.setString('Solver.Name{}'.format(i), '')
@@ -1415,7 +1419,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
     # Recreate thg GUI menus (ONELAB.json object) from the ContextDB, SafirDB and InspectDB
     def recreateContextMenusFromDB(self,ipb,do_add_from_pgsents):
         #
-        
+
         self.oldmenus=deepcopy(json.loads(gmsh.onelab.get().replace("\\","/"))["onelab"]["parameters"])
         gmsh.onelab.clear()
         #
@@ -1641,7 +1645,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                     jnb=inb
                                                     exclude_inb=False
                                                 #
-                                               
+
                                                 if (not self.updateStr in inam) and (not self.removeStr in inam) and (not self.drawStr in inam) and (not 'HIDDEN' in inam) and (not exclude_inb) and (not 'File for' in inam): # Notes: we don't recopy the buttons, they will be kept in a 'Template' mode - "File for" is treated inside its corresponding menu
                                                     if(len(inamtab)-4==end_lvl):# This is a leaf of the tree
                                                         #
@@ -1665,15 +1669,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                         print('is jnam in oldmenus=',[km0 for km0 in self.oldmenus if jnam in km0['name']])
                                                         if([km0 for km0 in self.oldmenus if jnam in km0['name']]==[]):
                                                             jmenu['values']=[k for k in iprop[ikey][inb] if list(k.keys())[0]==propnam][0][propnam]
-                                                            
+
                                                         # Else load from general menu
                                                         else:
                                                             jmenu['values']=imenu['values']
                                                         # Conditional "visible":True for couple (User-defined,File for):
-                                                                                                   
+
                                                         addmenus.append(jmenu)
-                                                        
-                                                        # Complete 'File for' for special case of 'User-defined' 
+
+                                                        # Complete 'File for' for special case of 'User-defined'
                                                         if('valueLabels' in imenu and 'User-defined' in imenu['valueLabels']):
                                                             print("imenu(",inb,")=",imenu)
                                                             iudef=[v0 for k0,v0 in imenu['valueLabels'].items() if k0=="User-defined"][0]
@@ -1895,7 +1899,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                                 #
                                 tmpk0['props'][idx]['values']=ivl
-                                
+
                                 print('inside permuteDB: tmpk0["props"][idx]=',tmpk0['props'][idx])
 
                                 # Special case of 'Beam Local Axes' in ONELAB Context: launches recreateLAXView to adjust the vectors according to the value of theta
@@ -2184,7 +2188,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
          #
          #self.recreateContextMenusFromDB(self.pbType,False)
          #if ( not valChanged or permute):
-         if 1>0: 
+         if 1>0:
               self.recreateContextMenusFromDB(self.pbType,True) # DEBUG
          #
          return 0
@@ -3648,32 +3652,40 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.cleaningToClean()
         #
         inspectColors={}
-        inspectColors['mats']=[(255,0,0),(255,8,189),(288,97,100),(82,8,255),(8,99,255),(8,230,255),(8,255,156),(8,255,41),(156,255,8),(255,255,0),(255,214,8)]
+        
+        def shuffled_cmap(cmap):
+            listcols=[(int(k[0]*255),int(k[1]*255),int(k[2]*255)) for k in cmap.colors]
+            print('len(listcols)=',len(listcols))
+            print('randshuf=',self.randshuffle)
+            listcols_shuffle=[listcols[self.randshuffle[k]] for k in range(len(listcols))]
+            return(listcols_shuffle)
+        
+        inspectColors['mats']=shuffled_cmap(plt.cm.viridis)
         inspectColors['beamcormat']=inspectColors['mats']
         inspectColors['beamlax']=inspectColors['mats']
         inspectColors['trusscormat']=inspectColors['mats']
         inspectColors['shcormat']=inspectColors['mats']
         inspectColors['solcormat']=inspectColors['mats']
-        inspectColors['flxs']=[(247,21,217),(247,21,217),(247,21,217),(247,21,217),(247,21,217),(247,21,217)]
-        inspectColors['frtiers']=[(195,21,247),(195,21,247),(195,21,247),(195,21,247),(195,21,247)]
-        inspectColors['blks']=[(250,211,142),(250,211,142),(250,211,142),(250,211,142),(250,211,142)]
-        inspectColors['beamrelax']=[(250,211,142),(250,211,142),(250,211,142),(250,211,142),(250,211,142)]
-        #
-        inspectColors['same']=[(250,211,142),(250,211,142),(250,211,142),(250,211,142),(250,211,142)]
+        
+        inspectColors['flxs']=shuffled_cmap(plt.cm.plasma)
+        inspectColors['frtiers']=shuffled_cmap(plt.cm.inferno)
+        inspectColors['blks']=shuffled_cmap(plt.cm.magma)
+        inspectColors['beamrelax']=inspectColors['blks']
+        inspectColors['same']=inspectColors['blks']
         #
         if("Structural" in self.pbType):
-            inspectColors['sload']=[(255,0,0),(255,8,189),(288,97,100),(82,8,255),(8,99,255),(8,230,255),(8,255,156),(8,255,41),(156,255,8),(255,255,0),(255,214,8)]
-            inspectColors['hydrostat']=[(255,0,0),(255,8,189),(288,97,100),(82,8,255),(8,99,255),(8,230,255),(8,255,156),(8,255,41),(156,255,8),(255,255,0),(255,214,8)]
-            inspectColors['tlload']=[(255,0,0),(255,8,189),(288,97,100),(82,8,255),(8,99,255),(8,230,255),(8,255,156),(8,255,41),(156,255,8),(255,255,0),(255,214,8)]
-            inspectColors['tgload']=[(255,0,0),(255,8,189),(288,97,100),(82,8,255),(8,99,255),(8,230,255),(8,255,156),(8,255,41),(156,255,8),(255,255,0),(255,214,8)]
-            inspectColors['mass']=[(250,211,142),(250,211,142),(250,211,142),(250,211,142),(250,211,142)]
+            inspectColors['sload']=inspectColors['mats']
+            inspectColors['hydrostat']=inspectColors['mats']
+            inspectColors['tlload']=inspectColors['mats']
+            inspectColors['tgload']=inspectColors['mats']
+            inspectColors['mass']=inspectColors['blks']
         #
         if(self.pbType=="Thermal 2D"):
-            inspectColors['void']=[(71,71,71),(102,102,102),(146,146,146),(210,210,210)]
+            inspectColors['void']=shuffled_cmap(plt.cm.cividis)
             if(self.nvoids>0):
-                inspectColors['void_sym']=[(71,71,71),(102,102,102),(146,146,146),(210,210,210)]
-            inspectColors['real_sym']=[(255,255,0),(255,255,0),(255,255,0),(255,255,0),(255,255,0)]
-            inspectColors['tors']=[(255,204,204),(255,204,204),(255,204,204),(255,204,204),(255,204,204)]
+                inspectColors['void_sym']=inspectColors['void']
+            inspectColors['real_sym']=inspectColors['void']
+            inspectColors['tors']=inspectColors['void']
         #
         pattern=re.compile("[0-9]")
         ndims=int(re.search(pattern, self.pbType).group(0))
@@ -6308,7 +6320,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # But the individual infos can be kept in these menus.
 
         action = gmsh.onelab.getString("ONELAB/Action")
-                
+
         if len(action) < 1:
             # no action requested
             pass
