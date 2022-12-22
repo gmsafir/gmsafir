@@ -20,7 +20,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-12-16 - Version 1.0"
+        self.version="2022-12-22 - Version 1.0"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -1642,8 +1642,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                     exclude_inb=False
                                                 #
                                                
-                                                if (not self.updateStr in inam) and (not self.removeStr in inam) and (not self.drawStr in inam) and (not 'HIDDEN' in inam) and (not exclude_inb): # Note: we don't recopy the buttons, they will be kept in a 'Template' mode
+                                                if (not self.updateStr in inam) and (not self.removeStr in inam) and (not self.drawStr in inam) and (not 'HIDDEN' in inam) and (not exclude_inb) and (not 'File for' in inam): # Notes: we don't recopy the buttons, they will be kept in a 'Template' mode - "File for" is treated inside its corresponding menu
                                                     if(len(inamtab)-4==end_lvl):# This is a leaf of the tree
+                                                        #
+                                                        if 'Frontier Constraint' in inam:
+                                                            print('ENTER existing data(',inb,'):',imenu)
+                                                        #
                                                         propnam=inamtab[len(inamtab)-1]
                                                         s0=inamtab[1]
                                                         shptyp=s0.replace("Physical ","").split(" ")[0]
@@ -1653,23 +1657,45 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                             s1="Physical "+s1
                                                         #
                                                         jnam=inam.replace(s0,s1)
+                                                        print('jnam=',jnam)
                                                         #
                                                         # If inb not already existing in oldmenus, reload inb from contextDB
+                                                        jmenu=deepcopy(imenu)
+                                                        jmenu['name']=jnam
+                                                        print('is jnam in oldmenus=',[km0 for km0 in self.oldmenus if jnam in km0['name']])
                                                         if([km0 for km0 in self.oldmenus if jnam in km0['name']]==[]):
-                                                            jmenu=deepcopy(imenu)
-                                                            jmenu['name']=jnam
                                                             jmenu['values']=[k for k in iprop[ikey][inb] if list(k.keys())[0]==propnam][0][propnam]
-                                                            # Conditional "visible":True for couple (User-defined,File for):
-                                                            if('valueLabels' in imenu and 'User-defined' in imenu['valueLabels']):
-                                                                print("imenu=",imenu)
-                                                                iudef=[v0 for k0,v0 in imenu['valueLabels'].items() if k0=="User-defined"][0]
-                                                                kmenu=[k for k in menus if(prf in k['name'] and 'File for' in k['name'])][0]
-                                                                if(jmenu['values'][0]==iudef):
-                                                                    kmenu['visible']=True
-                                                                else:
-                                                                    kmenu['visible']=False
+                                                            
+                                                        # Else load from general menu
+                                                        else:
+                                                            jmenu['values']=imenu['values']
+                                                        # Conditional "visible":True for couple (User-defined,File for):
+                                                                                                   
+                                                        addmenus.append(jmenu)
+                                                        
+                                                        # Complete 'File for' for special case of 'User-defined' 
+                                                        if('valueLabels' in imenu and 'User-defined' in imenu['valueLabels']):
+                                                            print("imenu(",inb,")=",imenu)
+                                                            iudef=[v0 for k0,v0 in imenu['valueLabels'].items() if k0=="User-defined"][0]
+                                                            kmenu=[k for k in menus if(prf in k['name'] and 'File for' in k['name'])][0]
                                                             #
-                                                            addmenus.append(jmenu)
+                                                            if(jmenu['values'][0]==iudef):
+                                                                kmenu['visible']=True
+                                                            else:
+                                                                kmenu['visible']=False
+                                                            #
+                                                            prefnam=jnam.replace(jnam.split('/')[-1],'')
+                                                            print("prefnam=",prefnam)
+                                                            print('if prefnam and "File for" in oldmenus=',[km0 for km0 in self.oldmenus if 'File for' in km0['name'] and prefnam in km0['name']])
+                                                            koldmenu=[km0 for km0 in self.oldmenus if 'File for' in km0['name'] and prefnam in km0['name']]
+                                                            if(koldmenu==[]):
+                                                                ikprop=[k for k in iprop[ikey][inb] if 'File for' in list(k.keys())[0]][0]
+                                                                #kmenu['values']=[k for k in iprop[ikey][inb] if list(k.keys())[0]=='File for'][0]['File for']
+                                                                kmenu['values']=list(ikprop.values())[0]
+                                                            else:
+                                                                kmenu['values']=koldmenu[0]['values']
+                                                            #
+                                                            addmenus.append(kmenu)
 
                         #
                         menus+=addmenus
@@ -1856,6 +1882,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 #
                                 idx=tabidx[0]
                                 #
+                                print('inside permuteDB: ivl=',ivl)
+                                print('inside permuteDB: tmpk0["props"][idx]=',tmpk0['props'][idx])
                                 if(ivl==-1):
                                     ivl=[tmpk0['props'][idx]['valueLabels'][ivlstr]]
                                 else:
@@ -1867,6 +1895,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                                 #
                                 tmpk0['props'][idx]['values']=ivl
+                                
+                                print('inside permuteDB: tmpk0["props"][idx]=',tmpk0['props'][idx])
 
                                 # Special case of 'Beam Local Axes' in ONELAB Context: launches recreateLAXView to adjust the vectors according to the value of theta
                                 if(shpid!="-1" and ("Rotation angle" in inam or "Reverse X" in inam or "X'(dx,dy,dz)" in inam or "Y'(dx,dy,dz)" in inam or "Z'(dx,dy,dz)" in inam)):
@@ -2153,7 +2183,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
              print ("permute=",permute)
          #
          #self.recreateContextMenusFromDB(self.pbType,False)
-         self.recreateContextMenusFromDB(self.pbType,True) # DEBUG
+         #if ( not valChanged or permute):
+         if 1>0: 
+              self.recreateContextMenusFromDB(self.pbType,True) # DEBUG
+         #
          return 0
 
 
@@ -3853,9 +3886,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         if(len(shpedges)!=4):
             if(ipg!="-1"):
-                gmsh.logger.write("Entity "+ient+" in 'Physical Surface "+ipg+"' should have 4 corners in TSH simulation", level="error")
+                gmsh.logger.write("Entity "+str(ient)+" in 'Physical Surface "+str(ipg)+"' should have 4 corners in TSH simulation", level="error")
             else:
-                gmsh.logger.write("Entity "+ient+" should have 4 corners for TSH simulation", level="error")
+                gmsh.logger.write("Entity "+str(ient)+" should have 4 corners for TSH simulation", level="error")
             return -1
         #
         x=[];y=[];z=[]
@@ -3864,11 +3897,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             tmp=gmsh.model.getValue(0, inode,[])
             x.append(tmp[0]);y.append(tmp[1]);z.append(tmp[2])
         #
-        if(max(z)!=0):
-            if(ipg!="-1"):
-                gmsh.logger.write("Entity "+ient+" in 'Physical Surface "+ipg+"' must be defined in the XY plane for TSH simulation", level="error")
+        if(not z.count(z[0]) == len(z)): # All z values are not the same
+            if(ipg!=-1):
+                gmsh.logger.write("Entity "+str(ient)+" in 'Physical Surface "+str(ipg)+"' must be defined in the XY plane for TSH simulation", level="error")
             else:
-                gmsh.logger.write("Entity "+ient+" must be defined in the XY plane for TSH simulation", level="error")
+                gmsh.logger.write("Entity "+str(ient)+" must be defined in the XY plane for TSH simulation", level="error")
             return -1
         #
         # center of mass
@@ -3888,10 +3921,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             return isequal
 
         if not (isDistEqual(dd[0],dd[1]) and isDistEqual(dd[1],dd[2]) and isDistEqual(dd[2],dd[3])):
-            if(ipg!="-1"):
-                gmsh.logger.write("Entity "+ient+" in 'Physical Surface "+ipg+"' must be a rectangle", level="error")
+            if(ipg!=-1):
+                gmsh.logger.write("Entity "+str(ient)+" in 'Physical Surface "+str(ipg)+"' must be a rectangle", level="error")
             else:
-                gmsh.logger.write("Entity "+ient+" must be a rectangle", level="error")
+                gmsh.logger.write("Entity "+str(ient)+" must be a rectangle", level="error")
             return -1
         #
         return 0
@@ -3912,7 +3945,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if(propEntsMats!=[]):
                 for i in range(len(propEntsMats)):
                     ient=propEntsMats[i]
-                    rc=self.verifyRectangleSingleEntity(gmsh.model.getBoundary([(idim, int(ient))],recursive=True),ient,"-1")
+                    print("type(ient)=",type(ient))
+                    rc=self.verifyRectangleSingleEntity(gmsh.model.getBoundary([(idim, int(ient))],recursive=True),ient,-1)
 
         except Exception as emsg:
             gmsh.logger.write("Problem in verifyRectangleGeomTSH:"+str(emsg), level="error")
@@ -6274,7 +6308,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # But the individual infos can be kept in these menus.
 
         action = gmsh.onelab.getString("ONELAB/Action")
-
+                
         if len(action) < 1:
             # no action requested
             pass
