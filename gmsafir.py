@@ -55,7 +55,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.permutespecial=False # will allow to monitor if the permutation comes for specialcase or not, important for the creation of GUI menus from the DB
         self.randshuffle=[k for k in range(256)]
         random.shuffle(self.randshuffle)
-        
+
         # Make other solver invisible
         for i in range(5):
             gmsh.option.setString('Solver.Name{}'.format(i), '')
@@ -3652,21 +3652,21 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.cleaningToClean()
         #
         inspectColors={}
-        
+
         def shuffled_cmap(cmap):
             listcols=[(int(k[0]*255),int(k[1]*255),int(k[2]*255)) for k in cmap.colors]
             print('len(listcols)=',len(listcols))
             print('randshuf=',self.randshuffle)
             listcols_shuffle=[listcols[self.randshuffle[k]] for k in range(len(listcols))]
             return(listcols_shuffle)
-        
+
         inspectColors['mats']=shuffled_cmap(plt.cm.viridis)
         inspectColors['beamcormat']=inspectColors['mats']
         inspectColors['beamlax']=inspectColors['mats']
         inspectColors['trusscormat']=inspectColors['mats']
         inspectColors['shcormat']=inspectColors['mats']
         inspectColors['solcormat']=inspectColors['mats']
-        
+
         inspectColors['flxs']=shuffled_cmap(plt.cm.plasma)
         inspectColors['frtiers']=shuffled_cmap(plt.cm.inferno)
         inspectColors['blks']=shuffled_cmap(plt.cm.magma)
@@ -5578,8 +5578,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
 
 # LAST VERIF
-        print("self.g4sfileError=",self.g4sfileError)
-        print("self.previousErrors=",self.previousErrors)
 
         if self.g4sfileError!="" or self.previousErrors!=[]:
             gmsh.logger.write("Problem with previously existing errors - Solve them before proceeding to the IN file creation", level="error")
@@ -5849,8 +5847,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     imatstr=imat.split(' - ')[1].strip()
                     f.write(self.writeLineFortran('(A20)',[ifile])+"\n")
                     imattab=imatstr.strip().split() #Split on spaces
+
                     for k in range(len(imattab)):
-                        iglomat=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imattab[k]+";1"][0]
+                        try:
+                            iglomat=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imattab[k]+";1"][0]
+                        except Exception as emsg:
+                            gmsh.logger.write("Material "+imattab[k]+"recovered from your .TEM files is not assigned correctly in the current structural case:"+str(emsg), level="error")
+                            return -1
+                        
                         f.write(self.writeLineFortran('(A9,I11,I11)',['TRANSLATE',k+1,iglomat+1])+"\n")
                     f.write(self.writeLineFortran('(A9)',['END_TRANS'])+"\n")
                 #
