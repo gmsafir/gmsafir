@@ -3541,6 +3541,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         if('pgs' in v0):
                             for ipg in range(len(v0['pgs'])):
                                 llog.append(self.allShapes[idim]+" - "+ifullname+"(Physical "+self.allShapes[idim]+" "+str(v0['pgs'][ipg])+") = {")
+                                
+                                if "Frontier Constraint" in ifullname:
+                                    print("WRITEING4S - ",str(v0['pgs'][ipg]),": ",v0)
+                                    
                                 for ik in range(len(v0['props'])):
                                     iprop=v0['props'][ik]
                                     propnam=list(iprop.keys())[0]
@@ -3553,12 +3557,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         ikey=ikey.replace(re.search(pattern, ikey).group(0),'')
                                     if('valueLabels' in idefprops):
                                         ival=[k1 for k1,v1 in idefprops['valueLabels'].items() if ival0==v1][0]
-                                        if not ("visible" in idefprops and idefprops['visible']==False):
-                                        #if(1>0):
+                                        #if not ("visible" in idefprops and idefprops['visible']==False):
+                                        if(1>0):
                                             llog.append(ikey+" : "+str(ival))
                                     else:
-                                        if not ("visible" in idefprops and idefprops['visible']==False):
-                                        #if(1>0):
+                                        #if not ("visible" in idefprops and idefprops['visible']==False):
+                                        if(1>0):
                                             llog.append(ikey+" : "+str(ival0))
 
                                 llog.append("}");llog.append("")
