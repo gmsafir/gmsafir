@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2022-12-22 - Version 1.0"
+        self.version="2023-01-10 - Version 1.0"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -1529,7 +1529,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 foundspecial=False
                 for  i in range(len(menus)):
                     imenu=menus[i]
+                    
                     inam=imenu['name']
+                    
+                    if("Frontier" in inam):
+                        print("FROM MENU CREATION=",imenu)
+                        
                     isnewmat=False;isnewlax=False
                     specialcase='New Material Definition' in inam or 'New LAX Definition' in inam or 'New Rebar Material Definition' in inam # Due to the creation of GUI menus, only of these two conditions can occur
                     #
@@ -1637,6 +1642,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                 inamtab=inam.split("/")
                                                 specialcase='New Material Definition' in inam or 'New Rebar Material Definition' in inam or 'New LAX Definition' in inam
                                                 #
+                                                print("imenu=",imenu)
                                                 if(specialcase): # No update for specialcase, update has already been done
                                                     jnb,_=inb.split('/')
                                                     exclude_inb=True
@@ -1648,9 +1654,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                                                 if (not self.updateStr in inam) and (not self.removeStr in inam) and (not self.drawStr in inam) and (not 'HIDDEN' in inam) and (not exclude_inb) and (not 'File for' in inam): # Notes: we don't recopy the buttons, they will be kept in a 'Template' mode - "File for" is treated inside its corresponding menu
                                                     if(len(inamtab)-4==end_lvl):# This is a leaf of the tree
-                                                        #
-                                                        if 'Frontier Constraint' in inam:
-                                                            print('ENTER existing data(',inb,'):',imenu)
                                                         #
                                                         propnam=inamtab[len(inamtab)-1]
                                                         s0=inamtab[1]
@@ -1666,22 +1669,23 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                         # If inb not already existing in oldmenus, reload inb from contextDB
                                                         jmenu=deepcopy(imenu)
                                                         jmenu['name']=jnam
-                                                        print('is jnam in oldmenus=',[km0 for km0 in self.oldmenus if jnam in km0['name']])
-                                                        if([km0 for km0 in self.oldmenus if jnam in km0['name']]==[]):
+                                                        
+                                                        oldmenu=[km0 for km0 in self.oldmenus if jnam in km0['name']]
+                                                        print('is jnam in oldmenus=',oldmenu)
+                                                        
+                                                        if(oldmenu==[]):
                                                             jmenu['values']=[k for k in iprop[ikey][inb] if list(k.keys())[0]==propnam][0][propnam]
-
-                                                        # Else load from general menu
+                                                        ## Else load from old menu
                                                         else:
-                                                            jmenu['values']=imenu['values']
-                                                        # Conditional "visible":True for couple (User-defined,File for):
-
+                                                            jmenu['values']=oldmenu[0]['values']
+                                                                                                             
                                                         addmenus.append(jmenu)
 
                                                         # Complete 'File for' for special case of 'User-defined'
                                                         if('valueLabels' in imenu and 'User-defined' in imenu['valueLabels']):
-                                                            print("imenu(",inb,")=",imenu)
                                                             iudef=[v0 for k0,v0 in imenu['valueLabels'].items() if k0=="User-defined"][0]
-                                                            kmenu=[k for k in menus if(prf in k['name'] and 'File for' in k['name'])][0]
+                                                            kmenu=deepcopy([k for k in menus if(prf in k['name'] and 'File for' in k['name'])][0])
+                                                            kmenu['name']=kmenu['name'].replace(s0,s1)
                                                             #
                                                             if(jmenu['values'][0]==iudef):
                                                                 kmenu['visible']=True
@@ -1689,8 +1693,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                                 kmenu['visible']=False
                                                             #
                                                             prefnam=jnam.replace(jnam.split('/')[-1],'')
-                                                            print("prefnam=",prefnam)
-                                                            print('if prefnam and "File for" in oldmenus=',[km0 for km0 in self.oldmenus if 'File for' in km0['name'] and prefnam in km0['name']])
                                                             koldmenu=[km0 for km0 in self.oldmenus if 'File for' in km0['name'] and prefnam in km0['name']]
                                                             if(koldmenu==[]):
                                                                 ikprop=[k for k in iprop[ikey][inb] if 'File for' in list(k.keys())[0]][0]
@@ -1704,8 +1706,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         #
                         menus+=addmenus
         #
+                
         return menus
-
+    
 
     #Called from "createContextMenu": generate recursively the list of DB children to be dressed
     def getLeaves(self,tmp0,prf_categ,prf_elem0,prf_elem,max_lvl,lists,menus,do_writeprf):
