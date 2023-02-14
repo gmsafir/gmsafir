@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-01-10 - Version 1.0"
+        self.version="2023-02-14 - Version 1.0"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -3541,10 +3541,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         if('pgs' in v0):
                             for ipg in range(len(v0['pgs'])):
                                 llog.append(self.allShapes[idim]+" - "+ifullname+"(Physical "+self.allShapes[idim]+" "+str(v0['pgs'][ipg])+") = {")
-                                
-                                if "Frontier Constraint" in ifullname:
-                                    print("WRITEING4S - ",str(v0['pgs'][ipg]),": ",v0)
-                                    
+                                                                    
                                 for ik in range(len(v0['props'])):
                                     iprop=v0['props'][ik]
                                     propnam=list(iprop.keys())[0]
@@ -5814,7 +5811,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Center of torsion (Xc)")],False)
             zc=tmp0['values'][0]
             #
-            if(typcal=="USE_CURVES" or typcal=="USE_HASEMI"  or typcal=="USE_LOCAFI" and not istorsrun) or istorsrun:
+            if(typcal=="USE_CURVES" or typcal=="USE_HASEMI"  or typcal=="USE_LOCAFI" or typcal=="USE_CFD" and not istorsrun) or istorsrun:
                 f.write(self.writeLineFortran('(A10,F5.1,F5.1)',['NODELINE',float(y0),float(z0)])+"\n")
                 f.write(self.writeLineFortran('(A10,F5.1,F5.1)',['YC_ZC',float(yc),float(zc)])+"\n")
             #
