@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-02-14 - Version 1.0"
+        self.version="2023-02-15"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -5593,7 +5593,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # 1/ SERIES 1 (thermal and meca) - Comments
         f=open(os.path.join(self.dir,self.INfile),'w')
         #
-        f.write("InputFile created with GMSH-SAFIR Interface\n")
+        f.write("InputFile created with GMSH-SAFIR Interface : Ver. \n"+self.version)
         #
         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Title1")],False)
         f.write(tmp0['values'][0]+"\n")
