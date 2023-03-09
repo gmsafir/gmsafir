@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-02-15"
+        self.version="2023-03-09"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -7195,10 +7195,10 @@ contextDBstring="""
                 "props":[
                     {"name":"00Load Function","valueLabels":{"F1":0,"FLOAD":1,"F1PS":2,"F1000PS":3,"User-defined":4},"choices":[0,1,2,3,4],"type":"number","values":[0]},
                     {"name":"01File for Load Function","type":"string","values":["y.fct"],"visible":false},
-                    {"name":"1X Pressure node1","type":"number","values":[0],"min":0,"max":100,"step":0},
-                    {"name":"2Y Pressure node1","type":"number","values":[0],"min":0,"max":100,"step":0},
-                    {"name":"3X Pressure node2","type":"number","values":[0],"min":0,"max":100,"step":0},
-                    {"name":"4Y Pressure node2","type":"number","values":[0],"min":0,"max":100,"step":0},
+                    {"name":"02X Pressure node1","type":"number","values":[0],"min":0,"max":100,"step":0},
+                    {"name":"03Y Pressure node1","type":"number","values":[0],"min":0,"max":100,"step":0},
+                    {"name":"04X Pressure node2","type":"number","values":[0],"min":0,"max":100,"step":0},
+                    {"name":"05Y Pressure node2","type":"number","values":[0],"min":0,"max":100,"step":0},
                     {"ents":{},"pgs":{}}
                     ],
                 "children":[]
@@ -7214,10 +7214,10 @@ contextDBstring="""
                 "props":[
                     {"name":"00Load Function","valueLabels":{"F1":0,"FLOAD":1,"F1PS":2,"F1000PS":3,"User-defined":4},"choices":[0,1,2,3,4],"type":"number","values":[0]},
                     {"name":"01File for Load Function","type":"string","values":["y.fct"],"visible":false},
-                    {"name":"1X Pressure node1","type":"number","values":[0],"min":0,"max":100,"step":0},
-                    {"name":"2Y Pressure node1","type":"number","values":[0],"min":0,"max":100,"step":0},
-                    {"name":"3X Pressure node2","type":"number","values":[0],"min":0,"max":100,"step":0},
-                    {"name":"4Y Pressure node2","type":"number","values":[0],"min":0,"max":100,"step":0},
+                    {"name":"02X Pressure node1","type":"number","values":[0],"min":0,"max":100,"step":0},
+                    {"name":"03Y Pressure node1","type":"number","values":[0],"min":0,"max":100,"step":0},
+                    {"name":"04X Pressure node2","type":"number","values":[0],"min":0,"max":100,"step":0},
+                    {"name":"05Y Pressure node2","type":"number","values":[0],"min":0,"max":100,"step":0},
                     {"ents":{},"pgs":{}}
                     ],
                 "children":[]
