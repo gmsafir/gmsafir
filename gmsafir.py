@@ -8474,7 +8474,7 @@ contextDBstring="""
                 {
                 "key":"Temperature Type","name":"-",
                 "props":[
-                    {"name":"00Temperature","valueLabels":{"FISO":0,"F20":1,"F100":2,"HYDROCARB":3,"HCM":4, "ASTME119":5, "RWS":6},"choices":[0,1,2,3,4,5,6],"type":"number","values":[0]},
+                    {"name":"00Temperature","valueLabels":{"FISO":0,"F20":1,"F100":2,"HYDROCARB":3,"HCM":4, "ASTME119":5, "RWS":6,"User-defined":7},"choices":[0,1,2,3,4,5,6,7],"type":"number","values":[0]},
                     {"name":"01File for Temperature","type":"string","values":[""],"visible":false},
                     {"ents":{},"pgs":{}}
                     ],
