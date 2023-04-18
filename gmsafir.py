@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-03-09"
+        self.version="2023-04-18"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
