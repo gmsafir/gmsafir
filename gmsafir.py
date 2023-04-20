@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-04-18"
+        self.version="2023-04-20"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -7156,12 +7156,12 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"1Node1-Xlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"2Node1-Ylocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"3Node1-thetaZlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"4Node2-Xlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"5Node2-Ylocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"6Node2-thetaZlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
+                {"name":"01Node1-Xlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
+                {"name":"02Node1-Ylocal","type":"number","values":[0],"min":0,"max":1,"step":0},
+                {"name":"03Node1-thetaZlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
+                {"name":"04Node2-Xlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
+                {"name":"05Node2-Ylocal","type":"number","values":[0],"min":0,"max":1,"step":0},
+                {"name":"06Node2-thetaZlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
