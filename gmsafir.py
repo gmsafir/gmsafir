@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-04-20"
+        self.version="2023-06-02"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -613,7 +613,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 self.safirDB['children'],listRecurs,permute_safir,found,endTree,merror=self.permuteDB(self.safirDB['children'],listRecurs,"",found,endTree,"-1",inam,ivl,ivlstr,999,merror)
                 if merror!="":
                     self.g4sfileError=merror
-                    gmsh.logger.write(msg0+" "+merror, level="error")
+                    gmsh.logger.write(merror, level="error")
                     return
             #
             #Reindex lines to account for bracketed props
@@ -7753,11 +7753,12 @@ contextDBstring="""
                 "props":[],
                 "children":[
                     {
-                    "key":"Material Sub-category","name":"USER_CONC",
+                    "key":"Material Sub-category","name":"WOODEC5",
                     "props":[
-                            {"name":"90Young module","type":"number","values":[1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"90Young module","type":"number","values":[2e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"92Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
+                            {"name":"93Tensile strength","type":"number","values":[0],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
