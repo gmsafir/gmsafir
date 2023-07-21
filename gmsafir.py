@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-06-02"
+        self.version="2023-07-21"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -3050,8 +3050,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 return -1,PropAtts,PropPgs,PropEnts,PropValPgs,PropValEnts,PropExtValEnts,PropExtValPgs,propstrs,ishptyp,ishptypm,nmats,uniqmatlist
 
         #TDB - add here a verification of coherence btw geo model and g4sDB
-
-
         # Thermal Only: Add a unique void indexing
         if(self.isThermal):
             try:
@@ -3138,6 +3136,18 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         val=extval
                     #
                     elif igtyp=='mass':
+                        valtab=[[val0 for k0,val0 in d.items()] for d in v["props"]]
+                        #
+                        nvals=len(valtab)
+                        for ival in range(nvals):
+                            if(ival==0):
+                                extval=str(valtab[0][0][0])
+                            else:
+                                extval+=" - "+str(valtab[ival][0][0])
+                        #
+                        val=extval
+                    #
+                    elif igtyp=='spring':
                         valtab=[[val0 for k0,val0 in d.items()] for d in v["props"]]
                         #
                         nvals=len(valtab)
@@ -3868,13 +3878,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if(list(vtags)==[] or not self.legendtag in vtags):
                 t1 = gmsh.view.add("Materials LEGEND",self.legendtag)
                 # Create mats legend from uniqmatlist:
-                gmsh.view.addListDataString(self.legendtag, [20., -700.], ["LEGEND"])
+                gmsh.view.addListDataString(self.legendtag, [20., -200.], ["LEGEND"])
                 for i in range(len(self.listMats)):
                     tmpmat=list(self.listMats[i].keys())[0]
                     imat=tmpmat.split('/')[0].split(";")[0]
                     imat+=" - "+tmpmat.split('/')[1].replace('New Material Definition-','')
                     ioffset=20*(i+1)
-                    gmsh.view.addListDataString(self.legendtag, [20., -700.+ioffset], [str(i+1)+" : "+imat])
+                    gmsh.view.addListDataString(self.legendtag, [20., -200.+ioffset], [str(i+1)+" : "+imat])
         #
         elif("lax" in ctyps[ctyp] and not "relax" in ctyps[ctyp]):
             self.removeViewTag(self.legendtag)
@@ -3882,11 +3892,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if(list(vtags)==[] or not self.legendtag in vtags):
                 t1 = gmsh.view.add("Local Axes LEGEND",self.legendtag)
                 # Create mats legend from uniqmatlist:
-                gmsh.view.addListDataString(self.legendtag, [20., -700.], ["LEGEND"])
+                gmsh.view.addListDataString(self.legendtag, [20., -200.], ["LEGEND"])
                 for i in range(len(self.listLAX)):
                     ilax=list(self.listLAX[i].keys())[0].split('/')[0].split(";")[0]
                     ioffset=20*(i+1)
-                    gmsh.view.addListDataString(self.legendtag, [20., -700.+ioffset], [str(i+1)+" : "+ilax])
+                    gmsh.view.addListDataString(self.legendtag, [20., -200.+ioffset], [str(i+1)+" : "+ilax])
         #
         else:
             self.removeViewTag(self.legendtag)
@@ -4858,7 +4868,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 gmsh.logger.write("Pb for preparing F.E. for writing:"+str(emsg), level="error")
                 return -1
         #
-        else: #Structural: Only Beams, Shells and Truss for now - TBD: extend to Spring, Solid
+        else: #Structural: Only Beams, Shells and Truss for now
             #
             #  Prepare Beams for writing (Structural)
             idxelem=0
@@ -5099,6 +5109,56 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             NTRUSS=idxelem
             NGEOTRUSS=len(INgroupTruss)
+
+
+            #
+            # Prepare Springs for writing (Structural)
+            INelemSpring=[]
+            idxelem=0
+            #
+            for i in range(len(PropPgs['spring;0'])):
+                ipg=int(PropPgs['spring;0'][i])
+                for ient in gmsh.model.getEntitiesForPhysicalGroup(1, int(ipg)):
+                    tmpelem={}
+                    shpedges=gmsh.model.getBoundary([(0, int(ient))],recursive=True)
+                    node1=allNodeTags.index([allElemNodeTags[0][i0] for i0 in range(nallelems[0]) if allElemEntityTags[0][i0]==shpedges[0][1]][0][0])+1
+                    #
+                    # Add NDFSPRING
+                    idxelem+=1
+                    ivaltab=PropValPgs['spring;0'][i].split(' - ')   
+                    nparams=len(ivaltab)
+                    tmpelem={}
+                    tmpelem['val']=['ELEM',idxelem,node1]
+                    tmpelem['fmt']='(A10,I6,I6'
+                    for iparam in range(nparams):
+                        tmpelem['fmt']+=',F10.1'
+                        tmpelem['val'].append(float(ivaltab[iparam]))
+                    tmpelem['fmt']+=")"
+                    #
+                    INelemSpring.append(tmpelem)
+            #
+            for i in range(len(PropEnts['spring;0'])):
+                ient=int(PropEnts['spring;0'][i])
+                tmpelem={}
+                shpedges=gmsh.model.getBoundary([(0, int(ient))],recursive=True)
+                node1=allNodeTags.index([allElemNodeTags[0][i0] for i0 in range(nallelems[0]) if allElemEntityTags[0][i0]==shpedges[0][1]][0][0])+1
+                #
+                # Add NDFSPRING
+                idxelem+=1
+                #print('PropValPgs["spring;0][i]=',PropValPgs['spring;0'][i])  
+                ivaltab=PropValEnts['spring;0'][i].split(' - ') 
+                nparams=len(ivaltab)
+                tmpelem={}
+                tmpelem['val']=['ELEM',idxelem,node1]
+                tmpelem['fmt']='(A10,I6,I6'
+                for iparam in range(nparams):
+                    tmpelem['fmt']+=',F10.1'
+                    tmpelem['val'].append(float(ivaltab[iparam]))
+                tmpelem['fmt']+=")"
+                #
+                INelemSpring.append(tmpelem)
+            #
+            NSPRING=idxelem
 
 
             #
@@ -5748,6 +5808,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 # NFIBER
                 f.write(self.writeLineFortran('(A6,I6)',['NFIBER',NFIBER])+"\n")
             #
+            # Truss
+            if(len(INelemTruss)>0):
+                f.write(self.writeLineFortran('(A5,I6,I6)',['TRUSS',NTRUSS,NGEOTRUSS])+"\n")
+            #
             # Shells
             if(len(INelemShells)>0):
                 f.write(self.writeLineFortran('(A5,I6,I6)',['SHELL',NSHELL,NGEOSHELL])+"\n")
@@ -5775,11 +5839,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     val=0
                 f.write(self.writeLineFortran('(A2,I6)',['NG',val])+"\n")
             #
-            # Truss
-            if(len(INelemTruss)>0):
-                f.write(self.writeLineFortran('(A5,I6,I6)',['TRUSS',NTRUSS,NGEOTRUSS])+"\n")
-            #
-            # Springs (TBD)
+            # Springs
+            if(len(INelemSpring)>0):
+                f.write(self.writeLineFortran('(A5,I6)',['NSPRING',NSPRING])+"\n")
             #
         f.write(self.writeLineFortran('(A11)',['END_ELEM'])+"\n")
         #
@@ -5937,6 +5999,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     f.write(self.writeLineFortran(INelemTruss[i]['fmt'],INelemTruss[i]['val'])+"\n")
 
             #
+
+        # SERIES 18 (meca) -Spring elements
+        if(not self.isThermal):
+            # Write Spring (Structural)
+            if(len(INelemSpring)>0):
+                f.write(self.writeLineFortran('(A10)',['NDFSPRING'])+"\n")
+                #                #
+                for i in range(len(INelemSpring)):
+                    f.write(self.writeLineFortran(INelemSpring[i]['fmt'],INelemSpring[i]['val'])+"\n")
 
         # SERIES 16 (thermal) - Frontiers
         if(self.isThermal):
@@ -6823,7 +6894,22 @@ contextDBstring="""
             {
             "key":"Property Type","name":"Spring",
             "props":[],
-            "children":[]
+            "children":[
+                {
+                "key":"Mass Node Type","name":"-",
+                "props":[
+                {"name":"0Theta","type":"number","values":[0],"min":0,"max":360,"step":0},
+                {"name":"1FS","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"2FI","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"3K","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"4area","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"5ui","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"6Fi","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"ents":{},"pgs":{}}
+                ],
+                "children":[]
+                }           
+            ]
             }
         ]},
         {
@@ -6952,7 +7038,24 @@ contextDBstring="""
             {
             "key":"Property Type","name":"Spring",
             "props":[],
-            "children":[]
+            "children":[
+                {
+                "key":"Mass Node Type","name":"-",
+                "props":[
+                {"name":"0cx","type":"number","values":[0],"min":-100,"max":100,"step":0},
+                {"name":"1cy","type":"number","values":[0],"min":-100,"max":100,"step":0},
+                {"name":"2cz","type":"number","values":[0],"min":-100,"max":100,"step":0},
+                {"name":"3FS","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"4FI","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"5K","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"6area","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"7ui","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"name":"8Fi","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                {"ents":{},"pgs":{}}
+                ],
+                "children":[]
+                }
+            ]
             }
         ]}
     ]},
