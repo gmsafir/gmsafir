@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-07-21"
+        self.version="2023-08-03"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -5841,7 +5841,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             # Springs
             if(len(INelemSpring)>0):
-                f.write(self.writeLineFortran('(A5,I6)',['NSPRING',NSPRING])+"\n")
+                f.write(self.writeLineFortran('(A5,I6)',['SPRING',NSPRING])+"\n")
             #
         f.write(self.writeLineFortran('(A11)',['END_ELEM'])+"\n")
         #
