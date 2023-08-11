@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-08-03"
+        self.version="2023-08-11"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -7865,6 +7865,17 @@ contextDBstring="""
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
+                    },
+                    {
+                    "key":"Material Sub-category","name":"WOOD2020",
+                    "props":[
+                            {"name":"90Young module","type":"number","values":[2e11],"min":0,"max":1e12,"step":0},
+                            {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
+                            {"name":"92Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
+                            {"name":"93Tensile strength","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                            {"ents":{},"pgs":{}}
+                    ],
+                    "children":[]
                     }
                 ]},
                 {
@@ -8473,6 +8484,25 @@ contextDBstring="""
                             {"name":"HIDDEN torsname","type":"string","values":["ELASTIC"]},
                             {"name":"1Specific Mass (including moisture)","type":"number","values":[410],"min":0,"max":10000,"step":0},
                             {"name":"2Moisture content","type":"number","values":[12],"min":0,"max":250,"step":0},
+                            {"name":"3Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
+                            {"name":"4Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
+                            {"name":"5Relative emission","type":"number","values":[0.8],"min":0,"max":1,"step":0},
+                            {"name":"6Ratio of anisotropy in conduct.","type":"number","values":[4],"min":0,"max":1,"step":0},
+                            {"name":"7Direction of the grain X-coord","type":"number","values":[0],"min":0,"max":1,"step":0},
+                            {"name":"8Direction of the grain Y-coord","type":"number","values":[0],"min":0,"max":1,"step":0},
+                            {"name":"9Direction of the grain Z-coord","type":"number","values":[1],"min":0,"max":1,"step":0},
+                            {"name":"91Young module","type":"number","values":[1e10],"min":0,"max":1e12,"step":0},
+                            {"name":"92Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
+                            {"ents":{},"pgs":{}}
+                    ],
+                    "children":[]
+                    },
+                    {
+                    "key":"Material Sub-category","name":"Wood2020",
+                    "props":[
+                            {"name":"HIDDEN torsname","type":"string","values":["ELASTIC"]},
+                            {"name":"1Specific Mass (including moisture)","type":"number","values":[410],"min":0,"max":10000,"step":0},
+                            {"name":"2Moisture content","type":"number","values":[16],"min":0,"max":250,"step":0},
                             {"name":"3Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"4Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
                             {"name":"5Relative emission","type":"number","values":[0.8],"min":0,"max":1,"step":0},
