@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-08-11"
+        self.version="2023-10-20"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -1212,6 +1212,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         lvl_max=999
         moremenus=self.createContextMenu(self.inspectDB,[pbtyp],lvl_max,prefixname,do_writeprf,do_assignidx,do_props_only,False)
 
+        # G4S Info button
+        menudict={}
+        menudict["type"]="string"
+        menudict["name"]=prefixname+"/000Select Mesh Nodes" # prf_elem
+        #print('menudict["name"]=',menudict["name"])
+        menudict["values"]=["selectZone"]
+        menudict["attributes"]={"Macro":"Action", "Aspect":"ReturnButton"}
+        moremenus.append(menudict)
+        
         # G4S Info button
         menudict={}
         menudict["type"]="string"
@@ -6452,11 +6461,58 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             gmsh.onelab.setString("ONELAB/Action", [""])
             rc=self.createIN()
 
-
         elif action[0] == "viewg4s":
             # user clicked on "Run"
             gmsh.onelab.setString("ONELAB/Action", [""])
             rc=self.viewAndWriteInfog4s(1)
+
+        elif action[0] == "selectZone":
+            # user clicked on "Run"
+            gmsh.onelab.setString("ONELAB/Action", [""])
+            gmsh.fltk.setStatusMessage("Please select one (click) or more (Ctrl+click and drag) entities ('e' to finish, 'q' to quit, 'u' to undo last step)", True)
+            ents=[]
+            while 1:
+                #rc
+                r, ent = gmsh.fltk.selectEntities()
+                if r==1:
+                    ents.append(ent)
+                elif (r==3 and ents!=[]):
+                    ents=ents[:-1]
+                print("selected elements", ents)
+                if r == 0 or r==4: break
+            # Print the list of nodes
+            #gmsh.logger.write(ilog, level="info")
+            
+            if(r==4):
+                flat_l=[]
+                for irow in ents:
+                    flat_l.extend(irow)
+                unique_l = (list(set(flat_l)))
+                #
+                print("unique list of selected elements", unique_l)
+                #
+                allNodeTags=[]
+                for e in unique_l:
+                    # Dimension and tag of the entity
+                    dim = e[0]
+                    tag = e[1]
+                    # Nodes and coords: stored as developed lists
+                    nodeTags, nodeCoords, nodeParams = gmsh.model.mesh.getNodes(dim, tag)
+                    if(nodeTags.size==0):
+                        gmsh.logger.write("Mesh not generated - Generate if first", level="error")
+                        if gmsh.fltk.isAvailable() == 0: return 0
+                        gmsh.fltk.setStatusMessage("", True)
+                        return -1
+                    else:
+                        allNodeTags+=list(nodeTags)
+                unique_allNodeTags= (list(set(allNodeTags)))
+                gmsh.logger.write("List of all selected nodes:", level="info")
+                for inode in unique_allNodeTags:
+                    gmsh.logger.write(str(int(inode+1)), level="")
+                #        
+            #r, ent = gmsh.fltk.selectEntities()
+            if gmsh.fltk.isAvailable() == 0: return 0
+            gmsh.fltk.setStatusMessage("", True)
 
 
         elif action[0] == "reloadprops":
