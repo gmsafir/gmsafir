@@ -1306,7 +1306,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if self.permutespecial or self.LAXspecial:
             checklax=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Check=LAX from" in list(k.keys())[0]][0][0]
             reverse_xp=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Reverse X" in list(k.keys())[0]][0][0]
-            if(checklax==1):
+            if(checklax=='YES'):
                 theta_degrees=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Rotation angle" in list(k.keys())[0]][0][0]
             else:
                 Yp_str=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Y'(dx,dy,dz)" in list(k.keys())[0]][0][0].split(',')
@@ -1317,7 +1317,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         else:
             checklax=[iprop for iprop in tmp0['props'] if 'name' in iprop if "Check=LAX from" in iprop['name']][0]['values'][0]
             reverse_xp=[iprop for iprop in tmp0['props'] if 'name' in iprop and "Reverse X" in iprop['name']][0]['values'][0]
-            if(checklax==1):
+            if(checklax=='YES'):
                 theta_degrees=[iprop for iprop in tmp0['props'] if 'name' in iprop and "Rotation angle" in iprop['name']][0]['values'][0]
             else:
                 Yp_str=[iprop for iprop in tmp0['props'] if 'name' in iprop and "Y'(dx,dy,dz)" in iprop['name']][0]['values'][0].split(',')
@@ -1332,7 +1332,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         else:
             VP.append(Xp)
         #
-        if(checklax==1): #4th point determined by LAX with rotation angle
+        if(checklax=='YES'): #4th point determined by LAX with rotation angle
             print("theta_degrees=",theta_degrees)
             #
             if(theta_degrees!=0):
