@@ -1306,7 +1306,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if self.permutespecial or self.LAXspecial:
             checklax=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Check=LAX from" in list(k.keys())[0]][0][0]
             reverse_xp=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Reverse X" in list(k.keys())[0]][0][0]
-            if(checklax==1):
+            if(checklax=='YES'):
                 theta_degrees=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Rotation angle" in list(k.keys())[0]][0][0]
             else:
                 Yp_str=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Y'(dx,dy,dz)" in list(k.keys())[0]][0][0].split(',')
@@ -1317,7 +1317,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         else:
             checklax=[iprop for iprop in tmp0['props'] if 'name' in iprop if "Check=LAX from" in iprop['name']][0]['values'][0]
             reverse_xp=[iprop for iprop in tmp0['props'] if 'name' in iprop and "Reverse X" in iprop['name']][0]['values'][0]
-            if(checklax==1):
+            if(checklax=='YES'):
                 theta_degrees=[iprop for iprop in tmp0['props'] if 'name' in iprop and "Rotation angle" in iprop['name']][0]['values'][0]
             else:
                 Yp_str=[iprop for iprop in tmp0['props'] if 'name' in iprop and "Y'(dx,dy,dz)" in iprop['name']][0]['values'][0].split(',')
@@ -1332,7 +1332,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         else:
             VP.append(Xp)
         #
-        if(checklax==1): #4th point determined by LAX with rotation angle
+        if(checklax=='YES'): #4th point determined by LAX with rotation angle
             print("theta_degrees=",theta_degrees)
             #
             if(theta_degrees!=0):
@@ -9179,77 +9179,78 @@ inspectDBstring="""
 # "children":[]
 # }
 
-print(sys.argv)
+if __name__ == "__main__":
+    print(sys.argv)
 
-myapp=Myapp()
+    myapp=Myapp()
 
-if not myapp.nopopup: # GUI MODE
-    gmsh.fltk.initialize()
-    while myapp.eventLoop():
-        pass
-else: # BATCH MODE
-    gmsh.logger.write("Run GmSAFIR in Batch mode", level="info")
-    #
+    if not myapp.nopopup: # GUI MODE
+        gmsh.fltk.initialize()
+        while myapp.eventLoop():
+            pass
+    else: # BATCH MODE
+        gmsh.logger.write("Run GmSAFIR in Batch mode", level="info")
+        #
 
-    if(re.search('.g4s$',myapp.dir)!=None): # process all GEO files found in the directory with this G4S file
-        #
-        myapp.g4sfile=myapp.dir
-        myapp.dir=os.path.dirname(myapp.dir)
-        #
-        tmpfiles2=[k for k in os.listdir(myapp.dir) if (re.search('.g4s$',k)!=None)]
-        gmsh.logger.write("Ok, G4S file, "+os.path.basename(myapp.g4sfile)+" is used for all GEO files in the directory.", level="info")
-        myapp.getG4sJson(myapp.g4sfile) # if existing DB in input director
-        #
-        tmpfiles=[k for k in os.listdir(myapp.dir) if (re.search('.geo$',k)!=None)]
-        if(tmpfiles!=[]):
-            gmsh.logger.write("Ok, found the following GEO files, process them in batch mode:\n"+str(tmpfiles), level="info")
+        if(re.search('.g4s$',myapp.dir)!=None): # process all GEO files found in the directory with this G4S file
             #
-            for gfile in tmpfiles:
-                gmsh.open(os.path.join(myapp.dir,gfile))
-                myapp.INfile=gfile.replace(".geo",".IN")
-                myapp.isThermal="Thermal" in myapp.pbType
-                pattern=re.compile("[0-9]")
-                ndims=int(re.search(pattern, myapp.pbType).group(0))
-                gmsh.model.geo.synchronize()
-                #
-                if(ndims==2):
-                    gmsh.model.mesh.generate(2)
-                if(ndims==3):
-                    gmsh.model.mesh.generate(3)
-                #
-                myapp.createIN()
-    #
-    elif(os.path.isdir(myapp.dir)): # process all couples (GEO,G4S) found in the directory
-        tmpfiles=[k for k in os.listdir(myapp.dir) if (re.search('.geo$',k)!=None)]
-        tmpfiles2=[k for k in os.listdir(myapp.dir) if (re.search('.g4s$',k)!=None)]
-        for ig4s in tmpfiles2:
-            myapp.g4sfile=os.path.join(myapp.dir,ig4s)
-            gfile=myapp.g4sfile.replace('g4s','geo')
+            myapp.g4sfile=myapp.dir
+            myapp.dir=os.path.dirname(myapp.dir)
             #
-            if(os.path.exists(gfile)):
-                gmsh.open(os.path.join(myapp.dir,gfile))
-                myapp.getG4sJson(myapp.g4sfile)
-                myapp.INfile=gfile.replace(".geo",".IN")
-                myapp.isThermal="Thermal" in myapp.pbType
-                pattern=re.compile("[0-9]")
-                ndims=int(re.search(pattern, myapp.pbType).group(0))
-                gmsh.model.geo.synchronize()
-                gmsh.model.geo.synchronize()
+            tmpfiles2=[k for k in os.listdir(myapp.dir) if (re.search('.g4s$',k)!=None)]
+            gmsh.logger.write("Ok, G4S file, "+os.path.basename(myapp.g4sfile)+" is used for all GEO files in the directory.", level="info")
+            myapp.getG4sJson(myapp.g4sfile) # if existing DB in input director
+            #
+            tmpfiles=[k for k in os.listdir(myapp.dir) if (re.search('.geo$',k)!=None)]
+            if(tmpfiles!=[]):
+                gmsh.logger.write("Ok, found the following GEO files, process them in batch mode:\n"+str(tmpfiles), level="info")
                 #
-                if(ndims==2):
-                    gmsh.model.mesh.generate(2)
-                if(ndims==3):
-                    gmsh.model.mesh.generate(3)
+                for gfile in tmpfiles:
+                    gmsh.open(os.path.join(myapp.dir,gfile))
+                    myapp.INfile=gfile.replace(".geo",".IN")
+                    myapp.isThermal="Thermal" in myapp.pbType
+                    pattern=re.compile("[0-9]")
+                    ndims=int(re.search(pattern, myapp.pbType).group(0))
+                    gmsh.model.geo.synchronize()
+                    #
+                    if(ndims==2):
+                        gmsh.model.mesh.generate(2)
+                    if(ndims==3):
+                        gmsh.model.mesh.generate(3)
+                    #
+                    myapp.createIN()
+        #
+        elif(os.path.isdir(myapp.dir)): # process all couples (GEO,G4S) found in the directory
+            tmpfiles=[k for k in os.listdir(myapp.dir) if (re.search('.geo$',k)!=None)]
+            tmpfiles2=[k for k in os.listdir(myapp.dir) if (re.search('.g4s$',k)!=None)]
+            for ig4s in tmpfiles2:
+                myapp.g4sfile=os.path.join(myapp.dir,ig4s)
+                gfile=myapp.g4sfile.replace('g4s','geo')
                 #
-                myapp.createIN()
-            else:
-                gmsh.logger.write("No GEO found in the folder associated with G4S file "+ig4s, level="warning")
-    #
-    else:
-        msg="-- Batch mode: No G4S file in the directory - need at least one --"
-        gmsh.logger.write(msg+"\n", level="error")
+                if(os.path.exists(gfile)):
+                    gmsh.open(os.path.join(myapp.dir,gfile))
+                    myapp.getG4sJson(myapp.g4sfile)
+                    myapp.INfile=gfile.replace(".geo",".IN")
+                    myapp.isThermal="Thermal" in myapp.pbType
+                    pattern=re.compile("[0-9]")
+                    ndims=int(re.search(pattern, myapp.pbType).group(0))
+                    gmsh.model.geo.synchronize()
+                    gmsh.model.geo.synchronize()
+                    #
+                    if(ndims==2):
+                        gmsh.model.mesh.generate(2)
+                    if(ndims==3):
+                        gmsh.model.mesh.generate(3)
+                    #
+                    myapp.createIN()
+                else:
+                    gmsh.logger.write("No GEO found in the folder associated with G4S file "+ig4s, level="warning")
+        #
+        else:
+            msg="-- Batch mode: No G4S file in the directory - need at least one --"
+            gmsh.logger.write(msg+"\n", level="error")
 
 
-    #self.INfile=gfile.replace(".geo",".IN")
+        #self.INfile=gfile.replace(".geo",".IN")
 
-gmsh.finalize()
+    gmsh.finalize()
