@@ -547,7 +547,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             with open(file0) as f:
                 lines=f.readlines()
                 pattern=re.compile("^#")
-                pattern2=re.compile("^[\s]*$")
+                pattern2=re.compile(r"^[\s]*$")
                 #
                 thelines=[]
                 for iline in lines:
@@ -744,10 +744,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         inb=1
                     #
                     else: # localized properties
-                        pattern_fct=re.compile("\((.)*\)$")
-                        pattern_fct2=re.compile("^(.)*\((\w)*(\s)*(\w)*(\s)*")
-                        pattern_fct2b=re.compile("^(.)*\((\w)*(\s)*")
-                        pattern_fct3=re.compile("\)")
+                        pattern_fct=re.compile(r"\((.)*\)$")
+                        pattern_fct2=re.compile(r"^(.)*\((\w)*(\s)*(\w)*(\s)*")
+                        pattern_fct2b=re.compile(r"^(.)*\((\w)*(\s)*")
+                        pattern_fct3=re.compile(r"\)")
                         #print ("inam0=",inam0)
                         inam=re.sub(pattern_fct,"",inam0)
                         #print ("inam0=",inam0)
@@ -6210,7 +6210,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             lines=f0.readlines()
                             if(lines==[]):
                                 raise ValueError("Empty file")
-                            tmpl=re.split('\s+',lines[0].replace('\n',''))
+                            tmpl=re.split(r'\s+',lines[0].replace('\n',''))
                             pattern=re.compile("USER.*[0-9]+$")
                             if((not len(tmpl)==2) or re.search(pattern,lines[0])==None):
                                 raise ValueError("First line shall be in the form: USER[X] [nb]")
@@ -6218,11 +6218,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             inb=int(tmpl[1])
                             if(inb+1!=len(lines) or inb<2):
                                 raise ValueError("Incorrect number of lines")
-                            tmpl=re.split('\s+',lines[1].replace('\n',''))
+                            tmpl=re.split(r'\s+',lines[1].replace('\n',''))
                             if(len(tmpl)!=11):
                                 raise ValueError("Second line shall contain 11 parameters: T,k,c,rho,w,Tstart,Tend,hh,hu,emissiv,r")
                             for iline in lines[2:]:
-                                tmpl=re.split('\s+',iline.replace('\n',''))
+                                tmpl=re.split(r'\s+',iline.replace('\n',''))
                                 while '' in tmpl:
                                     tmpl.remove('')
                                 if(len(tmpl)!=4):
