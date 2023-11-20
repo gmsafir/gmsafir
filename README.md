@@ -1,4 +1,5 @@
 ## GmSAFIR (current version 2023-11-20) ⚡
+
 GmSAFIR is a GUI-preprocessor that enables to facilitate the creation of input files to SAFIR model.   
 It is meant to be used starting with SAFIR version 2022a0 and future versions.  
 It is free and open-source.  
@@ -16,6 +17,16 @@ Here are some other useful links:
 ### Important Note: 
 In the Issues, the .geo .g4s and .IN files cannot be uploaded as is. Please, add .txt at the end of their names before uploading
 
+Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
+
+This work is licensed under a
+[Creative Commons Attribution 4.0 International License][cc-by].
+
+[![CC BY 4.0][cc-by-image]][cc-by]
+
+[cc-by]: http://creativecommons.org/licenses/by/4.0/
+[cc-by-image]: https://i.creativecommons.org/l/by/4.0/88x31.png
+[cc-by-shield]: https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg
 <!--
 **gmsafir/gmsafir** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
 
