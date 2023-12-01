@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-11-20"
+        self.version="2023-12-01"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -5799,9 +5799,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             if(self.isThermal and ndims==2):
                 self.nvoids=len(PropAtts['void;1'])
-                f.write(self.writeLineFortran('(A5,I6)',['NVOID',self.nvoids])+"\n")
-                if(self.nvoids>0):
-                    f.write(self.writeLineFortran('(A11,I6)',['FRTIERVOID',nfrontiervoids])+"\n")
+                if(not istorsrun):
+                    f.write(self.writeLineFortran('(A5,I6)',['NVOID',self.nvoids])+"\n")
+                    if(self.nvoids>0):
+                        f.write(self.writeLineFortran('(A11,I6)',['FRTIERVOID',nfrontiervoids])+"\n")
+                else:
+                    f.write(self.writeLineFortran('(A5,I6)',['NVOID','0'])+"\n")
         #
         else: # Header (Structural)
             #
@@ -8309,8 +8312,6 @@ contextDBstring="""
                             {"name":"7Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"8Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
                             {"name":"90Relative emission","type":"number","values":[0.8],"min":0,"max":1,"step":0},
-                            {"name":"91Young module","type":"number","values":[1.2e10],"min":0,"max":1e12,"step":0},
-                            {"name":"92Poisson coefficient","type":"number","values":[0.2],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]},
@@ -8326,8 +8327,6 @@ contextDBstring="""
                             {"name":"6Temperature when evaporation stops","type":"number","values":[110],"min":0,"max":200,"step":0},
                             {"name":"7Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"8Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
-                            {"name":"90Relative emission","type":"number","values":[0.8],"min":0,"max":1,"step":0},
-                            {"name":"91Young module","type":"number","values":[1.2e10],"min":0,"max":1e12,"step":0},
                             {"name":"92Poisson coefficient","type":"number","values":[0.2],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
@@ -8344,8 +8343,6 @@ contextDBstring="""
                             {"name":"1Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"2Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
                             {"name":"3Relative emission","type":"number","values":[0.7],"min":0,"max":1,"step":0},
-                            {"name":"90Young module","type":"number","values":[1.2e10],"min":0,"max":1e12,"step":0},
-                            {"name":"91Poisson coefficient","type":"number","values":[0.2],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]},
@@ -8356,8 +8353,6 @@ contextDBstring="""
                             {"name":"1Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"2Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
                             {"name":"3Relative emission","type":"number","values":[0.7],"min":0,"max":1,"step":0},
-                            {"name":"90Young module","type":"number","values":[1.2e10],"min":0,"max":1e12,"step":0},
-                            {"name":"91Poisson coefficient","type":"number","values":[0.2],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]}
