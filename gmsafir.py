@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2023-12-01"
+        self.version="2024-01-08"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -6188,7 +6188,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             fmtstr+=")"
                             f.write(self.writeLineFortran(fmtstr,vallst)+"\n")
                         #
-                        if 'STAINLESS STEELS' in imat:
+                        if 'STAINLESS_STEELS' in imat:
                             f.write(self.writeLineFortran('(A9)',["SLS1.4301"])+"\n")
                             f.write(self.writeLineFortran('(F15.2,F15.2,F15.2)',[25.,4.,0.4])+"\n")
                         #
@@ -7566,7 +7566,7 @@ contextDBstring="""
                     }
                 ]},
                 {
-                "key":"Material Type","name":"STAINLESS STEELS",
+                "key":"Material Type","name":"STAINLESS_STEELS",
                 "props":[],
                 "children":[
                     {
@@ -8499,7 +8499,7 @@ contextDBstring="""
                     "children":[]
                     },
                     {
-                    "key":"Material Sub-category","name":"Stainless Steels",
+                    "key":"Material Sub-category","name":"Stainless_Steels",
                     "props":[
                             {"name":"HIDDEN torsname","type":"string","values":["ELASTIC"]},
                             {"name":"1Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
