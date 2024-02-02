@@ -6156,7 +6156,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 if not istorsrun:
                     #
                     if not 'User-defined' in imatstr:
-                        f.write(self.writeLineFortran('(A10,A10)',[imat,imatg4s])+"\n")
                         #
                         vallst=[];fmtstr="("
                         #
@@ -6170,31 +6169,36 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             leng1=len(tmpvals)-1 # Remove from the list the material name (no torsname)
                         #
                         begin=True
-                        if(leng1>0):
-                            for i0 in range(leng1):
-                                key=list(tmpvals[i0].keys())[0]
-                                if(re.search("^0",key)==None): #Reserved to menus, not to params].keys())[0]
-                                    val0=list(tmpvals[i0].values())[0][0]
-                                    vallst.append(val0)
-                                    if str(val0).replace('.','',1).isdigit():
-                                        format1="F15.2"
-                                    else:
-                                        format1="A15"
-                                    if(begin):
-                                        fmtstr+=format1
-                                        begin=False
-                                    else:
-                                        fmtstr+=","+format1
-                            fmtstr+=")"
-                            f.write(self.writeLineFortran(fmtstr,vallst)+"\n")
-                        #
+
                         if 'STAINLESS_STEELS' in imat:
                             f.write(self.writeLineFortran('(A9)',["SLS1.4301"])+"\n")
                             f.write(self.writeLineFortran('(F15.2,F15.2,F15.2)',[25.,4.,0.4])+"\n")
                         #
-                        if 'ALUMINUM' in imat:
+                        elif 'ALUMINUM' in imat:
                             f.write(self.writeLineFortran('(A9)',["AL6061_T6"])+"\n")
                             f.write(self.writeLineFortran('(F15.2,F15.2,F15.2)',[25.,4.,0.7])+"\n")
+                        
+                        else:
+                            f.write(self.writeLineFortran('(A10,A10)',[imat,imatg4s])+"\n")
+                            if(leng1>0):
+                                for i0 in range(leng1):
+                                    key=list(tmpvals[i0].keys())[0]
+                                    if(re.search("^0",key)==None): #Reserved to menus, not to params].keys())[0]
+                                        val0=list(tmpvals[i0].values())[0][0]
+                                        vallst.append(val0)
+                                        if str(val0).replace('.','',1).isdigit():
+                                            format1="F15.2"
+                                        else:
+                                            format1="A15"
+                                        if(begin):
+                                            fmtstr+=format1
+                                            begin=False
+                                        else:
+                                            fmtstr+=","+format1
+                                fmtstr+=")"
+                                f.write(self.writeLineFortran(fmtstr,vallst)+"\n")
+                        #
+
                     #
                     else:# User-defined material
                         ikey=[i for i in range(len(tmpvals)) if "Filename" in list(tmpvals[i].keys())[0]][0]
@@ -7938,7 +7942,7 @@ contextDBstring="""
                     }
                 ]},
                 {
-                "key":"Material Type","name":"ALUMINIUM",
+                "key":"Material Type","name":"ALUMINUM",
                 "props":[],
                 "children":[
                     {
@@ -9186,7 +9190,6 @@ if __name__ == "__main__":
     else: # BATCH MODE
         gmsh.logger.write("Run GmSAFIR in Batch mode", level="info")
         #
-
         if(re.search('.g4s$',myapp.dir)!=None): # process all GEO files found in the directory with this G4S file
             #
             myapp.g4sfile=myapp.dir
@@ -9207,11 +9210,17 @@ if __name__ == "__main__":
                     pattern=re.compile("[0-9]")
                     ndims=int(re.search(pattern, myapp.pbType).group(0))
                     gmsh.model.geo.synchronize()
+                    gmsh.model.mesh.synchronize()
                     #
-                    if(ndims==2):
-                        gmsh.model.mesh.generate(2)
-                    if(ndims==3):
-                        gmsh.model.mesh.generate(3)
+                    elemTypes, elemTags, elemNodeTags = gmsh.model.mesh.getElements(0, -1)
+                    
+                    if(elemTags!=[]):
+                        gmsh.logger.write("Mesh is already generated from GEO file", level="info")
+                    else:
+                        if(ndims==2):
+                            gmsh.model.mesh.generate(2)
+                        if(ndims==3):
+                            gmsh.model.mesh.generate(3)
                     #
                     myapp.createIN()
         #
@@ -9232,10 +9241,15 @@ if __name__ == "__main__":
                     gmsh.model.geo.synchronize()
                     gmsh.model.geo.synchronize()
                     #
-                    if(ndims==2):
-                        gmsh.model.mesh.generate(2)
-                    if(ndims==3):
-                        gmsh.model.mesh.generate(3)
+                    elemTypes, elemTags, elemNodeTags = gmsh.model.mesh.getElements(0, -1)
+                    
+                    if(elemTags!=[]):
+                        gmsh.logger.write("Mesh is already generated from GEO file", level="info")
+                    else:
+                        if(ndims==2):
+                            gmsh.model.mesh.generate(2)
+                        if(ndims==3):
+                            gmsh.model.mesh.generate(3)
                     #
                     myapp.createIN()
                 else:
