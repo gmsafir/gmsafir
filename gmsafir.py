@@ -4591,8 +4591,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # (Structural): get the NDOFMAX - FEM considered are those with some Mats defined
         if not self.isThermal:
             if(ndims==2):
-                if("trusscormat;1" in ElemVals):
-                    if([k for k in ElemVals["trusscormat;1"] if k!="-1"]!=[]):
+                if(PropPgs["trusscormat;1"]!=[] or PropEnts["trusscormat;1"]!=[]):
                         ndofmax=2
                 if("beamcormat;1" in ElemVals):
                     if([k for k in ElemVals["beamcormat;1"] if k!="-1"]!=[]):
