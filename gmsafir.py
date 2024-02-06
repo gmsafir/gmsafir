@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2024-01-08"
+        self.version="2024-02-06"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -8315,6 +8315,8 @@ contextDBstring="""
                             {"name":"7Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"8Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
                             {"name":"90Relative emission","type":"number","values":[0.8],"min":0,"max":1,"step":0},
+                            {"name":"91Young module","type":"number","values":[0],"min":0,"max":1e12,"step":0},
+                            {"name":"92Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]},
@@ -8330,6 +8332,7 @@ contextDBstring="""
                             {"name":"6Temperature when evaporation stops","type":"number","values":[110],"min":0,"max":200,"step":0},
                             {"name":"7Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"8Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
+                            {"name":"91Young module","type":"number","values":[0],"min":0,"max":1e12,"step":0},
                             {"name":"92Poisson coefficient","type":"number","values":[0.2],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
@@ -8346,6 +8349,8 @@ contextDBstring="""
                             {"name":"1Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"2Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
                             {"name":"3Relative emission","type":"number","values":[0.7],"min":0,"max":1,"step":0},
+                            {"name":"91Young module","type":"number","values":[0],"min":0,"max":1e12,"step":0},
+                            {"name":"92Poisson coefficient","type":"number","values":[0.2],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]},
@@ -8356,6 +8361,8 @@ contextDBstring="""
                             {"name":"1Convection coeff hot","type":"number","values":[25],"min":0,"max":100,"step":0},
                             {"name":"2Convection coeff cold","type":"number","values":[4],"min":0,"max":100,"step":0},
                             {"name":"3Relative emission","type":"number","values":[0.7],"min":0,"max":1,"step":0},
+                            {"name":"91Young module","type":"number","values":[0],"min":0,"max":1e12,"step":0},
+                            {"name":"92Poisson coefficient","type":"number","values":[0.2],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]}
