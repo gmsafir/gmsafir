@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2024-02-22"
+        self.version="2024-03-06"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -6949,9 +6949,9 @@ contextDBstring="""
                 {
                 "key":"Mass Node Type","name":"-",
                 "props":[
-                {"name":"0Mass1","type":"number","values":[0],"min":0,"max":100,"step":0},
-                {"name":"1Mass2","type":"number","values":[0],"min":0,"max":100,"step":0},
-                {"name":"2Mass3","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"0Translation X (kg)","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"1Translation Y (kg)","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"2Rotation Z (kgm)","type":"number","values":[0],"min":0,"max":100,"step":0},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
@@ -7089,13 +7089,13 @@ contextDBstring="""
                 {
                 "key":"Mass Node Type","name":"-",
                 "props":[
-                {"name":"0Mass1","type":"number","values":[0],"min":0,"max":100,"step":0},
-                {"name":"1Mass2","type":"number","values":[0],"min":0,"max":100,"step":0},
-                {"name":"2Mass3","type":"number","values":[0],"min":0,"max":100,"step":0},
-                {"name":"3Mass4","type":"number","values":[0],"min":0,"max":100,"step":0},
-                {"name":"4Mass5","type":"number","values":[0],"min":0,"max":100,"step":0},
-                {"name":"5Mass6","type":"number","values":[0],"min":0,"max":100,"step":0},
-                {"name":"6Mass7","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"0Translation X (kg)","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"1Translation Y (kg)","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"2Translation Z (kg)","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"3Rotation X (kgm)","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"4Rotation Y (kgm)","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"5Rotation Z (kgm)","type":"number","values":[0],"min":0,"max":100,"step":0},
+                {"name":"6Warping (-)","type":"number","values":[0],"min":0,"max":100,"step":0},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
