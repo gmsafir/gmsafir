@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2024-03-06"
+        self.version="2024-04-08"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -6495,6 +6495,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #gmsh.logger.write(ilog, level="info")
             
             if(r==4):
+                #gmsh.model.mesh.synchronize()
                 flat_l=[]
                 for irow in ents:
                     flat_l.extend(irow)
@@ -6508,9 +6509,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     dim = e[0]
                     tag = e[1]
                     # Nodes and coords: stored as developed lists
-                    nodeTags, nodeCoords, nodeParams = gmsh.model.mesh.getNodes(dim, tag)
-                    if(nodeTags.size==0):
-                        gmsh.logger.write("Mesh not generated - Generate if first", level="error")
+                    nodeTags, nodeCoords, nodeParams = gmsh.model.mesh.getNodes(dim, tag, includeBoundary=True)
+                    if(len(nodeTags)==0):
+                        gmsh.logger.write("Mesh not generated - Generate if first for dimension:"+str(dim), level="error")
                         if gmsh.fltk.isAvailable() == 0: return 0
                         gmsh.fltk.setStatusMessage("", True)
                         return -1
