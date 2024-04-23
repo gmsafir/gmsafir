@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2024-04-08"
+        self.version="2024-04-23"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -544,6 +544,25 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         # Read G4S file (no more a JSON format) and remove commented and empty lines (or full of whitespaces)
         if notdebug:
+            
+            
+#             # Particular treatment (for compatibility with older GmSAFIR versions, where property "Residual Stress" was not existant in G4S file)
+#             with open(file0) as f:
+#                 lines=f.readlines()
+#                 pattern=re.compile("^Surface - Surface Material")
+#                 pattern2=re.compile("^Volume - Volume Material")
+#                 Residual Stress
+#                 #
+#                 thelines=[]
+#                 for iline in lines:
+#                     if(re.search(pattern, iline)!=None):
+#                         print("OK 2D: "+iline);
+#                     elif(re.search(pattern, iline)!=None):
+#                         print("OK 3D: "+iline);
+#             f.close()            
+            
+
+            #General treatment
             with open(file0) as f:
                 lines=f.readlines()
                 pattern=re.compile("^#")
@@ -1220,7 +1239,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         menudict["values"]=["selectZone"]
         menudict["attributes"]={"Macro":"Action", "Aspect":"ReturnButton"}
         moremenus.append(menudict)
-        
+
         # G4S Info button
         menudict={}
         menudict["type"]="string"
@@ -1538,12 +1557,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 foundspecial=False
                 for  i in range(len(menus)):
                     imenu=menus[i]
-                    
+
                     inam=imenu['name']
-                    
+
                     if("Frontier" in inam):
                         print("FROM MENU CREATION=",imenu)
-                        
+
                     isnewmat=False;isnewlax=False
                     specialcase='New Material Definition' in inam or 'New LAX Definition' in inam or 'New Rebar Material Definition' in inam # Due to the creation of GUI menus, only of these two conditions can occur
                     #
@@ -1678,16 +1697,16 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                         # If inb not already existing in oldmenus, reload inb from contextDB
                                                         jmenu=deepcopy(imenu)
                                                         jmenu['name']=jnam
-                                                        
+
                                                         oldmenu=[km0 for km0 in self.oldmenus if jnam in km0['name']]
                                                         print('is jnam in oldmenus=',oldmenu)
-                                                        
+
                                                         if(oldmenu==[]):
                                                             jmenu['values']=[k for k in iprop[ikey][inb] if list(k.keys())[0]==propnam][0][propnam]
                                                         ## Else load from old menu
                                                         else:
                                                             jmenu['values']=oldmenu[0]['values']
-                                                                                                             
+
                                                         addmenus.append(jmenu)
 
                                                         # Complete 'File for' for special case of 'User-defined'
@@ -1715,9 +1734,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         #
                         menus+=addmenus
         #
-                
+
         return menus
-    
+
 
     #Called from "createContextMenu": generate recursively the list of DB children to be dressed
     def getLeaves(self,tmp0,prf_categ,prf_elem0,prf_elem,max_lvl,lists,menus,do_writeprf):
@@ -3001,8 +3020,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if(ndims==3):
                 propstrs.append(('blks;2','Block Constraint'))
                 propstrs.append(('same;3','SAME Constraint'))
+                #propstrs.append(('epsrsolid;3','Residual Stress'))
             if(ndims==2):
                 propstrs.append(('void;1','Void Constraint'))
+                #propstrs.append(('epsrsolid;2','Residual Stress'))
                 if(self.nvoids>0):
                     propstrs.append(('void_sym;1','Void SymAxis Constraint'))
                 propstrs.append(('real_sym;1','Real SymAxis Constraint'))
@@ -3056,6 +3077,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 get_objs_from_json(tmp0,"",PropAtts[igtypdim],'pgs')
             except Exception as emsg:
                 gmsh.logger.write("Problem in collecting "+igtypdim+" property attributes:"+str(emsg), level="error")
+                    #PropAtts[igtypdim]={}
                 return -1,PropAtts,PropPgs,PropEnts,PropValPgs,PropValEnts,PropExtValEnts,PropExtValPgs,propstrs,ishptyp,ishptypm,nmats,uniqmatlist
 
         #TDB - add here a verification of coherence btw geo model and g4sDB
@@ -3227,9 +3249,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #
                     elif igtyp =='mats':
                         valtab=[[val0 for k0,val0 in d.items()] for d in v["props"]]
+                        #extval=valtab[0][0][0]
+                        print("valtab=",valtab)
                         extval=valtab[0][0][0]
                         # Get number
-                        val=str([k0 for k0 in range(len(self.listMats)) if extval+";"+idim in list(self.listMats[k0].keys())[0]][0]+1)
+                        val=str([k0 for k0 in range(len(self.listMats)) if valtab[0][0][0]+";"+idim in list(self.listMats[k0].keys())[0]][0]+1)
+                        val=val+" - "+valtab[1][0][0]
                     #
                     elif igtyp == 'rebar':
                         for d in v["props"]:
@@ -3306,7 +3331,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         extval=str(v['extend_val'])
                     #
                     else:
-                        print('coucou_fin:',igtyp)
                         val="1"
                         extval="1"
 
@@ -3560,7 +3584,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         if('pgs' in v0):
                             for ipg in range(len(v0['pgs'])):
                                 llog.append(self.allShapes[idim]+" - "+ifullname+"(Physical "+self.allShapes[idim]+" "+str(v0['pgs'][ipg])+") = {")
-                                                                    
+
                                 for ik in range(len(v0['props'])):
                                     iprop=v0['props'][ik]
                                     propnam=list(iprop.keys())[0]
@@ -4844,7 +4868,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     tmp={}
                     ielem=allElemTags[ndims][i]
                     ientity=allElemEntityTags[ndims][i]
-                    imat=ElemVals['mats;'+str(ishptyp)][i]
+                    imat,iepsr=ElemVals['mats;'+str(ishptyp)][i].split(" - ")
                     inodesperelem=self.allElemTypesNbNodes[allElemTypes[ndims][i]]
                     ncoords=[] #number of nodes for the elems, completed for SAFIR to 4 (dim=2) or to 8 (dim=3)
                     for icoord in range(inodesperelem):
@@ -4867,7 +4891,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         flst.append(ncoords[icoord])
                     #ffmt+="I8,F7.0)"
                     ffmt+="I8,I7)"
-                    flst.append(imat);flst.append(0.)
+                    flst.append(imat);flst.append(iepsr)
                     tmp['val']=flst
                     tmp['fmt']=ffmt
                     INelems.append(tmp)
@@ -5133,7 +5157,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #
                     # Add NDFSPRING
                     idxelem+=1
-                    ivaltab=PropValPgs['spring;0'][i].split(' - ')   
+                    ivaltab=PropValPgs['spring;0'][i].split(' - ')
                     nparams=len(ivaltab)
                     tmpelem={}
                     tmpelem['val']=['ELEM',idxelem,node1]
@@ -5153,8 +5177,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 #
                 # Add NDFSPRING
                 idxelem+=1
-                #print('PropValPgs["spring;0][i]=',PropValPgs['spring;0'][i])  
-                ivaltab=PropValEnts['spring;0'][i].split(' - ') 
+                #print('PropValPgs["spring;0][i]=',PropValPgs['spring;0'][i])
+                ivaltab=PropValEnts['spring;0'][i].split(' - ')
                 nparams=len(ivaltab)
                 tmpelem={}
                 tmpelem['val']=['ELEM',idxelem,node1]
@@ -5931,7 +5955,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         except Exception as emsg:
                             gmsh.logger.write("Material "+imattab[k]+"recovered from your .TEM files is not assigned correctly in the current structural case:"+str(emsg), level="error")
                             return -1
-                        
+
                         f.write(self.writeLineFortran('(A9,I11,I11)',['TRANSLATE',k+1,iglomat+1])+"\n")
                     f.write(self.writeLineFortran('(A9)',['END_TRANS'])+"\n")
                 #
@@ -6181,7 +6205,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         elif 'ALUMINUM' in imat:
                             f.write(self.writeLineFortran('(A9)',["AL6061_T6"])+"\n")
                             f.write(self.writeLineFortran('(F15.2,F15.2,F15.2)',[25.,4.,0.7])+"\n")
-                        
+
                         else:
                             f.write(self.writeLineFortran('(A10,A10)',[imat,imatg4s])+"\n")
                             if(leng1>0):
@@ -6493,7 +6517,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 if r == 0 or r==4: break
             # Print the list of nodes
             #gmsh.logger.write(ilog, level="info")
-            
+
             if(r==4):
                 #gmsh.model.mesh.synchronize()
                 flat_l=[]
@@ -6521,7 +6545,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 gmsh.logger.write("List of all selected nodes:", level="info")
                 for inode in unique_allNodeTags:
                     gmsh.logger.write(str(int(inode+1)), level="")
-                #        
+                #
             #r, ent = gmsh.fltk.selectEntities()
             if gmsh.fltk.isAvailable() == 0: return 0
             gmsh.fltk.setStatusMessage("", True)
@@ -6976,7 +7000,7 @@ contextDBstring="""
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
-                }           
+                }
             ]
             }
         ]},
@@ -8281,6 +8305,7 @@ contextDBstring="""
                 "key":"Sub-Type","name":"-",
                 "props":[
                 {"name":"1Material Name(s)","type":"string","values":[""]},
+                {"name":"2Residual Stress (Pa)","type":"string","values":["0.0"]},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
@@ -8967,6 +8992,7 @@ contextDBstring="""
                 "key":"Sub-Type","name":"-",
                 "props":[
                 {"name":"1Material Name(s)","type":"string","values":[""]},
+                {"name":"2Residual Stress (Pa)","type":"string","values":["0.0"]},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
@@ -9225,7 +9251,7 @@ if __name__ == "__main__":
                     gmsh.model.mesh.synchronize()
                     #
                     elemTypes, elemTags, elemNodeTags = gmsh.model.mesh.getElements(0, -1)
-                    
+
                     if(elemTags!=[]):
                         gmsh.logger.write("Mesh is already generated from GEO file", level="info")
                     else:
@@ -9254,7 +9280,7 @@ if __name__ == "__main__":
                     gmsh.model.geo.synchronize()
                     #
                     elemTypes, elemTags, elemNodeTags = gmsh.model.mesh.getElements(0, -1)
-                    
+
                     if(elemTags!=[]):
                         gmsh.logger.write("Mesh is already generated from GEO file", level="info")
                     else:
