@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2024-07-10"
+        self.version="2024-07-15"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -6002,12 +6002,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                          #
                          for k in range(len(imattab)):
                              try:
-                                 glomat=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imattab[k]+";1"][0]
+                                 iglomat2=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imattab[k]+";1"][0]
                              except Exception as emsg:
                                  print(self.listMats)
                                  gmsh.logger.write("Material "+imattab[k]+" recovered from your .TSH files is not assigned correctly in the current structural case:"+str(emsg), level="error")
                                  return -1
-                             f.write(self.writeLineFortran('(A20,I3)',["REBARMAT",iglomat+1])+"\n")
+                             f.write(self.writeLineFortran('(A20,I3)',["REBARMAT",iglomat2+1])+"\n")
                              f.write(self.writeLineFortran('(A20,F10.3)',["SECTION",float(isecttab[k])])+"\n")
                              f.write(self.writeLineFortran('(A20,F10.3)',["LEVEL",float(ilevtab[k])])+"\n")
                              iangle=[val for i,val in angles.items() if i==k][0]
