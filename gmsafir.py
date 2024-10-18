@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2024-07-15"
+        self.version="2024-09-03"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -115,7 +115,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         else:
             self.contextDB=json.loads(contextDBstring) # load ContextDB from this script
             self.initCompleteContextDB(self.contextDB) # Copy Materials: same for Volume/th3D than Surface/th2D
-            self.safirDB=json.loads(safirDBstring)
+            self.safirDB=json.loads(safirDBstring.replace("1990-01-01",self.version))
             self.initCompleteSafirDB(self.safirDB)
             self.pbType="Thermal 2D" #Initialization of problem type
 
@@ -537,7 +537,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         self.contextDB=json.loads(contextDBstring) # load ContextDB from this script
         self.initCompleteContextDB(self.contextDB) # Copy Materials: same for Volume/th3D than Surface/th2D
-        self.safirDB=json.loads(safirDBstring)
+        self.safirDB=json.loads(safirDBstring.replace("1990-01-01",self.version))
         self.initCompleteSafirDB(self.safirDB)
         #
         notdebug=True # To read old G4S files, set temporarily notdebug to False
@@ -866,8 +866,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.INfile=tmp0[ikey2]["values"][0]
         #
         # Get the number of VOIDS
-        if(self.pbType=="Thermal 2D"):
-            tmp0=self.getDBValue(self.contextDB,[("children","name","Curve"),("children","name","Thermal 2D"),("children","name","Void Constraint"),("children","name","-")],False)
+        if(self.pbType=="Thermal 2D" or self.pbType=="Thermal 3D"):
+            if(self.pbType=="Thermal 2D"):
+                ishp0="Curve"
+            elif(self.pbType=="Thermal 3D"):
+                ishp0="Surface"
+            tmp0=self.getDBValue(self.contextDB,[("children","name",ishp0),("children","name",self.pbType),("children","name","Void Constraint"),("children","name","-")],False)
             pgsents=[iprop for iprop in tmp0['props'] if not 'name' in list(iprop.keys())][0]
             self.nvoids=0
             for ityp in ['ents','pgs']:
@@ -875,7 +879,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     for k,v in pgsents[ityp].items():
                         val=[list(iv.values())[0] for iv in v if 'Void number' in list(iv.keys())][0][0]
                         self.nvoids=max(self.nvoids,val)
-
             #if(pgsents['pgs']!={}):
             print("self.nvoids Read: value=",self.nvoids)
 
@@ -3020,6 +3023,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if(ndims==3):
                 propstrs.append(('blks;2','Block Constraint'))
                 propstrs.append(('same;3','SAME Constraint'))
+                propstrs.append(('void;2','Void Constraint'))
                 #propstrs.append(('epsrsolid;3','Residual Stress'))
             if(ndims==2):
                 propstrs.append(('void;1','Void Constraint'))
@@ -3102,6 +3106,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             ikey=PropAtts['real_sym;1'][k]
                             ikey["val"]=i+1
                             ikey["extend_val"]=i+1
+                    #
+                    elif(ndims==3):
+                        for i, (k, v) in enumerate(PropAtts['void;2'].items()):
+                            ikey=PropAtts['void;2'][k]
+                            ivoid=[list(iv.values())[0] for iv in ikey['props'] if 'Void number' in list(iv.keys())][0][0]
+                            ikey["val"]=ivoid
+                            ikey["extend_val"]=str(ivoid)+'- void Boundary'
                 #
             except Exception as emsg:
                 gmsh.logger.write("Problem in void property attributes:"+str(emsg), level="error")
@@ -3733,6 +3744,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 inspectColors['void_sym']=inspectColors['void']
             inspectColors['real_sym']=inspectColors['void']
             inspectColors['tors']=inspectColors['void']
+        #
+        if(self.pbType=="Thermal 3D"):
+            inspectColors['void']=shuffled_cmap(plt.cm.cividis)
         #
         pattern=re.compile("[0-9]")
         ndims=int(re.search(pattern, self.pbType).group(0))
@@ -5329,13 +5343,18 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         # 6/ Prepare Voids for writing (Thermal)
         if(self.isThermal):
-            if(ndims==2 and self.nvoids>0):
+            #if(ndims==2 and self.nvoids>0):
+            if(self.nvoids>0):
                 nfrontiervoids=0
                 INvoids={}
                 frtvoids={}
                 try:
                     #
-                    igtypdim='void;1'
+                    if(ndims==2):
+                        igtypdim='void;1'
+                    elif(ndims==3):
+                        igtypdim='void;2'
+                    #
                     igtyp='void'
                     ipref='ELEM'
                     if PropAtts[igtypdim]!={}:
@@ -5691,7 +5710,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         f.write(tmp0['values'][0]+"\n")
 
         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Title2")],False)
-        f.write(tmp0['values'][0]+"\n")
+        #title2=tmp0['values'][0].replace("1990-01-01",self.version)
+        title2=tmp0['values'][0]
+        f.write(title2+"\n")
         f.write("\n")
 
         # SERIES 2 (thermal and meca) - Quantity of nodes
@@ -5828,6 +5849,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         f.write(self.writeLineFortran('(A11,I6)',['FRTIERVOID',nfrontiervoids])+"\n")
                 else:
                     f.write(self.writeLineFortran('(A5,I6)',['NVOID','0'])+"\n")
+            #
+            elif(self.isThermal and ndims==3):
+                self.nvoids=len(PropAtts['void;2'])
+                f.write(self.writeLineFortran('(A5,I6)',['NVOID',self.nvoids])+"\n")
+                if(self.nvoids>0):
+                    f.write(self.writeLineFortran('(A11,I6)',['FRTIERVOID',nfrontiervoids])+"\n")
+            #
         #
         else: # Header (Structural)
             #
@@ -6062,12 +6090,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # SERIES 17 (thermal) - Voids
         if(self.isThermal):
             # 7/ Write Voids (Thermal 2D)
-            if(ndims==2 and self.nvoids>0 and not istorsrun):
+            if(ndims==2 and self.nvoids>0 and not istorsrun) or (ndims==3 and self.nvoids>0):
                 for ivoid,tmpvoid in INvoids.items():
                     f.write(self.writeLineFortran('(A10)',['VOID'])+"\n")
                     for i in range(len(tmpvoid)):
                         f.write(self.writeLineFortran(tmpvoid[i]['fmt'],tmpvoid[i]['val'])+"\n")
                     f.write(self.writeLineFortran('(A10)',['END_VOID'])+"\n")
+            #
 
         # SERIES 18 (thermal) - Symmetries
         if(self.isThermal):
@@ -6415,7 +6444,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             else:
                 self.contextDB=json.loads(contextDBstring) # load ContextDB from this script
                 self.initCompleteContextDB(self.contextDB) # Copy Materials: same for Volume/th3D than Surface/th2D
-                self.safirDB=json.loads(safirDBstring)
+                self.safirDB=json.loads(safirDBstring.replace("1990-01-01",self.version))
                 self.initCompleteSafirDB(self.safirDB)
                 self.pbType="Thermal 2D" #Initialization of problem type
 
@@ -6597,7 +6626,7 @@ safirDBstring="""
     "key":"Problem Type","name":"Thermal 2D",
     "props":[
         {"name":"Title1","type":"string","values":["Safir_Thermal_Analysis"]},
-        {"name":"Title2","type":"string","values":["Mesh_from_G4S-Mesher"]},
+        {"name":"Title2","type":"string","values":["Model created with GmSAFIR version 1990-01-01"]},
         {"name":"PRECISION","type":"number","values":[1.0e-3],"min":0,"max":1.0e-1,"step":1.0e-3},
         {"name":"TETA","type":"number","values":[0.9],"min":0,"max":1,"step":0.1,"visible":true},
         {"name":"TINITIAL","type":"number","values":[20],"min":0,"max":1,"step":0.1,"visible":true},
@@ -6677,7 +6706,7 @@ safirDBstring="""
     "key":"Problem Type","name":"Thermal 3D",
     "props":[
         {"name":"Title1","type":"string","values":["Safir_Thermal_3D_Analysis"]},
-        {"name":"Title2","type":"string","values":["Mesh_from_G4S-Mesher"]},
+        {"name":"Title2","type":"string","values":["Model created with GmSAFIR version 1990-01-01"]},
         {"name":"PRECISION","type":"number","values":[1.0e-3],"min":0,"max":1.0e-1,"step":1.0e-3},
         {"name":"TETA","type":"number","values":[0.9],"min":0,"max":1,"step":0.1},
         {"name":"TINITIAL","type":"number","values":[20],"min":0,"max":1,"step":0.1},
@@ -6707,7 +6736,7 @@ safirDBstring="""
     "key":"Problem Type","name":"Structural 2D",
     "props":[
         {"name":"Title1","type":"string","values":["Safir_Structural_Analysis"]},
-        {"name":"Title2","type":"string","values":["Mesh_from_G4S-Mesher"]},
+        {"name":"Title2","type":"string","values":["Model created with GmSAFIR version 1990-01-01"]},
         {"name":"Name of the .IN File","type":"string","values":["untitled.IN"]},
         {"type":"number","name":"Consider max displacement","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
         {"type":"number","name":"MAX DISPL","values":[999],"min":1,"max":1000,"step":1,"visible":false},
@@ -7225,7 +7254,7 @@ contextDBstring="""
                 {
                 "key":"Void Type","name":"-",
                 "props":[
-                    {"name":"Void number","type":"number","values":[1],"min":0,"max":1,"step":1},
+                    {"name":"Void number","type":"number","values":[1],"min":0,"max":10,"step":1},
                     {"ents":{},"pgs":{}}
                     ],
                 "children":[]
@@ -8680,6 +8709,19 @@ contextDBstring="""
             ]
             },
             {
+            "key":"Property Type","name":"Void Constraint",
+            "props":[],
+            "children":[
+                {
+                "key":"Void Type","name":"-",
+                "props":[
+                    {"name":"Void number","type":"number","values":[1],"min":0,"max":10,"step":1},
+                    {"ents":{},"pgs":{}}
+                    ],
+                "children":[]
+                }]
+            },
+            {
             "key":"Property Type","name":"SAME Constraint",
             "props":[],
             "children":[
@@ -9174,8 +9216,9 @@ inspectDBstring="""
             {"type":"string","name":"1View flux","values":["inspect fluxes"],"attributes":{"Macro":"Action", "Aspect":"Button"}},
             {"type":"string","name":"2View frontiers","values":["inspect frontiers"],"attributes":{"Macro":"Action", "Aspect":"Button"}},
             {"type":"string","name":"3View blocks","values":["inspect blocks"],"attributes":{"Macro":"Action", "Aspect":"Button"}},
-            {"type":"string","name":"4View same","values":["inspect same"],"attributes":{"Macro":"Action", "Aspect":"Button"}},
-            {"type":"string","name":"5Clean","values":["inspect clean"],"attributes":{"Macro":"Action", "Aspect":"Button"}}
+            {"type":"string","name":"4View voids","values":["inspect voids"],"attributes":{"Macro":"Action", "Aspect":"Button"}},
+            {"type":"string","name":"5View same","values":["inspect same"],"attributes":{"Macro":"Action", "Aspect":"Button"}},
+            {"type":"string","name":"6Clean","values":["inspect clean"],"attributes":{"Macro":"Action", "Aspect":"Button"}}
             ],
             "children":[]
     },
