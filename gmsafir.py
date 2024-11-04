@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2024-09-03"
+        self.version="2024-11-04"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -3789,6 +3789,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             print(ugtypdim,PropEnts[ugtypdim])
             #
             listvals=list(set(PropExtValEnts[ugtypdim]))
+            #print(listvals)
             #
             if(len(PropEnts[ugtypdim])!=0):
                 nugtyps=len(PropEnts[ugtypdim])
@@ -3798,7 +3799,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     idim=int(idim)
                     ishp=self.allShapes[idim]
                     ival=PropExtValEnts[ugtypdim][i]
-                    irgb=inspectColors[ugtyp][listvals.index(ival)]
+                    print("ugtypdim="+ugtypdim+","+str(ival))
+                    irgb=inspectColors[ugtyp][max(min(listvals.index(ival),255),0)]
 
                     # save previous color before changing (in order to clean later)
                     if(not 'colors' in self.toClean):
@@ -4552,10 +4554,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 ElemVals[igtypdim].append(valuestr)
                         #
                         if ientity in GroupTags[igtypdim]:
+                                
                             if(len(ElemVals[igtypdim])==i+1 and not 'load' in igtyp and not 'blks' in igtyp):
                                 raise ValueError("ielem="+str(ielem)+" has simultaneously a '"+igtypdim+"' property as physgroup '"+str(GroupTags[igtypdim][ientity])+"' and as entity '"+str(ientity)+"'! Need to select only one definition")
                             elif 'load' in igtyp or 'blks' in igtyp:
                                 igps=GroupTags[igtypdim][ientity].split(';')
+
                                 for igp in igps:
                                     if(valuestr==""):
                                         valuestr=PropValPgs[igtypdim][PropPgs[igtypdim].index(igp)]
@@ -4936,11 +4940,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                 if PropAtts[igtypdim]!={}:
                     for i in range(nallelems[1]):
+                        ielem=allElemTags[1][i]
+                        ientity=allElemEntityTags[1][i]
+                        idxbeams.append(ielem)
+                            
                         if(ElemVals[igtypdim][i]!="-1"):
                             tmp={};tmpelem={}
 
-                            ielem=allElemTags[1][i]
-                            ientity=allElemEntityTags[1][i]
 
                             if(ndims==3 and ElemVals[igtypdim2][i]=="-1"):
                                 raise ValueError(" Need to assign a local axes to 'Curve "+str(ientity)+"'")
@@ -5006,7 +5012,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     INnodes.append(tmp)
 
                             # Add NODOFBEAM
-                            idxbeams.append(ielem)
                             idxelem+=1
                             if(ndims==2):
                                 tmpelem['val']=['ELEM',idxelem,node1,node3,node2,sectidx]
@@ -5057,10 +5062,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                 if igtypdim in PropAtts and PropAtts[igtypdim]!={}:
                     for i in range(nallelems[2]):
+                        ielem=allElemTags[2][i]
+                        ientity=allElemEntityTags[2][i]
+                        idxshells.append(ielem)
+                        
                         if(ElemVals[igtypdim][i]!="-1"):
                             tmp={};tmpelem={}
-                            ielem=allElemTags[2][i]
-                            ientity=allElemEntityTags[2][i]
                             #
                             inodesperelem=self.allElemTypesNbNodes[allElemTypes[2][i]]
                             idx1=allNodeTags.index(allElemNodeTags[2][i][0])
@@ -5087,7 +5094,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 sectidx=len(INsectionShells)
 
                             # Add NODOFSHELL
-                            idxshells.append(ielem)
+                            
                             idxelem+=1
                             tmpelem['val']=['ELEM',idxelem,node1,node2,node3,node4,sectidx]
                             tmpelem['fmt']='(A10,I6,I11,I11,I11,I11,I11)'
@@ -5304,16 +5311,20 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     frtierfaceSi.append(i)
                             # Boucle de recherche
                             for im in range(nelems):
+                                ielem=allElemTags[ndims][im]
                                 ielemnodes = allElemNodeTags[ndims][im]
                                 ielemtype=allElemTypes[ndims][im]
                                 ifaces=self.getOrderedFaces(ielemtype,ielemnodes)
+                                if(ielem==615): print(str(ifaces))
                                 found=False
                                 faceConstraints=['NO' for i0 in range(nfacesperelemmax)]
                                 for ifa in range(len(ifaces)):
                                     elemface=ifaces[ifa]
                                     elemface.sort()
                                     try:
+                                        #if(elemface[0]==36 and elemface[1]==37): print("FRTIERS2-1: "+str(ifa)+","+str(elemface))
                                         j = frtierfaceS.index(elemface)
+                                        #print("FRTIERS2-2: "+str(ifa)+","+str(elemface))
                                         idx=im+1
                                         ifa0=ifa
                                         tmp={}
@@ -5417,6 +5428,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         if PropAtts[igtypdim]!={}:
                             #
                             for i in range(kelems):
+                                print(str(i))
                                 ielem=allElemTags[kdims][i]
                                 #
                                 if(ElemVals[igtypdim][i]!="-1"):
@@ -5431,6 +5443,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         idx=idxshells.index(ielem)+1
                                         iflag="M_SHELL"
                                     #
+                                    
                                     ivaltab=ElemVals[igtypdim][i].split(' - ')
                                     nparams=len(ivaltab)
                                     tmpelem={}
