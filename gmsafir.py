@@ -5011,16 +5011,16 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     tmp['fmt']='(A10,I6,F11.4,F11.4,F11.4)'
                                     INnodes.append(tmp)
 
-                            # Add NODOFBEAM
-                            idxelem+=1
-                            if(ndims==2):
-                                tmpelem['val']=['ELEM',idxelem,node1,node3,node2,sectidx]
-                                tmpelem['fmt']='(A10,I6,I11,I11,I11,I11)'
-                            if(ndims==3):
-                                tmpelem['val']=['ELEM',idxelem,node1,node3,node2,node4,sectidx]
-                                tmpelem['fmt']='(A10,I6,I11,I11,I11,I11,I11)'
-                            #
-                            INelemBeams.append(tmpelem)
+                        # Add NODOFBEAM
+                        idxelem+=1
+                        if(ndims==2):
+                            tmpelem['val']=['ELEM',idxelem,node1,node3,node2,sectidx]
+                            tmpelem['fmt']='(A10,I6,I11,I11,I11,I11)'
+                        if(ndims==3):
+                            tmpelem['val']=['ELEM',idxelem,node1,node3,node2,node4,sectidx]
+                            tmpelem['fmt']='(A10,I6,I11,I11,I11,I11,I11)'
+                        #
+                        INelemBeams.append(tmpelem)
                 #
                 # Get NFIBER
                 for i in range(len(INsectionBeams)):
