@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2024-11-04"
+        self.version="2024-11-11"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -4938,11 +4938,20 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 igtypdim2='beamlax;1'
                 ientityold=-999
 
+
                 if PropAtts[igtypdim]!={}:
                     for i in range(nallelems[1]):
                         ielem=allElemTags[1][i]
                         ientity=allElemEntityTags[1][i]
-                        idxbeams.append(ielem)
+                        
+                        if(ElemVals[igtypdim][i]=="-1"):
+                            raise ValueError(" Material is missing, at least for 'Curve "+str(ientity)+"'")
+
+
+                if PropAtts[igtypdim]!={}:
+                    for i in range(nallelems[1]):
+                        ielem=allElemTags[1][i]
+                        ientity=allElemEntityTags[1][i]
                             
                         if(ElemVals[igtypdim][i]!="-1"):
                             tmp={};tmpelem={}
@@ -5011,16 +5020,17 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     tmp['fmt']='(A10,I6,F11.4,F11.4,F11.4)'
                                     INnodes.append(tmp)
 
-                        # Add NODOFBEAM
-                        idxelem+=1
-                        if(ndims==2):
-                            tmpelem['val']=['ELEM',idxelem,node1,node3,node2,sectidx]
-                            tmpelem['fmt']='(A10,I6,I11,I11,I11,I11)'
-                        if(ndims==3):
-                            tmpelem['val']=['ELEM',idxelem,node1,node3,node2,node4,sectidx]
-                            tmpelem['fmt']='(A10,I6,I11,I11,I11,I11,I11)'
-                        #
-                        INelemBeams.append(tmpelem)
+                            # Add NODOFBEAM
+                            idxbeams.append(ielem)
+                            idxelem+=1
+                            if(ndims==2):
+                                tmpelem['val']=['ELEM',idxelem,node1,node3,node2,sectidx]
+                                tmpelem['fmt']='(A10,I6,I11,I11,I11,I11)'
+                            if(ndims==3):
+                                tmpelem['val']=['ELEM',idxelem,node1,node3,node2,node4,sectidx]
+                                tmpelem['fmt']='(A10,I6,I11,I11,I11,I11,I11)'
+                            #
+                            INelemBeams.append(tmpelem)
                 #
                 # Get NFIBER
                 for i in range(len(INsectionBeams)):
