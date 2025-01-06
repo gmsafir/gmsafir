@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2024-11-11"
+        self.version="2025-01-06"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -7936,6 +7936,8 @@ contextDBstring="""
                     "props":[
                             {"name":"90Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"91Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
+                            {"name":"92Tensile strength","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                            {"name":"93Time","type":"number","values":[0],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
@@ -7945,6 +7947,8 @@ contextDBstring="""
                     "props":[
                             {"name":"90Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"91Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
+                            {"name":"92Tensile strength","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                            {"name":"93Time","type":"number","values":[0],"min":0,"max":1e10,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
@@ -7954,6 +7958,8 @@ contextDBstring="""
                     "props":[
                             {"name":"90Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"91Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
+                            {"name":"92Tensile strength","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                            {"name":"93Quantile for compressive strength","type":"number","values":[0.5],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
@@ -7963,6 +7969,8 @@ contextDBstring="""
                     "props":[
                             {"name":"90Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"91Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
+                            {"name":"92Tensile strength","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                            {"name":"93Quantile for compressive strength","type":"number","values":[0.5],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
@@ -7972,6 +7980,8 @@ contextDBstring="""
                     "props":[
                             {"name":"90Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"91Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
+                            {"name":"92Tensile strength","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                            {"name":"93Ratio of compressive strength loss in cooling","type":"number","values":[0.5],"min":0,"max":1,"step":0},
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
@@ -7981,6 +7991,9 @@ contextDBstring="""
                     "props":[
                             {"name":"90Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
                             {"name":"91Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
+                            {"name":"92Tensile strength","type":"number","values":[0],"min":0,"max":1e10,"step":0},
+                            {"name":"93Ratio of compressive strength loss in cooling","type":"number","values":[0.5],"min":0,"max":1,"step":0},
+                            
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
