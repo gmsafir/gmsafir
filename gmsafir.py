@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-01-06"
+        self.version="2025-02-04"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -81,6 +81,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # specialCategs is defined by default - will be updated in getG4sJson if g4sfile exists:
         self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
                             ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
+        self.reverseLAXEntities={}
+        self.ReverseOnce=False
         #
         # Reading the different DBs:
         #
@@ -885,8 +887,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.g4sfileError=""
 
 
-        tmp0=self.getDBValue(self.contextDB,[("children","name","Curve"),("children","name","Thermal 2D"),("children","name","Frontier Constraint")],False)
-
 
     # Update the general lists: self.listMats and self.listLAX
     def updateGeneralLists(self):
@@ -904,7 +904,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         else:
             listshps=[shpmax]
 
-        print('listshps=',listshps)
+        #print('listshps=',listshps)
         for i in listshps:
             tmp2=self.getDBValue(self.contextDB,[("children","name",self.allShapes[i]),("children","name",self.pbType),("children","name","New Material Definition")],False)
             rc=self.recursActionContextDB(tmp2,'list_names\tmat;'+str(i),self.listMats)
@@ -1334,6 +1334,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 Yp_str=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Y'(dx,dy,dz)" in list(k.keys())[0]][0][0].split(',')
 
             #
+            
         #
         # theta values in other cases
         else:
@@ -1570,7 +1571,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     specialcase='New Material Definition' in inam or 'New LAX Definition' in inam or 'New Rebar Material Definition' in inam # Due to the creation of GUI menus, only of these two conditions can occur
                     #
                     if ('New Material Definition' in inam or 'New Rebar Material Definition' in inam) and self.listMats!=[]:
-                        print('inam create=',inam,imenu)
+                        #print('inam create=',inam,imenu)
                         isnewmat=True
                         tmplist=self.listMats
                         newname="Material Names Choice"
@@ -1627,9 +1628,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #
                     tmp1=ilist['data']
                     end_lvl=ilist['end_lvl']
-                    print('end_lvl=',end_lvl) # DEBUG - print to evaluate the depth of the leaves
+                    #print('end_lvl=',end_lvl) # DEBUG - print to evaluate the depth of the leaves
                     prf=ilist['name']
-                    print('name=',prf) # DEBUG - print to evaluate the depth of the leaves
+                    #print('name=',prf) # DEBUG - print to evaluate the depth of the leaves
                     nprops=len(tmp1['props'])
                     #
                     # Specialcase: update from self.listMats or self.listLAX
@@ -1673,7 +1674,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                 inamtab=inam.split("/")
                                                 specialcase='New Material Definition' in inam or 'New Rebar Material Definition' in inam or 'New LAX Definition' in inam
                                                 #
-                                                print("imenu=",imenu)
+                                                #print("imenu=",imenu)
                                                 if(specialcase): # No update for specialcase, update has already been done
                                                     jnb,_=inb.split('/')
                                                     exclude_inb=True
@@ -1695,14 +1696,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                                             s1="Physical "+s1
                                                         #
                                                         jnam=inam.replace(s0,s1)
-                                                        print('jnam=',jnam)
+                                                        #print('jnam=',jnam)
                                                         #
                                                         # If inb not already existing in oldmenus, reload inb from contextDB
                                                         jmenu=deepcopy(imenu)
                                                         jmenu['name']=jnam
 
                                                         oldmenu=[km0 for km0 in self.oldmenus if jnam in km0['name']]
-                                                        print('is jnam in oldmenus=',oldmenu)
+                                                        #print('is jnam in oldmenus=',oldmenu)
 
                                                         if(oldmenu==[]):
                                                             jmenu['values']=[k for k in iprop[ikey][inb] if list(k.keys())[0]==propnam][0][propnam]
@@ -1920,8 +1921,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 #
                                 idx=tabidx[0]
                                 #
-                                print('inside permuteDB: ivl=',ivl)
-                                print('inside permuteDB: tmpk0["props"][idx]=',tmpk0['props'][idx])
+                                #print('inside permuteDB: ivl=',ivl)
+                                #print('inside permuteDB: tmpk0["props"][idx]=',tmpk0['props'][idx])
                                 if(ivl==-1):
                                     ivl=[tmpk0['props'][idx]['valueLabels'][ivlstr]]
                                 else:
@@ -1934,7 +1935,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 #
                                 tmpk0['props'][idx]['values']=ivl
 
-                                print('inside permuteDB: tmpk0["props"][idx]=',tmpk0['props'][idx])
+                               # print('inside permuteDB: tmpk0["props"][idx]=',tmpk0['props'][idx])
 
                                 # Special case of 'Beam Local Axes' in ONELAB Context: launches recreateLAXView to adjust the vectors according to the value of theta
                                 if(shpid!="-1" and ("Rotation angle" in inam or "Reverse X" in inam or "X'(dx,dy,dz)" in inam or "Y'(dx,dy,dz)" in inam or "Z'(dx,dy,dz)" in inam)):
@@ -2380,7 +2381,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         return emsg
 
 
-    #Called by manageStoreDB and by GetG4SJson
+    #Called by manageStoreDB and by GetG4SJson - this routine updates DB in memory (not in G4Sfile)
     def updateDB(self,tmpg,pbtyp,toStore):
         #
         ierr=0
@@ -2394,7 +2395,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             propnam=s
             return inam,propnam,ivl
         #
-        print('toStore=',toStore)
+        #print('toStore=',toStore)
         inam,propnam,ivl=getParam(0)
 
         p=re.compile("^[0-9]+")
@@ -2406,7 +2407,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         s0=copy(s)
         isVoidConstraint="Void Constraint" in s0
         #
-        print('inam=',inam)
+        #print('inam=',inam)
         iprop=s[3]
         #
         shp0=inam.split('/')[1]
@@ -2752,6 +2753,47 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if(specialcase):
             self.updateGeneralLists()
             self.permutespecial=True
+
+        # ADjustment for Reverse x':
+        
+        if("New LAX Definition" in inam):
+            i0=[i for i in range(len(toStoreNames)) if 'Reverse X' in toStoreNames[i]][0]
+            irev=int(list(toStore[i0].values())[0][0])
+            #
+            if(not 'pgs' in self.reverseLAXEntities):
+                self.reverseLAXEntities['pgs']={}
+            if(not 'ents' in self.reverseLAXEntities):
+                self.reverseLAXEntities['ents']={}
+            #
+            if(not ivl[0] in list(self.reverseLAXEntities['ents'].keys())):
+                self.reverseLAXEntities['ents'][ivl[0]]={}
+            if(not ivl[0] in list(self.reverseLAXEntities['pgs'].keys())):
+                self.reverseLAXEntities['pgs'][ivl[0]]={}
+            #
+            self.reverseLAXEntities['ents'][ivl[0]]['reverse_value']=irev
+            self.reverseLAXEntities['ents'][ivl[0]]['curves']=[]
+            self.reverseLAXEntities['pgs'][ivl[0]]['reverse_value']=irev
+            self.reverseLAXEntities['pgs'][ivl[0]]['curves']=[]
+            self.ReverseOnce=True
+            #
+            #print("self.reverseLAXEntities after=", self.reverseLAXEntities)
+
+
+        if("Beam Section Local Axes" in inam):
+            #print('ok entered Beam Section Local Axes.')
+            #print("self.reverseLAXEntities before=", self.reverseLAXEntities)
+            #
+            if(ityp=='Physical'):
+                ikey='pgs'
+            else:
+                ikey='ents'
+            
+            if(not int(inb) in self.reverseLAXEntities[ikey][ivl[0]]['curves']):
+                self.reverseLAXEntities[ikey][ivl[0]]['curves'].append(int(inb))
+            
+            print("reverseLAXEntities in updateDB=",str(self.reverseLAXEntities))
+            self.ReverseOnce=True
+            
 
 
         return tmpg,update_void,ierr
@@ -6433,7 +6475,80 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
         return 0
 
+    def checkReverse(self,ient,irev):
+        istR=False
+        # Get coords of entity
+        edgesCurve=gmsh.model.getBoundary([(1, ient)],recursive=True)
+        inode1=abs(int(edgesCurve[0][1]));inode2=abs(int(edgesCurve[1][1])) # Select the nodes of the first beam element, all other beam in same entity will have same treatment
+#         print("ient=",ient)
+#         print("inode1=",inode1)
+#         print("inode2=",inode2)
+        _,entcoord1,_=gmsh.model.mesh.getNodes(0,inode1)
+        _,entcoord2,_=gmsh.model.mesh.getNodes(0,inode2)
+        entx1=entcoord1[0];enty1=entcoord1[1];entz1=entcoord1[2]
+        entx2=entcoord2[0];enty2=entcoord2[1];entz2=entcoord2[2]
+#         print("entcoord1=",entcoord1)
+#         print("entcoord2=",entcoord2)
+        
+        nodeTags, nodeCoords, _ = gmsh.model.mesh.getNodes(1, ient, includeBoundary=True)
+        
+        _, _, elemNodeTags = gmsh.model.mesh.getElements(1, ient)
+        idx1=list(nodeTags).index(list(elemNodeTags)[0][0]);idx2=list(nodeTags).index(list(elemNodeTags)[0][1])
+        FEx1=nodeCoords[3*idx1];FEy1=nodeCoords[3*idx1+1];FEz1=nodeCoords[3*idx1+2]
+        FEx2=nodeCoords[3*idx2];FEy2=nodeCoords[3*idx2+1];FEz2=nodeCoords[3*idx2+2]
+        
+        # only structural 2D/3D => same order in coordinates
+        
+#         print('ent1=',entx1,enty1,entz1)
+#         print('ent2=',entx2,enty2,entz2)
+#         #
+#         print('FE1=',FEx1,FEy1,FEz1)
+#         print('FE2=',FEx2,FEy2,FEz2)
+        
+        #Produit scalaire
+        ps=(FEx2-FEx1)*(entx2-entx1)+(FEy2-FEy1)*(enty2-enty1)+(FEz2-FEz1)*(entz2-entz1)
+        #print("ps,irev,ient=",ps,irev,ient)
+        if(irev==0 and ps<0):
+            #print("reverse")
+            istR=True
+        elif(irev==1 and ps>0):
+            #print("reverse")
+            istR=True
+                
+        return istR
 
+    def updateReverse(self):
+        # once an update is needed (at creation of the mesh it updates the reverse of beams)
+        #
+        #print("reverseLAXEntities in updateReverse=",str(self.reverseLAXEntities))
+
+        for ityp in ['ents','pgs']:
+            if ityp in self.reverseLAXEntities:
+                for k, v in self.reverseLAXEntities[ityp].items():
+                    irev=v['reverse_value']
+                    if(ityp=='ents' and v['curves']!=[]):
+                        isverified=False
+                        isToReverse=False
+                        for ient in v['curves']:
+                            if not isverified :
+                                isverified=True
+                                isToReverse=self.checkReverse(ient,irev)
+                            if isToReverse:
+                                gmsh.model.mesh.reverse([(1,ient)])
+                    elif(ityp=='pgs' and v['curves']!=[]):
+                        isverified=False
+                        isToReverse=False
+                        for ipgs in v['curves']:
+                            for ient in gmsh.model.getEntitiesForPhysicalGroup(idim, ipgs):
+                                if not isverified :
+                                    isverified=True
+                                    isToReverse=self.checkReverse(ient,irev)
+                                if isToReverse:
+                                    gmsh.model.mesh.reverse([(1,ient)])
+        gmsh.fltk.update()
+        gmsh.graphics.draw()
+        
+        
     def eventLoop(self):
         # terminate the event loop if the GUI was closed
         if gmsh.fltk.isAvailable() == 0: return 0
@@ -6496,6 +6611,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         action = gmsh.onelab.getString("ONELAB/Action")
 
+        #print(str(gmsh.model.mesh.getElements()[1]!=[] ),str(self.ReverseOnce))
+        if gmsh.model.mesh.getElements()[1]!=[] and self.ReverseOnce:
+            #print("Mesh is now existing and reverse X' axis has been updated.")
+            self.ReverseOnce=False
+            self.updateReverse()
+            
         if len(action) < 1:
             # no action requested
             pass
@@ -6613,6 +6734,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 self.recreateContextMenusFromDB(self.pbType,True)
             else:
                 gmsh.logger.write("No existing G4S file to load", level="error")
+
         return 1
 
 
@@ -9339,6 +9461,8 @@ if __name__ == "__main__":
                         if(ndims==3):
                             gmsh.model.mesh.generate(3)
                     #
+                        self.updateReverse()
+            
                     myapp.createIN()
         #
         elif(os.path.isdir(myapp.dir)): # process all couples (GEO,G4S) found in the directory
@@ -9368,6 +9492,8 @@ if __name__ == "__main__":
                         if(ndims==3):
                             gmsh.model.mesh.generate(3)
                     #
+                        self.updateReverse()
+                        
                     myapp.createIN()
                 else:
                     gmsh.logger.write("No GEO found in the folder associated with G4S file "+ig4s, level="warning")
