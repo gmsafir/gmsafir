@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-02-04"
+        self.version="2025-02-18"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -864,7 +864,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #Get the INfile name as global variable
         ikey=[k for k in range(len(self.safirDB['children'])) if 'Problem Type' in self.safirDB['children'][k]["key"]][0]
         tmp0=self.safirDB['children'][ikey]['props']
-        ikey2=[k for k in range(len(tmp0)) if 'Name of the .IN File' in tmp0[k]["name"]][0]
+        ikey2=[k for k in range(len(tmp0)) if 'Name of the input File' in tmp0[k]["name"]][0]
         self.INfile=tmp0[ikey2]["values"][0]
         #
         # Get the number of VOIDS
@@ -1066,7 +1066,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             # Adjustments in visibility of menus, when special case of Torsion run
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Run torsion analysis")],False)
             istorsrun=tmp0["values"]==[1]
-
+                
             #tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","name","COMEBACK")],False)['props']
             #print("tmp0=",tmp0)
             #tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
@@ -1075,6 +1075,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if(tmp0['name']=='COMEBACK'):
                 iscomeback=True
             tmp0=tmp0['props']
+            #
             if(iscomeback):
                 i1=[ k for k in range(len(tmp0)) if "TIMESTEPMIN" in tmp0[k]['name']][0]
                 i2=[ k for k in range(len(tmp0)) if "TIMESTEP,UPTIME,TIMESTEPMAX" in tmp0[k]['name'] ][0]
@@ -1094,6 +1095,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     tmp0[i1]['visible']=True
                     tmp0[i2]['visible']=True
             #
+            tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Title1")],False)
+            if(istorsrun):
+                tmp0['values']=["Safir Torsional Analysis"]
+            else:
+                tmp0['values']=["Safir Thermal Analysis"]
+                
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","DIAG CAPA")],False)
             if istorsrun:
                 tmp0['visible']=False
@@ -2066,7 +2073,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                              listRecurs=[{'key':"",'end_lvl':0}]
                              tmp0,listRecurs,permute,found,endTree,merror=self.permuteDB(tmp0,listRecurs,"",found,endTree,"-1",nameChange,-1,newValChangeStr,levelChange,merror)
                          #
-                    elif('Name of the .IN File' in iparam['name']):
+                    elif('Name of the input File' in iparam['name']):
                         self.INfile=ivl[0]
                         otherSolverChanged=True
                     else:
@@ -5792,6 +5799,17 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             f.write(self.writeLineFortran('(A10,I6)',['NDOFMAX',1])+"\n")
         else:
             f.write(self.writeLineFortran('(A10,I6)',['NDOFMAX',ndofmax])+"\n")
+        # Added SERIES 4.1 (thermal) - Solver for Voids
+        if(self.isThermal):
+        #
+            if( ndims==2):
+                self.nvoids=len(PropAtts['void;1'])
+            elif(ndims==3):
+                self.nvoids=len(PropAtts['void;2'])
+            #
+            if(self.nvoids>0):
+                    f.write(self.writeLineFortran('(A8,A5)',['SOLVER','NOSYM'])+"\n")
+                                
         #
         # OBSOLETE
 #         f.write(self.writeLineFortran('(A10,I6,A5,I6,A5,I6,A5,I6)',['FROM',1,'TO',nnodes,'STEP',1,'NDDL',1])+"\n")
@@ -5878,7 +5896,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             f.write(self.writeLineFortran('(A15)',[typcalcode])+"\n")
             if(typcal=="USE_LOCAFI" or typcal=="USE_HASEMI" or typcal=="USE_CFD") and not istorsrun:
-                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","name",typcal),("props","name","Expected name of the structural .IN File")],False)
+                tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","name",typcal),("props","name","Expected name of the structural input File")],False)
                 structfile=tmp0['values'][0]
                 tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","name",typcal),("props","name","IELEMTYPE")],False)
                 ielem=int(tmp0['values'][0])
@@ -6770,7 +6788,7 @@ safirDBstring="""
     {
     "key":"Problem Type","name":"Thermal 2D",
     "props":[
-        {"name":"Title1","type":"string","values":["Safir_Thermal_Analysis"]},
+        {"name":"Title1","type":"string","values":["Safir Thermal Analysis"]},
         {"name":"Title2","type":"string","values":["Model created with GmSAFIR version 1990-01-01"]},
         {"name":"PRECISION","type":"number","values":[1.0e-3],"min":0,"max":1.0e-1,"step":1.0e-3},
         {"name":"TETA","type":"number","values":[0.9],"min":0,"max":1,"step":0.1,"visible":true},
@@ -6782,13 +6800,13 @@ safirDBstring="""
         {"name":"Global center (Yo)","type":"number","values":[0],"min":0,"max":100,"step":1,"visible":true},
         {"name":"Center of torsion (Xc)","type":"number","values":[0],"min":0,"max":100,"step":1,"visible":true},
         {"name":"Center of torsion (Yc)","type":"number","values":[0],"min":0,"max":100,"step":1,"visible":true},
-        {"name":"Name of the .IN File","type":"string","values":["untitled.IN"]}
+        {"name":"Name of the input File","type":"string","values":["untitled.IN"]}
     ],
     "children":[
         {
         "key":"Convergence","name":"COMEBACK",
         "props":[
-            {"name":"TIMESTEPMIN","type":"number","values":[1.0e-5],"min":0,"max":1.0e-3,"step":1.0e-7,"visible":true},
+            {"name":"TIMESTEPMIN","type":"number","values":[0.1],"min":0,"max":1,"step":0.01,"visible":true},
             {"name":"TIMESTEP,UPTIME,TIMESTEPMAX","type":"string","values":["1,3600,8"],"visible":true}
         ],
         "children":[]
@@ -6825,7 +6843,7 @@ safirDBstring="""
         {
         "key":"Type of calculation","name":"USE_LOCAFI","codename":"MAKE.TEMLF",
         "props":[
-            {"name":"Expected name of the structural .IN File","type":"string","values":["structural.IN"],"visible":true},
+            {"name":"Expected name of the structural input File","type":"string","values":["structural.IN"],"visible":true},
             {"name":"IELEMTYPE","type":"number","values":[1],"min":0,"max":100,"step":1,"visible":true}
         ],
         "children":[]
@@ -6833,7 +6851,7 @@ safirDBstring="""
         {
         "key":"Type of calculation","name":"USE_HASEMI","codename":"MAKE.TEMHA",
         "props":[
-            {"name":"Expected name of the structural .IN File","type":"string","values":["structural.IN"],"visible":true},
+            {"name":"Expected name of the structural input File","type":"string","values":["structural.IN"],"visible":true},
             {"name":"IELEMTYPE","type":"number","values":[1],"min":0,"max":100,"step":1,"visible":true}
         ],
         "children":[]
@@ -6841,7 +6859,7 @@ safirDBstring="""
         {
         "key":"Type of calculation","name":"USE_CFD","codename":"MAKE.TEMCD",
         "props":[
-            {"name":"Expected name of the structural .IN File","type":"string","values":["structural.IN"],"visible":true},
+            {"name":"Expected name of the structural input File","type":"string","values":["structural.IN"],"visible":true},
             {"name":"IELEMTYPE","type":"number","values":[1],"min":0,"max":100,"step":1,"visible":true}
         ],
         "children":[]
@@ -6857,13 +6875,13 @@ safirDBstring="""
         {"name":"TINITIAL","type":"number","values":[20],"min":0,"max":1,"step":0.1},
         {"name":"TIMEPRINT,UPTIMEPRINT","type":"string","values":["30,3600"]},
         {"name":"Use matrix diag (DIAG CAPA)","type":"number","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1},"visible":true},
-        {"name":"Name of the .IN File","type":"string","values":["untitled.IN"]}
+        {"name":"Name of the input File","type":"string","values":["untitled.IN"]}
     ],
     "children":[
         {
         "key":"Convergence","name":"COMEBACK",
         "props":[
-            {"name":"TIMESTEPMIN","type":"number","values":[1.0e-5],"min":0,"max":1.0e-3,"step":1.0e-7,"visible":true},
+            {"name":"TIMESTEPMIN","type":"number","values":[0.1],"min":0,"max":1,"step":0.01,"visible":true},
             {"name":"TIMESTEP,UPTIME,TIMESTEPMAX","type":"string","values":["1,3600,8"],"visible":true}
         ],
         "children":[]
@@ -6882,7 +6900,7 @@ safirDBstring="""
     "props":[
         {"name":"Title1","type":"string","values":["Safir_Structural_Analysis"]},
         {"name":"Title2","type":"string","values":["Model created with GmSAFIR version 1990-01-01"]},
-        {"name":"Name of the .IN File","type":"string","values":["untitled.IN"]},
+        {"name":"Name of the input File","type":"string","values":["untitled.IN"]},
         {"type":"number","name":"Consider max displacement","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
         {"type":"number","name":"MAX DISPL","values":[999],"min":1,"max":1000,"step":1,"visible":false},
         {"name":"PRECISION","type":"number","values":[1.0e-3],"min":0,"max":1.0e-1,"step":1.0e-3},
@@ -7510,7 +7528,7 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"0TEM Filename","type":"string","values":[""]},
+                {"name":"0Filename of the TEM","type":"string","values":[""]},
                 {"name":"1Material Name(s)","type":"string","values":[""]},
                 {"ents":{},"pgs":{}}
                 ],
@@ -7525,12 +7543,12 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"01Node1-Xlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"02Node1-Ylocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"03Node1-thetaZlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"04Node2-Xlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"05Node2-Ylocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"06Node2-thetaZlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
+                {"name":"01Node1-Xlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"02Node1-Ylocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"03Node1-thetaZlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"04Node2-Xlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"05Node2-Ylocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"06Node2-thetaZlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
@@ -8300,10 +8318,10 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"0Check=LAX from local angle, Uncheck=LAX from fix coords","type":"number","values":[1],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
-                {"name":"1Rotation angle (deg) of Y' around X'","type":"number","values":[0],"min":-180,"max":180,"step":1,"visible":true},
-                {"name":"2Reverse X' axis","type":"number","values":[0],"choices":[0, 1],"visible":true},
-                {"name":"4Y'(dx,dy,dz)","type":"string","values":["0,0,0"],"visible":false},
+                {"name":"0Check=LAX from local angle, Uncheck=LAX from fix coords","type":"number","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
+                {"name":"1Rotation angle (deg) of y' around x'","type":"number","values":[0],"min":-180,"max":180,"step":1,"visible":true},
+                {"name":"2Reverse x' axis","type":"number","values":[0],"choices":[0, 1],"visible":true},
+                {"name":"4y'(dx,dy,dz)","type":"string","values":["0,0,0"],"visible":false},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
@@ -8316,7 +8334,7 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"0TEM Filename","type":"string","values":[""]},
+                {"name":"0Filename of the TEM","type":"string","values":[""]},
                 {"name":"1Material Name(s)","type":"string","values":[""]},
                 {"ents":{},"pgs":{}}
                 ],
@@ -8343,20 +8361,20 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"01Node1-Xlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"02Node1-Ylocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"03Node1-Zlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"04Node1-thetaXlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"05Node1-thetaYlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"06Node1-thetaZlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"07Node1-W","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"08Node2-Xlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"09Node2-Ylocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"10Node2-Zlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"11Node2-thetaXlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"12Node2-thetaYlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"13Node2-thetaZlocal","type":"number","values":[0],"min":0,"max":1,"step":0},
-                {"name":"14Node2-W","type":"number","values":[0],"min":0,"max":1,"step":0.1},
+                {"name":"01Node1-Xlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"02Node1-Ylocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"03Node1-Zlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"04Node1-thetaXlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"05Node1-thetaYlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"06Node1-thetaZlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"07Node1-W","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"08Node2-Xlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"09Node2-Ylocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"10Node2-Zlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"11Node2-thetaXlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"12Node2-thetaYlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"13Node2-thetaZlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"14Node2-W","type":"number","values":[-1],"min":-1,"max":1,"step":0.1},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
@@ -9123,7 +9141,7 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"0Filename","type":"string","values":[""]},
+                {"name":"0Filename of the TSH","type":"string","values":[""]},
                 {"name":"1Thickness","type":"number","values":[0],"min":0,"max":1,"step":0},
                 {"name":"2Node level Z0","type":"number","values":[0],"min":0,"max":1,"step":0},
                 {"name":"3Material Name(s)","type":"string","values":[""]},
