@@ -1,5 +1,8 @@
 ## GmSAFIR (current version 2025-02-18) ⚡
 
+
+!!!!! Important preliminary note: all G4S files created <= 18-2-2025 will not be read correctly by gmsafir.py with version btw 18-2-2025 and < 25-2-2025. Use gmsafir.py with version >= 25-2-2025 to read them correctly !!!!!!
+
 GmSAFIR is a GUI-preprocessor that enables to facilitate the creation of input files to SAFIR model.   
 It is meant to be used starting with SAFIR version 2022a0 and future versions.  
 It is free and open-source.  

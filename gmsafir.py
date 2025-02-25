@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-02-18"
+        self.version="2025-02-25"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -534,6 +534,15 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 self.go_on=False
 
 
+    # Set patch for properties that have changed their names between different software versions
+    def changeSpecialProps(self,propnam,specialprops,chgspecialprops):
+        lstspprop=[k for k in range(len(specialprops)) if specialprops[k] in propnam]
+        isSpecialProp=lstspprop!=[]
+        if isSpecialProp:
+            idxsp=lstspprop[0]
+            propnam=chgspecialprops[idxsp]
+        return(propnam,isSpecialProp)
+                
     #Load ContextDB and SafirDB from the disk
     def getG4sJson(self,file0): # Name originates from the time where G4S file was a JSON format, no more the case
         #
@@ -694,8 +703,25 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         #
                         iprop,ival=iline[0].split(":");iprop=iprop.strip();ival=ival.strip()
                         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType)],False)['props']
+
+#                         specialprops=["Name of the .IN File"]
+#                         chgspecialprops=["Name of the input File"]
+#                         lstspprop=[k for k in range(len(specialprops)) if specialprops[k]==iprop]
+#                         isSpecialProp=lstspprop!=[]
+#                         if isSpecialProp:
+#                             idxsp=lstspprop[0]
+#                             iprop=chgspecialprops[idxsp]
+#                             print("*********** FOUND !!!! ***** Special SAFIRDB Prop: ", lstspprop[0],iprop)
+                        
+                        specialprops=["Name of the .IN File"]
+                        chgspecialprops=["Name of the input File"]
+                        previousiprop=iprop
+                        iprop,isSpecialProp=self.changeSpecialProps(iprop,specialprops,chgspecialprops)
+                    
                         idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
 
+                        if isSpecialProp:
+                            print("*********** FOUND changed property !!!! ***** idxtab: ", iprop,"<=",previousiprop)
                         #
                         if(idxtab!=[]): # is a SafirDB "prop"
                             k=idxtab[0]
@@ -951,7 +977,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             tmp0=self.getDBValue(self.contextDB,[("children","name","Curve"),("children","name",self.pbType),("children","name","New LAX Definition"),("children","name","-")],False)['props']
             i1=[ k for k in range(len(tmp0)) if 'name' in tmp0[k] and "Check=LAX from" in tmp0[k]['name']][0]
             i2=[ k for k in range(len(tmp0)) if 'name' in tmp0[k] and "Rotation angle" in tmp0[k]['name']][0]
-            i5=[ k for k in range(len(tmp0)) if 'name' in tmp0[k] and "Y'(dx,dy,dz)" in tmp0[k]['name'] ][0]
+            i5=[ k for k in range(len(tmp0)) if 'name' in tmp0[k] and "y'(dx,dy,dz)" in tmp0[k]['name'] ][0]
             #
             if(tmp0[i1]['values'][0]==1):
                 tmp0[i2]['visible']=True
@@ -1334,11 +1360,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         if self.permutespecial or self.LAXspecial:
             checklax=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Check=LAX from" in list(k.keys())[0]][0][0]
-            reverse_xp=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Reverse X" in list(k.keys())[0]][0][0]
+            reverse_xp=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if ("Reverse X" in list(k.keys())[0] or "Reverse x" in list(k.keys())[0])][0][0]
             if(checklax=='YES'):
                 theta_degrees=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Rotation angle" in list(k.keys())[0]][0][0]
             else:
-                Yp_str=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if "Y'(dx,dy,dz)" in list(k.keys())[0]][0][0].split(',')
+                Yp_str=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if ("Y'(dx,dy,dz)" in list(k.keys())[0] or "y'(dx,dy,dz)" in list(k.keys())[0])][0][0].split(',')
 
             #
             
@@ -1346,11 +1372,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # theta values in other cases
         else:
             checklax=[iprop for iprop in tmp0['props'] if 'name' in iprop if "Check=LAX from" in iprop['name']][0]['values'][0]
-            reverse_xp=[iprop for iprop in tmp0['props'] if 'name' in iprop and "Reverse X" in iprop['name']][0]['values'][0]
+            reverse_xp=[iprop for iprop in tmp0['props'] if 'name' in iprop and ("Reverse X" in iprop['name'] or "Reverse x" in iprop['name'])][0]['values'][0]
             if(checklax=='YES'):
                 theta_degrees=[iprop for iprop in tmp0['props'] if 'name' in iprop and "Rotation angle" in iprop['name']][0]['values'][0]
             else:
-                Yp_str=[iprop for iprop in tmp0['props'] if 'name' in iprop and "Y'(dx,dy,dz)" in iprop['name']][0]['values'][0].split(',')
+                Yp_str=[iprop for iprop in tmp0['props'] if 'name' in iprop and ("Y'(dx,dy,dz)" in iprop['name'] or "y'(dx,dy,dz)" in iprop['name'])][0]['values'][0].split(',')
             #
         VP=[]
         if(reverse_xp==1):
@@ -1945,10 +1971,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                # print('inside permuteDB: tmpk0["props"][idx]=',tmpk0['props'][idx])
 
                                 # Special case of 'Beam Local Axes' in ONELAB Context: launches recreateLAXView to adjust the vectors according to the value of theta
-                                if(shpid!="-1" and ("Rotation angle" in inam or "Reverse X" in inam or "X'(dx,dy,dz)" in inam or "Y'(dx,dy,dz)" in inam or "Z'(dx,dy,dz)" in inam)):
+                                if(shpid!="-1" and ("Rotation angle" in inam or "Reverse X" in inam or "X'(dx,dy,dz)" in inam or "Reverse x" in inam or "x'(dx,dy,dz)" in inam or "Y'(dx,dy,dz)" in inam or "Z'(dx,dy,dz)" in inam or "y'(dx,dy,dz)" in inam or "z'(dx,dy,dz)" in inam)):
                                     #
                                     # Verification in "New LAX Definition" concerning X',Y',Z':
-                                    if "X'(dx,dy,dz)" in inam or "Y'(dx,dy,dz)" in inam or "Z'(dx,dy,dz)" in inam:
+                                    if "X'(dx,dy,dz)" in inam or "Y'(dx,dy,dz)" in inam or "Z'(dx,dy,dz)" in inam or "x'(dx,dy,dz)" in inam or "y'(dx,dy,dz)" in inam or "z'(dx,dy,dz)":
                                         ierr=self.isCorrectFormat(ivl[0],3,"Error in reading the fix coordinates - it shall be 3 floats separated by comma : ")
                                         if(ierr==-1):
                                             return tmp0,lists,permute,found,endTree
@@ -2705,9 +2731,20 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 tmp1[tmp1key]=[]
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
+                    
+#                     print("params=",inam,propnam,ivl)
+#                     print("test=",tmp0["props"])
+                    specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename"]
+                    chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM"]
+                    previouspropnam=propnam
+                    propnam,isSpecialProp=self.changeSpecialProps(propnam,specialprops,chgspecialprops) 
+                    
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
-#                     print('iprop=',iprop)
-#                     print('ivl=',ivl)
+                    
+                    if isSpecialProp:
+                        print("*********** FOUND changed property !!!! ***** iprop: ", propnam,"<=",previouspropnam)
+                    #           
+                    
                     merror,ivl=self.changeLabelToIdxOrNumerize(iprop,ivl)
                     if(merror!=""):
                         gmsh.logger.write(merror, level="error")
@@ -2732,7 +2769,20 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
+#                     print("params=",inam,propnam,ivl)
+#                     print("test=",tmp0["props"])
+
+                    specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)"]
+                    chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)"]
+                    previouspropnam=propnam
+                    propnam,isSpecialProp=self.changeSpecialProps(propnam,specialprops,chgspecialprops)
+                    #                        
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
+                    
+                    if isSpecialProp:
+                        print("*********** FOUND !!!! ***** iprop: ", propnam,"<=",previouspropnam)
+                    #
+                        
                     merror,ivl=self.changeLabelToIdxOrNumerize(iprop,ivl)
                     if(merror!=""):
                         gmsh.logger.write(merror, level="error")
@@ -2764,7 +2814,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # ADjustment for Reverse x':
         
         if("New LAX Definition" in inam):
-            i0=[i for i in range(len(toStoreNames)) if 'Reverse X' in toStoreNames[i]][0]
+            i0=[i for i in range(len(toStoreNames)) if ('Reverse x' in toStoreNames[i] or 'Reverse X' in toStoreNames[i])][0]
             irev=int(list(toStore[i0].values())[0][0])
             #
             if(not 'pgs' in self.reverseLAXEntities):
@@ -6631,7 +6681,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         #print(str(gmsh.model.mesh.getElements()[1]!=[] ),str(self.ReverseOnce))
         if gmsh.model.mesh.getElements()[1]!=[] and self.ReverseOnce:
-            #print("Mesh is now existing and reverse X' axis has been updated.")
+            #print("Mesh is now existing and reverse x' axis has been updated.")
             self.ReverseOnce=False
             self.updateReverse()
             
