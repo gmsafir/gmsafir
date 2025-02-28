@@ -1,4 +1,4 @@
-## GmSAFIR (current version 2025-02-27) ⚡
+## GmSAFIR (current version 2025-02-28) ⚡
 
 
 !!!!! Important preliminary note: all G4S files created <= 18-2-2025 will not be read correctly by gmsafir.py with version btw 18-2-2025 and < 25-2-2025. Use gmsafir.py with version >= 25-2-2025 to read them correctly !!!!!!

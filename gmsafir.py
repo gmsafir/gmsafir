@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-02-27"
+        self.version="2025-02-28"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -2741,6 +2741,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Node-Xlocal","Mass1","Mass2","Mass3","Mass4","Mass5","Mass6","Mass7"]
                         chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Translation Z (kg)",
                                          "Rotation X (kgm)","Rotation Y (kgm)","Rotation Z (kgm)","Warping (-)"]
+                    else:
+                        specialprops=[]
+                        chgspecialprops=[]
+                        
                     previouspropnam=propnam
                     propnam,isSpecialProp=self.changeSpecialProps(propnam,specialprops,chgspecialprops) 
                     
@@ -2777,8 +2781,19 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 #                     print("params=",inam,propnam,ivl)
 #                     print("test=",tmp0["props"])
 
-                    specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)"]
-                    chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)"]
+#                    specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)"]
+#                    chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)"]
+                    if(pbtyp=="Structural 2D"):
+                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Node-Xlocal","Mass1","Mass2","Mass3"]
+                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Rotation Z (kgm)"]
+                    elif(pbtyp=="Structural 3D"):
+                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Node-Xlocal","Mass1","Mass2","Mass3","Mass4","Mass5","Mass6","Mass7"]
+                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Translation Z (kg)",
+                                         "Rotation X (kgm)","Rotation Y (kgm)","Rotation Z (kgm)","Warping (-)"]
+                    else:
+                        specialprops=[]
+                        chgspecialprops=[]
+                        
                     previouspropnam=propnam
                     propnam,isSpecialProp=self.changeSpecialProps(propnam,specialprops,chgspecialprops)
                     #                        
