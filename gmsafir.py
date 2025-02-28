@@ -6627,7 +6627,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         isverified=False
                         isToReverse=False
                         for ipgs in v['curves']:
-                            for ient in gmsh.model.getEntitiesForPhysicalGroup(idim, ipgs):
+                            for ient in gmsh.model.getEntitiesForPhysicalGroup(1, ipgs):
                                 if not isverified :
                                     isverified=True
                                     isToReverse=self.checkReverse(ient,irev)
