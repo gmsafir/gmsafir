@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-02-28"
+        self.version="2025-03-04"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -1973,8 +1973,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 # Special case of 'Beam Local Axes' in ONELAB Context: launches recreateLAXView to adjust the vectors according to the value of theta
                                 if(shpid!="-1" and ("Rotation angle" in inam or "Reverse X" in inam or "X'(dx,dy,dz)" in inam or "Reverse x" in inam or "x'(dx,dy,dz)" in inam or "Y'(dx,dy,dz)" in inam or "Z'(dx,dy,dz)" in inam or "y'(dx,dy,dz)" in inam or "z'(dx,dy,dz)" in inam)):
                                     #
+                                    print("PRINT INAM=",inam)
                                     # Verification in "New LAX Definition" concerning X',Y',Z':
-                                    if "X'(dx,dy,dz)" in inam or "Y'(dx,dy,dz)" in inam or "Z'(dx,dy,dz)" in inam or "x'(dx,dy,dz)" in inam or "y'(dx,dy,dz)" in inam or "z'(dx,dy,dz)":
+                                    if "X'(dx,dy,dz)" in inam or "Y'(dx,dy,dz)" in inam or "Z'(dx,dy,dz)" in inam or "x'(dx,dy,dz)" in inam or "y'(dx,dy,dz)" in inam or "z'(dx,dy,dz)" in inam:
                                         ierr=self.isCorrectFormat(ivl[0],3,"Error in reading the fix coordinates - it shall be 3 floats separated by comma : ")
                                         if(ierr==-1):
                                             return tmp0,lists,permute,found,endTree
