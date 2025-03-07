@@ -8,7 +8,7 @@ import ast
 import time
 from copy import deepcopy,copy
 import re
-import fortranformat as ff
+#import fortranformat as ff
 from datetime import datetime
 import numpy as np
 from numpy import linalg as LA
@@ -2323,7 +2323,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             elif('Surface' in ishp and [icateg for icateg in shellmenus4verif if icateg in iparam['name']]!=[]):
                 emsg=self.verifShellGeom(ishp)
                 if emsg!="":
-                    gmsh.logger.write("Error in Shell Geometry: "+str(err), level="error")
+                    gmsh.logger.write("Error in Shell Geometry: "+str(emsg), level="error")
                     return -1
             #
             if ishp in iparam['name'] and (not self.updateStr in iparam['name']) and (not self.removeStr in iparam['name']):
