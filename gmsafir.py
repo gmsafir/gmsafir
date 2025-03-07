@@ -8,7 +8,7 @@ import ast
 import time
 from copy import deepcopy,copy
 import re
-import fortranformat as ff
+#import fortranformat as ff
 from datetime import datetime
 import numpy as np
 from numpy import linalg as LA
