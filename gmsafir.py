@@ -4532,6 +4532,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             try:
                 # Nodes and coords: stored as developed lists
                 nodeTags, nodeCoords, nodeParams = gmsh.model.mesh.getNodes(dim, tag)
+
                 allNodeTags+=list(nodeTags)
 
                 allNodeCoords+=list(nodeCoords)
