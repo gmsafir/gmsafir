@@ -22,7 +22,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-03-04"
+        self.version="2025-04-07"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -31,6 +31,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.nvoids=0
         self.symvoids=0
 
+        #
+        self.sep1=";"
+        self.sep2="/"
+        self.sep3=" | "
+        
         # Vars
         self.toClean={}
         self.removeStr="{}Remove"
@@ -3258,7 +3263,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     if igtyp =='beamcormat':
                         valtab=[[val0 for k0,val0 in d.items()] for d in v["props"]]
                         #
-                        extval=valtab[0][0][0]+" - "+valtab[1][0][0]
+                        extval=valtab[0][0][0]+self.sep3+valtab[1][0][0]
                         #
                         val=extval
                     #
@@ -3272,7 +3277,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     elif igtyp =='trusscormat':
                         valtab=[[val0 for k0,val0 in d.items()] for d in v["props"]]
                         #
-                        extval=str(valtab[0][0][0])+" - "+str(valtab[1][0][0])+" - "+str(valtab[2][0][0])+" - "+str(valtab[3][0][0])
+                        extval=str(valtab[0][0][0])+self.sep3+str(valtab[1][0][0])+self.sep3+str(valtab[2][0][0])+self.sep3+str(valtab[3][0][0])
                         #
                         val=extval
                     #
@@ -3286,14 +3291,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         self.SolidFilename=str(valtab[0][0][0])
                         #
                         #
-                        extval=str(valtab[0][0][0])+" - "+str(valtab[1][0][0])+" - "+str(valtab[2][0][0])+" - "+str(valtab[3][0][0])+" - "+str(valtab[4][0][0])
+                        extval=str(valtab[0][0][0])+self.sep3+str(valtab[1][0][0])+self.sep3+str(valtab[2][0][0])+self.sep3+str(valtab[3][0][0])+self.sep3+str(valtab[4][0][0])
                         #
                         val=extval
                     #
                     elif igtyp =='shcormat':
                         valtab=[[val0 for k0,val0 in d.items()] for d in v["props"]]
                         #
-                        extval=str(valtab[0][0][0])+" - "+str(valtab[1][0][0])+" - "+str(valtab[2][0][0])+" - "+str(valtab[3][0][0])
+                        extval=str(valtab[0][0][0])+self.sep3+str(valtab[1][0][0])+self.sep3+str(valtab[2][0][0])+self.sep3+str(valtab[3][0][0])
                         #
                         val=extval
                     #
@@ -3305,7 +3310,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             if(ival==0):
                                 extval=str(valtab[0][0][0])
                             else:
-                                extval+=" - "+str(valtab[ival][0][0])
+                                extval+=self.sep3+str(valtab[ival][0][0])
                         #
                         val=extval
                     #
@@ -3317,7 +3322,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             if(ival==0):
                                 extval=str(valtab[0][0][0])
                             else:
-                                extval+=" - "+str(valtab[ival][0][0])
+                                extval+=self.sep3+str(valtab[ival][0][0])
                         #
                         val=extval
                     #
@@ -3341,7 +3346,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             iprop=v["props"][i0]
                             for k0,val0 in iprop.items():
                                 if (not 'Load Function' in k0):
-                                    extval+=' - '+str(val0[0])
+                                    extval+=self.sep3+str(val0[0])
                         #
                         val=extval
                     #
@@ -3357,7 +3362,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             if(i==0):
                                 extval=str(valtab[1][0][0])
                             else:
-                                extval+=" - "+str(valtab[i][0][0])
+                                extval+=self.sep3+str(valtab[i][0][0])
                         #
                         val=extval
                     #
@@ -3365,7 +3370,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         valtab=[[val0 for k0,val0 in d.items()] for d in v["props"]]
                         #
                         if("3D" in self.pbType):
-                            extval=str(valtab[0][0][0])+" - "+str(valtab[1][0][0])
+                            extval=str(valtab[0][0][0])+self.sep3+str(valtab[1][0][0])
                         else:
                             extval=str(valtab[0][0][0])
                         #
@@ -3385,7 +3390,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         extval=valtab[0][0][0]
                         # Get number
                         val=str([k0 for k0 in range(len(self.listMats)) if valtab[0][0][0]+";"+idim in list(self.listMats[k0].keys())[0]][0]+1)
-                        val=val+" - "+valtab[1][0][0]
+                        val=val+self.sep3+valtab[1][0][0]
                     #
                     elif igtyp == 'rebar':
                         for d in v["props"]:
@@ -3424,7 +3429,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             if(extval==""):
                                 extval=s0
                             else:
-                                extval+=" - "+s0
+                                extval+=self.sep3+s0
                         #
                         val=extval
                     #
@@ -3453,7 +3458,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         extval=extval0
                                         ifirst=False
                                     else:
-                                        extval+=" - "+extval0
+                                        extval+=self.sep3+extval0
 
                         val=extval
                     #
@@ -3883,6 +3888,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                'relax':'beamrelax'}
 
         ugtyps=[]
+        
+
 
         if not ("blks" in ctyps[ctyp] or "void" in ctyps[ctyp]) :
             #ugtyps.append(ctyps[ctyp])
@@ -3962,26 +3969,26 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #
                     elif("mats" in ctyps[ctyp] and self.isThermal==False):
                         if ugtypdim == "shcormat;2":
-                            ival=ival.split(' - ')[0]+' - '+ival.split(' - ')[1]+' - '+ival.split(' - ')[2]
+                            ival=ival.split(self.sep3)[0]+' - '+ival.split(self.sep3)[1]+' - '+ival.split(self.sep3)[2]+' - '+ival.split(self.sep3)[3]
                             ival="shell:"+ival
                         #
                         elif ugtypdim == "trusscormat;1":
                             if(ival0==""):
-                                ival='truss: '+ival.split(' - ')[0]+' - '+ival.split(' - ')[1]+' - '+ival.split(' - ')[2]+' - '+ival.split(' - ')[3]
+                                ival='truss: '+ival.split(self.sep3)[0]+' - '+ival.split(self.sep3)[1]+' - '+ival.split(self.sep3)[2]+' - '+ival.split(self.sep3)[3]
                             else:
-                                ival=ival0+'; truss: '+ival.split(' - ')[0]+' - '+ival.split(' - ')[1]+' - '+ival.split(' - ')[2]+' - '+ival.split(' - ')[3]
+                                ival=ival0+'; truss: '+ival.split(self.sep3)[0]+' - '+ival.split(self.sep3)[1]+' - '+ival.split(self.sep3)[2]+' - '+ival.split(self.sep3)[3]
                         #
                         elif ugtypdim == "beamcormat;1":
                             if(ival0==""):
-                                ival='beam: '+ival.split(' - ')[0]+' - '+ival.split(' - ')[1]
+                                ival='beam: '+ival.split(self.sep3)[0]+' - '+ival.split(self.sep3)[1]
                             else:
-                                ival=ival0+'; beam: '+ival.split(' - ')[0]+' - '+ival.split(' - ')[1]
+                                ival=ival0+'; beam: '+ival.split(self.sep3)[0]+' - '+ival.split(self.sep3)[1]
                         #
                         elif ugtypdim == "solcormat;3":
                             ival="solid: "+ival
                         #
                         else:
-                            ival=ival.split(' - ')[0]+' - '+ival.split(' - ')[1]
+                            ival=ival.split(self.sep3)[0]+' - '+ival.split(self.sep3)[1]
                     #
                     elif("loads" in ctyps[ctyp]):
                         print ("loads: ",ugtypdim)
@@ -4826,7 +4833,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # Prepare SAME to write (Thermal and Structural)
         SAMEnodes=[]
         for ival in samevals:
-            ivaltab=ival.split("/")[0].split(' - ')
+            ivaltab=ival.split("/")[0].split(self.sep3)
 
             for i in range(1,len(samevals[ival])):
                 tmp={}
@@ -4984,7 +4991,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         singlenodes.append(inode)
 
                                         for ijval in ival.split(";"):
-                                            ivaltab=ijval.split("/")[0].split(' - ')
+                                            ivaltab=ijval.split("/")[0].split(self.sep3)
                                             tmp={}
                                             tmp['val']=['BLOCK',inode]+ivaltab[0:ndofmax]
                                             tmp['fmt']='(A10,I6,'
@@ -5007,7 +5014,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     tmp={}
                     ielem=allElemTags[ndims][i]
                     ientity=allElemEntityTags[ndims][i]
-                    imat,iepsr=ElemVals['mats;'+str(ishptyp)][i].split(" - ")
+                    imat,iepsr=ElemVals['mats;'+str(ishptyp)][i].split(self.sep3)
                     inodesperelem=self.allElemTypesNbNodes[allElemTypes[ndims][i]]
                     ncoords=[] #number of nodes for the elems, completed for SAFIR to 4 (dim=2) or to 8 (dim=3)
                     for icoord in range(inodesperelem):
@@ -5156,7 +5163,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 # Get NFIBER
                 for i in range(len(INsectionBeams)):
                     imat=INsectionBeams[i]
-                    ifile=imat.split(' - ')[0].strip()
+                    ifile=imat.split(self.sep3)[0].strip()
                     try:
                         file0=os.path.join(self.dir,ifile)
                         f=open(file0,'r')
@@ -5309,7 +5316,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #
                     # Add NDFSPRING
                     idxelem+=1
-                    ivaltab=PropValPgs['spring;0'][i].split(' - ')
+                    ivaltab=PropValPgs['spring;0'][i].split(self.sep3)
                     nparams=len(ivaltab)
                     tmpelem={}
                     tmpelem['val']=['ELEM',idxelem,node1]
@@ -5330,7 +5337,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 # Add NDFSPRING
                 idxelem+=1
                 #print('PropValPgs["spring;0][i]=',PropValPgs['spring;0'][i])
-                ivaltab=PropValEnts['spring;0'][i].split(' - ')
+                ivaltab=PropValEnts['spring;0'][i].split(self.sep3)
                 nparams=len(ivaltab)
                 tmpelem={}
                 tmpelem['val']=['ELEM',idxelem,node1]
@@ -5378,7 +5385,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             # Add NODOFSOLID
 
                             idxelem+=1
-                            _,imat,res1,res2,res3=ElemVals[igtypdim][i].split(' - ')
+                            _,imat,res1,res2,res3=ElemVals[igtypdim][i].split(self.sep3)
                             iglomat=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imat+";3"][0]
                             res1=float(res1);res2=float(res2);res3=float(res3)
                             #
@@ -5575,7 +5582,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         iflag="M_SHELL"
                                     #
                                     
-                                    ivaltab=ElemVals[igtypdim][i].split(' - ')
+                                    ivaltab=ElemVals[igtypdim][i].split(self.sep3)
                                     nparams=len(ivaltab)
                                     tmpelem={}
                                     tmpelem['val']=[iflag,idx]
@@ -5613,7 +5620,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     else:
                                         ivaltab1=ElemVals[igtypdim][i]
                                     for ivaltab0 in ivaltab1.split(";"):
-                                        ivaltab=ivaltab0.split(' - ')
+                                        ivaltab=ivaltab0.split(self.sep3)
                                         ifunc=ivaltab[0]
                                         nparams=len(ivaltab[1:])
                                         #
@@ -5684,7 +5691,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             ielem=allElemTags[kdims][i]
                             idx=idxbeams.index(ielem)+1
                             ivaltab0,ivalcompl=ElemVals[igtypdim][i].split('/')
-                            ivaltab=ivaltab0.split(' - ')
+                            ivaltab=ivaltab0.split(self.sep3)
                             #
                             if ivalcompl=="L" or ivalcompl=="R":
                                 tmpelem={}
@@ -5738,7 +5745,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             #
                             ielem=allElemTags[kdims][i]
                             idx=idxbeams.index(ielem)+1
-                            ivaltab=ElemVals[igtypdim][i].split(' - ')
+                            ivaltab=ElemVals[igtypdim][i].split(self.sep3)
                             ifunc=ivaltab[0]+","+ivaltab[1]
                             if(not ifuncwght in INelemHydrost):
                                 INelemHydrost[ifuncwght]=[]
@@ -5780,7 +5787,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 ielem=allElemTags[kdims][i]
                                 ientity=allElemEntityTags[kdims][i]
                                 inodetag=allElemNodeTags[kdims][i][0]
-                                ivaltab=ElemVals[igtypdim][i].split(' - ')
+                                ivaltab=ElemVals[igtypdim][i].split(self.sep3)
                                 idx1=allNodeTags.index(inodetag) #first node of oblique
                                 node1=idx1+1
                                 #
@@ -5819,7 +5826,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     tmp['fmt']='(A10,I6,F11.4,F11.4,F11.4)'
                                     INnodes.append(tmp)
 #                                 idx=idxbeams.index(ielem)+1
-#                                 ivaltab=ElemVals[igtypdim][i].split(' - ')
+#                                 ivaltab=ElemVals[igtypdim][i].split(self.sep3)
                                 tmpelem={}
                                 if(ndims==2):
                                     tmpelem['val']=['INCLIN',signObliq[i0]*node1,node2]
@@ -6127,8 +6134,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 #
                 for i in range(len(INsectionBeams)):
                     imat=INsectionBeams[i]
-                    ifile=imat.split(' - ')[0].strip()
-                    imatstr=imat.split(' - ')[1].strip()
+                    ifile=imat.split(self.sep3)[0].strip()
+                    imatstr=imat.split(self.sep3)[1].strip()
                     f.write(self.writeLineFortran('(A20)',[ifile])+"\n")
                     imattab=imatstr.strip().split() #Split on spaces
 
@@ -6165,7 +6172,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 for i in range(len(INsectionShells)):
                      ikey=INsectionShells[i]
                      imat,irebar=ikey.split("//")
-                     ifile,thick,zzero,imatstr=imat.split(' - ')
+                     ifile,thick,zzero,imatstr=imat.split(self.sep3)
                      if(irebar!="-1"):
                          nbar,matrebar,sectrebar,levrebar,strangles=irebar.split('/')
                      else:
@@ -6211,10 +6218,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 #
                 for i in range(len(INgroupTruss)):
                     iparam=INgroupTruss[i]
-                    ifile=iparam.split(' - ')[0].strip()
-                    isect=iparam.split(' - ')[1].strip()
-                    ires=iparam.split(' - ')[2].strip()
-                    imat=iparam.split(' - ')[3].strip()
+                    ifile=iparam.split(self.sep3)[0].strip()
+                    isect=iparam.split(self.sep3)[1].strip()
+                    ires=iparam.split(self.sep3)[2].strip()
+                    imat=iparam.split(self.sep3)[3].strip()
                     iglomat=[i0 for i0 in range(len(self.listMats)) if list(self.listMats[i0].keys())[0].split('/')[0]==imat+";1"][0]
                     f.write(self.writeLineFortran('(A10,F10.3,F10.3,I3)',[ifile,float(isect),float(ires),iglomat+1])+"\n")
                 #
