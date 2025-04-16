@@ -16,13 +16,15 @@ import subprocess
 import matplotlib as mpl
 import matplotlib.pylab as plt
 import random
+import ezdxf
+from collections import defaultdict
 
 class Myapp: # Use of class only in order to share 'params' as a global variable with the "event manager" below (not working properly without class)
     def __init__(self, parent=None):
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-04-07"
+        self.version="2025-04-14"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -35,7 +37,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.sep1=";"
         self.sep2="/"
         self.sep3=" | "
-        
+
         # Vars
         self.toClean={}
         self.removeStr="{}Remove"
@@ -104,9 +106,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         # Read InspectDB
         self.inspectDB=json.loads(inspectDBstring)
+        self.loadConvertMenu()
         #
         # Keep track of the default ContextDB from this script, with default values
         self.contextDB0=json.loads(contextDBstring)
+        print("toto:",self.contextDB0)
         self.initCompleteContextDB(self.contextDB0)
 
         # Retrieve initial version of ContextDB
@@ -139,6 +143,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.loadContextDB(self.contextDB,self.pbType,True)
         self.loadSafirDB()
         self.loadInspectDB(self.pbType)
+        self.loadConvertMenu()
         s=deepcopy(json.loads(gmsh.onelab.get().replace("\\","/"))["onelab"]["parameters"])
         self.params= [k for k in s if 'SAFIR' in k['name'] or self.pbType in k['name']]
 
@@ -547,7 +552,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             idxsp=lstspprop[0]
             propnam=chgspecialprops[idxsp]
         return(propnam,isSpecialProp)
-                
+
     #Load ContextDB and SafirDB from the disk
     def getG4sJson(self,file0): # Name originates from the time where G4S file was a JSON format, no more the case
         #
@@ -560,8 +565,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         # Read G4S file (no more a JSON format) and remove commented and empty lines (or full of whitespaces)
         if notdebug:
-            
-            
+
+
 #             # Particular treatment (for compatibility with older GmSAFIR versions, where property "Residual Stress" was not existant in G4S file)
 #             with open(file0) as f:
 #                 lines=f.readlines()
@@ -575,8 +580,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 #                         print("OK 2D: "+iline);
 #                     elif(re.search(pattern, iline)!=None):
 #                         print("OK 3D: "+iline);
-#             f.close()            
-            
+#             f.close()
+
 
             #General treatment
             with open(file0) as f:
@@ -717,12 +722,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 #                             idxsp=lstspprop[0]
 #                             iprop=chgspecialprops[idxsp]
 #                             print("*********** FOUND !!!! ***** Special SAFIRDB Prop: ", lstspprop[0],iprop)
-                        
+
                         specialprops=["Name of the .IN File"]
                         chgspecialprops=["Name of the input File"]
                         previousiprop=iprop
                         iprop,isSpecialProp=self.changeSpecialProps(iprop,specialprops,chgspecialprops)
-                    
+
                         idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
 
                         if isSpecialProp:
@@ -1097,7 +1102,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             # Adjustments in visibility of menus, when special case of Torsion run
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Run torsion analysis")],False)
             istorsrun=tmp0["values"]==[1]
-                
+
             #tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","name","COMEBACK")],False)['props']
             #print("tmp0=",tmp0)
             #tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key","Convergence"),("props","name","TIMESTEPMIN")],False)
@@ -1131,7 +1136,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 tmp0['values']=["Safir Torsional Analysis"]
             else:
                 tmp0['values']=["Safir Thermal Analysis"]
-                
+
             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","DIAG CAPA")],False)
             if istorsrun:
                 tmp0['visible']=False
@@ -1263,6 +1268,166 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         gmsh.fltk.update()
 
 
+    # Load special menu to convert DXF to GEO
+    def loadConvertMenu(self):
+        convertmenu=[]
+
+        menudict={}
+        menudict["type"]="string"
+        menudict["name"]='0Modules/{}DXF_TO_GEO/0DXF Full path filename' # prf_elem
+        #print('menudict["name"]=',menudict["name"])
+        menudict["values"]=["test"]
+        convertmenu.append(menudict)
+
+        menudict={}
+        menudict["type"]="string"
+        menudict["name"]='0Modules/{}DXF_TO_GEO/1Convert DXF' # prf_elem
+        #print('menudict["name"]=',menudict["name"])
+        menudict["values"]=["conv_dxf"]
+        menudict["attributes"]={"Macro":"Action", "Aspect":"ReturnButton"}
+        convertmenu.append(menudict)
+
+        gmsh.onelab.set(json.dumps(convertmenu))
+        gmsh.fltk.update()
+
+    def convert_dxf_geo(self):
+        #if(1>0): return
+        print('cou')
+        # Test existence of input file
+        input_dxf=gmsh.onelab.getString("0Modules/{}DXF_TO_GEO/0DXF Full path filename")[0]
+        print('cou2')
+        print("input_dxf=",input_dxf)
+        #gmsh.logger.write(input_dxf, level="info")
+        if(not os.path.exists(input_dxf)):
+            gmsh.logger.write("This full path filename does not exist!", level="error")
+            return(-1)
+
+        else:
+            print("cou")
+        # Continue
+        output_geo=input_dxf.replace(".dxf",".geo").replace(".DXF",".geo")
+
+        # Charger le document DXF
+        doc = ezdxf.readfile(input_dxf)
+        msp = doc.modelspace()
+
+        # Structures de données
+        liste_points = []
+        liste_lines = []
+        layer_lines = defaultdict(list)
+        point_index_map = {}
+        line_counter = 1
+
+        # Parcourir toutes les entités
+        for entity in msp:
+            entity_type = entity.dxftype()
+            layer_name = entity.dxf.layer
+
+            # On ne traite que les LINE et POLYLINE
+            if entity_type not in ('LINE', 'LWPOLYLINE', 'POLYLINE'):
+                continue
+
+            # Extraire les points
+            (rc,attrs) = self.get_entity_attributes(entity)
+            if(rc!=0):
+                gmsh.logger.write("Attribute reading error in DXF File", level="error")
+                return(rc)
+
+            if entity_type == 'LINE':
+                start, end = attrs['start'], attrs['end']
+                points = [start, end]
+            else:  # POLYLINE ou LWPOLYLINE
+                if 'points' in attrs:
+                    points = [p[:3] for p in attrs['points']]  # Prendre seulement (x,y,z)
+                else:
+                    continue
+
+            # Ajouter les points à la liste globale et garder leur index
+            line_point_indices = []
+            for point in points:
+                point_tuple = tuple(round(coord, 6) for coord in point)  # Arrondi pour éviter les doublons
+                if point_tuple not in point_index_map:
+                    liste_points.append(point)
+                    point_index_map[point_tuple] = len(liste_points)  # Index commence à 1
+                line_point_indices.append(point_index_map[point_tuple])
+
+            # Créer les lignes
+            if entity_type == 'LINE':
+                # Une seule ligne de start à end
+                line_def = (line_point_indices[0], line_point_indices[1])
+                liste_lines.append(line_def)
+                layer_lines[layer_name].append(line_counter)
+                line_counter += 1
+            else:
+                # Pour les polylignes, créer une ligne entre chaque paire de points consécutifs
+                for i in range(len(line_point_indices) - 1):
+                    line_def = (line_point_indices[i], line_point_indices[i+1])
+                    liste_lines.append(line_def)
+                    layer_lines[layer_name].append(line_counter)
+                    line_counter += 1
+
+        # Écrire le fichier .geo pour Gmsh
+        with open(output_geo, 'w') as f:
+            f.write("// Gmsh File automatically generated from DXF\n")
+            f.write("SetFactory(\"OpenCASCADE\");\n\n")
+
+            # Écrire les points
+            f.write("// Points\n")
+            for i, point in enumerate(liste_points, 1):
+                f.write(f"Point({i}) = {{{point[0]}, {point[1]}, {point[2]}, 1.0}};\n")
+
+            # Écrire les lignes
+            f.write("\n// Lignes\n")
+            for i, line in enumerate(liste_lines, 1):
+                f.write(f"Line({i}) = {{{line[0]}, {line[1]}}};\n")
+
+            # Écrire les Physical Curve par layer
+            f.write("\n// Physical Curves par layer\n")
+            for layer_name, line_numbers in layer_lines.items():
+                # Nettoyer le nom du layer pour Gmsh
+                clean_name = layer_name.replace(" ", "_").replace("-", "_")
+                lines_str = ",".join(map(str, line_numbers))
+                f.write(f'Physical Curve("{clean_name}") = {{{lines_str}}};\n')
+
+        gmsh.logger.write("Conversion DXF to GEO is successful!", level="info")
+
+
+    def get_entity_attributes(self,entity):
+        """Récupère les attributs DXF d'une entité de manière sécurisée"""
+
+        attributs = {}
+        common_attrs = ['layer', 'linetype', 'color', 'lineweight']
+
+        for attr in common_attrs:
+            if hasattr(entity.dxf, attr):
+                try:
+                    attributs[attr] = entity.dxf.get(attr, "N/A")
+                except:
+                    attributs[attr] = "Reading error"
+                    return(-1,attributs)
+
+        entity_type = entity.dxftype()
+        specific_attrs = []
+
+        if entity_type == 'LINE':
+            specific_attrs = ['start', 'end']
+        elif entity_type in ('LWPOLYLINE', 'POLYLINE'):
+            specific_attrs = ['points']
+        elif entity_type == 'CIRCLE':
+            specific_attrs = ['center', 'radius']
+        elif entity_type == 'ARC':
+            specific_attrs = ['center', 'radius', 'start_angle', 'end_angle']
+
+        for attr in specific_attrs:
+            if hasattr(entity.dxf, attr):
+                try:
+                    attributs[attr] = entity.dxf.get(attr, "N/A")
+                except:
+                    attributs[attr] = "Reading error"
+                    return(-1,attributs)
+
+        return (0,attributs)
+
     # Create and Load the GUI menus in ONELAB.json from the InspectDB
     def loadInspectDB(self,pbtyp):
         prefixname='0Modules/Solver/SAFIR/VIEW'
@@ -1372,7 +1537,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 Yp_str=[list(k.values())[0] for k in list(self.listLAX[lax_id].values())[0] if ("Y'(dx,dy,dz)" in list(k.keys())[0] or "y'(dx,dy,dz)" in list(k.keys())[0])][0][0].split(',')
 
             #
-            
+
         #
         # theta values in other cases
         else:
@@ -1501,6 +1666,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.loadContextDB(self.contextDB,ipb,do_add_from_pgsents)
         self.loadSafirDB()
         self.loadInspectDB(ipb)
+        self.loadConvertMenu()
         #
         s=deepcopy(json.loads(gmsh.onelab.get().replace("\\","/"))["onelab"]["parameters"])
         self.params= [k for k in s if 'SAFIR' in k['name'] or ipb in k['name']]
@@ -2020,12 +2186,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
          permute_safir=False
          ipb=self.pbType
 
-
+         print(newparams)
          #Manage the changes triggered from the GUI modifications in the SAFIR General Menu
          for iparam in newparams:
 
             if(not iparam in self.params):
-                if "Also run" in iparam['name']:
+                if "DXF_TO_GEO" in iparam['name']:
+                    return 1 #special case
+                elif "Also run" in iparam['name']:
                     iprops=self.safirDB['props']
                     idx=[i for i in range(len(iprops)) if "Also run" in iprops[i]['name']][0]
                     self.safirDB['props'][idx]['values']=iparam['values']
@@ -2737,7 +2905,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 tmp1[tmp1key]=[]
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
-                    
+
                     print("params=",inam,propnam,ivl)
                     print("test=",tmp0["props"])
                     if(pbtyp=="Structural 2D"):
@@ -2750,16 +2918,16 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     else:
                         specialprops=[]
                         chgspecialprops=[]
-                        
+
                     previouspropnam=propnam
-                    propnam,isSpecialProp=self.changeSpecialProps(propnam,specialprops,chgspecialprops) 
-                    
+                    propnam,isSpecialProp=self.changeSpecialProps(propnam,specialprops,chgspecialprops)
+
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
-                    
+
                     if isSpecialProp:
                         print("*********** FOUND changed property !!!! ***** iprop: ", propnam,"<=",previouspropnam)
-                    #           
-                    
+                    #
+
                     merror,ivl=self.changeLabelToIdxOrNumerize(iprop,ivl)
                     if(merror!=""):
                         gmsh.logger.write(merror, level="error")
@@ -2799,16 +2967,16 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     else:
                         specialprops=[]
                         chgspecialprops=[]
-                        
+
                     previouspropnam=propnam
                     propnam,isSpecialProp=self.changeSpecialProps(propnam,specialprops,chgspecialprops)
-                    #                        
+                    #
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
-                    
+
                     if isSpecialProp:
                         print("*********** FOUND !!!! ***** iprop: ", propnam,"<=",previouspropnam)
                     #
-                        
+
                     merror,ivl=self.changeLabelToIdxOrNumerize(iprop,ivl)
                     if(merror!=""):
                         gmsh.logger.write(merror, level="error")
@@ -2838,7 +3006,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             self.permutespecial=True
 
         # ADjustment for Reverse x':
-        
+
         if("New LAX Definition" in inam):
             i0=[i for i in range(len(toStoreNames)) if ('Reverse x' in toStoreNames[i] or 'Reverse X' in toStoreNames[i])][0]
             irev=int(list(toStore[i0].values())[0][0])
@@ -2870,13 +3038,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 ikey='pgs'
             else:
                 ikey='ents'
-            
+
             if(not int(inb) in self.reverseLAXEntities[ikey][ivl[0]]['curves']):
                 self.reverseLAXEntities[ikey][ivl[0]]['curves'].append(int(inb))
-            
+
             print("reverseLAXEntities in updateDB=",str(self.reverseLAXEntities))
             self.ReverseOnce=True
-            
+
 
 
         return tmpg,update_void,ierr
@@ -3888,7 +4056,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                'relax':'beamrelax'}
 
         ugtyps=[]
-        
+
 
 
         if not ("blks" in ctyps[ctyp] or "void" in ctyps[ctyp]) :
@@ -4682,7 +4850,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 ElemVals[igtypdim].append(valuestr)
                         #
                         if ientity in GroupTags[igtypdim]:
-                                
+
                             if(len(ElemVals[igtypdim])==i+1 and not 'load' in igtyp and not 'blks' in igtyp):
                                 raise ValueError("ielem="+str(ielem)+" has simultaneously a '"+igtypdim+"' property as physgroup '"+str(GroupTags[igtypdim][ientity])+"' and as entity '"+str(ientity)+"'! Need to select only one definition")
                             elif 'load' in igtyp or 'blks' in igtyp:
@@ -5071,7 +5239,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     for i in range(nallelems[1]):
                         ielem=allElemTags[1][i]
                         ientity=allElemEntityTags[1][i]
-                        
+
                         if(ElemVals[igtypdim][i]=="-1"):
                             raise ValueError(" Material is missing, at least for 'Curve "+str(ientity)+"'")
 
@@ -5080,7 +5248,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     for i in range(nallelems[1]):
                         ielem=allElemTags[1][i]
                         ientity=allElemEntityTags[1][i]
-                            
+
                         if(ElemVals[igtypdim][i]!="-1"):
                             tmp={};tmpelem={}
 
@@ -5203,7 +5371,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         ielem=allElemTags[2][i]
                         ientity=allElemEntityTags[2][i]
                         idxshells.append(ielem)
-                        
+
                         if(ElemVals[igtypdim][i]!="-1"):
                             tmp={};tmpelem={}
                             #
@@ -5232,7 +5400,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 sectidx=len(INsectionShells)
 
                             # Add NODOFSHELL
-                            
+
                             idxelem+=1
                             tmpelem['val']=['ELEM',idxelem,node1,node2,node3,node4,sectidx]
                             tmpelem['fmt']='(A10,I6,I11,I11,I11,I11,I11)'
@@ -5581,7 +5749,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         idx=idxshells.index(ielem)+1
                                         iflag="M_SHELL"
                                     #
-                                    
+
                                     ivaltab=ElemVals[igtypdim][i].split(self.sep3)
                                     nparams=len(ivaltab)
                                     tmpelem={}
@@ -5888,7 +6056,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             if(self.nvoids>0):
                     f.write(self.writeLineFortran('(A8,A5)',['SOLVER','NOSYM'])+"\n")
-                                
+
         #
         # OBSOLETE
 #         f.write(self.writeLineFortran('(A10,I6,A5,I6,A5,I6,A5,I6)',['FROM',1,'TO',nnodes,'STEP',1,'NDDL',1])+"\n")
@@ -6586,22 +6754,22 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         entx2=entcoord2[0];enty2=entcoord2[1];entz2=entcoord2[2]
 #         print("entcoord1=",entcoord1)
 #         print("entcoord2=",entcoord2)
-        
+
         nodeTags, nodeCoords, _ = gmsh.model.mesh.getNodes(1, ient, includeBoundary=True)
-        
+
         _, _, elemNodeTags = gmsh.model.mesh.getElements(1, ient)
         idx1=list(nodeTags).index(list(elemNodeTags)[0][0]);idx2=list(nodeTags).index(list(elemNodeTags)[0][1])
         FEx1=nodeCoords[3*idx1];FEy1=nodeCoords[3*idx1+1];FEz1=nodeCoords[3*idx1+2]
         FEx2=nodeCoords[3*idx2];FEy2=nodeCoords[3*idx2+1];FEz2=nodeCoords[3*idx2+2]
-        
+
         # only structural 2D/3D => same order in coordinates
-        
+
 #         print('ent1=',entx1,enty1,entz1)
 #         print('ent2=',entx2,enty2,entz2)
 #         #
 #         print('FE1=',FEx1,FEy1,FEz1)
 #         print('FE2=',FEx2,FEy2,FEz2)
-        
+
         #Produit scalaire
         ps=(FEx2-FEx1)*(entx2-entx1)+(FEy2-FEy1)*(enty2-enty1)+(FEz2-FEz1)*(entz2-entz1)
         #print("ps,irev,ient=",ps,irev,ient)
@@ -6611,7 +6779,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         elif(irev==1 and ps>0):
             #print("reverse")
             istR=True
-                
+
         return istR
 
     def updateReverse(self):
@@ -6644,8 +6812,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     gmsh.model.mesh.reverse([(1,ient)])
         gmsh.fltk.update()
         gmsh.graphics.draw()
-        
-        
+
+
     def eventLoop(self):
         # terminate the event loop if the GUI was closed
         if gmsh.fltk.isAvailable() == 0: return 0
@@ -6689,6 +6857,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 self.loadContextDB(self.contextDB,self.pbType,True)
                 self.loadSafirDB()
                 self.loadInspectDB(self.pbType)
+                self.loadConvertMenu()
                 s=deepcopy(json.loads(gmsh.onelab.get().replace("\\","/"))["onelab"]["parameters"])
                 self.params= [k for k in s if 'SAFIR' in k['name'] or self.pbType in k['name']]
 
@@ -6713,7 +6882,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #print("Mesh is now existing and reverse x' axis has been updated.")
             self.ReverseOnce=False
             self.updateReverse()
-            
+
         if len(action) < 1:
             # no action requested
             pass
@@ -6770,6 +6939,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             # user clicked on "Run"
             gmsh.onelab.setString("ONELAB/Action", [""])
             rc=self.viewAndWriteInfog4s(1)
+
+
+        elif action[0] == "conv_dxf":
+            # user clicked on "Convert DXF to GEO"
+            gmsh.onelab.setString("ONELAB/Action", [""])
+            rc=self.convert_dxf_geo()
 
         elif action[0] == "selectZone":
             # user clicked on "Run"
@@ -8212,7 +8387,7 @@ contextDBstring="""
                             {"name":"91Compressive strength","type":"number","values":[3e7],"min":0,"max":1e10,"step":0},
                             {"name":"92Tensile strength","type":"number","values":[0],"min":0,"max":1e10,"step":0},
                             {"name":"93Ratio of compressive strength loss in cooling","type":"number","values":[0.5],"min":0,"max":1,"step":0},
-                            
+
                             {"ents":{},"pgs":{}}
                     ],
                     "children":[]
@@ -9559,7 +9734,7 @@ if __name__ == "__main__":
                             gmsh.model.mesh.generate(3)
                     #
                         self.updateReverse()
-            
+
                     myapp.createIN()
         #
         elif(os.path.isdir(myapp.dir)): # process all couples (GEO,G4S) found in the directory
@@ -9590,7 +9765,7 @@ if __name__ == "__main__":
                             gmsh.model.mesh.generate(3)
                     #
                         self.updateReverse()
-                        
+
                     myapp.createIN()
                 else:
                     gmsh.logger.write("No GEO found in the folder associated with G4S file "+ig4s, level="warning")
