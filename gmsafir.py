@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-04-14"
+        self.version="2025-04-30"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -105,8 +105,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # contains the information for the object Inspector (essentially pushButtons in the Left Window, to request current view on the objects defined in the Drawing Window)
         #
         # Read InspectDB
-        self.inspectDB=json.loads(inspectDBstring)
         self.loadConvertMenu()
+        self.inspectDB=json.loads(inspectDBstring)
         #
         # Keep track of the default ContextDB from this script, with default values
         self.contextDB0=json.loads(contextDBstring)
@@ -140,10 +140,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.oldmenus=[]
         #
         self.updateGeneralLists()
-        self.loadContextDB(self.contextDB,self.pbType,True)
         self.loadSafirDB()
         self.loadInspectDB(self.pbType)
         self.loadConvertMenu()
+        self.loadContextDB(self.contextDB,self.pbType,True)
         s=deepcopy(json.loads(gmsh.onelab.get().replace("\\","/"))["onelab"]["parameters"])
         self.params= [k for k in s if 'SAFIR' in k['name'] or self.pbType in k['name']]
 
@@ -1264,6 +1264,26 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         moremenus[i]['visible']=True
 
 
+# 
+#         menudict={}
+#         menudict["type"]="string"
+#         #menudict["name"]='0Modules/{}DXF_TO_GEO/0DXF Full path filename' # prf_elem
+#         menudict["name"]='0Modules/Solver/SAFIR/{}DXF_TO_GEO/0DXF Full path filename' # prf_elem
+#         #print('menudict["name"]=',menudict["name"])
+#         menudict["values"]=["test"]
+#         moremenus.append(menudict)
+# 
+#         menudict={}
+#         menudict["type"]="string"
+#         #menudict["name"]='0Modules/{}DXF_TO_GEO/1Convert DXF' # prf_elem
+#         menudict["name"]='0Modules/Solver/SAFIR/{}DXF_TO_GEO/1Convert DXF' # prf_elem
+#         #print('menudict["name"]=',menudict["name"])
+#         menudict["values"]=["conv_dxf"]
+#         menudict["attributes"]={"Macro":"Action", "Aspect":"ReturnButton"}
+#         moremenus.append(menudict)
+
+
+
         gmsh.onelab.set(json.dumps(moremenus))
         gmsh.fltk.update()
 
@@ -1274,14 +1294,16 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         menudict={}
         menudict["type"]="string"
-        menudict["name"]='0Modules/{}DXF_TO_GEO/0DXF Full path filename' # prf_elem
+        #menudict["name"]='0Modules/{}DXF_TO_GEO/0DXF Full path filename' # prf_elem
+        menudict["name"]='0Modules/Solver/SAFIR/{}DXF_TO_GEO/0DXF Full path filename' # prf_elem
         #print('menudict["name"]=',menudict["name"])
         menudict["values"]=["test"]
         convertmenu.append(menudict)
 
         menudict={}
         menudict["type"]="string"
-        menudict["name"]='0Modules/{}DXF_TO_GEO/1Convert DXF' # prf_elem
+        #menudict["name"]='0Modules/{}DXF_TO_GEO/1Convert DXF' # prf_elem
+        menudict["name"]='0Modules/Solver/SAFIR/{}DXF_TO_GEO/1Convert DXF' # prf_elem
         #print('menudict["name"]=',menudict["name"])
         menudict["values"]=["conv_dxf"]
         menudict["attributes"]={"Macro":"Action", "Aspect":"ReturnButton"}
@@ -1663,10 +1685,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.updateGeneralLists()
 #        print('listmat after=',self.listMats)
 
-        self.loadContextDB(self.contextDB,ipb,do_add_from_pgsents)
         self.loadSafirDB()
         self.loadInspectDB(ipb)
         self.loadConvertMenu()
+        self.loadContextDB(self.contextDB,ipb,do_add_from_pgsents)
         #
         s=deepcopy(json.loads(gmsh.onelab.get().replace("\\","/"))["onelab"]["parameters"])
         self.params= [k for k in s if 'SAFIR' in k['name'] or ipb in k['name']]
@@ -6854,10 +6876,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 gmsh.onelab.clear()
                 #
                 self.updateGeneralLists()
-                self.loadContextDB(self.contextDB,self.pbType,True)
                 self.loadSafirDB()
                 self.loadInspectDB(self.pbType)
                 self.loadConvertMenu()
+                self.loadContextDB(self.contextDB,self.pbType,True)
                 s=deepcopy(json.loads(gmsh.onelab.get().replace("\\","/"))["onelab"]["parameters"])
                 self.params= [k for k in s if 'SAFIR' in k['name'] or self.pbType in k['name']]
 
