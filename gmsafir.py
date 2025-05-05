@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-04-30"
+        self.version="2025-05-05"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -1264,7 +1264,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         moremenus[i]['visible']=True
 
 
-# 
+#
 #         menudict={}
 #         menudict["type"]="string"
 #         #menudict["name"]='0Modules/{}DXF_TO_GEO/0DXF Full path filename' # prf_elem
@@ -1272,7 +1272,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 #         #print('menudict["name"]=',menudict["name"])
 #         menudict["values"]=["test"]
 #         moremenus.append(menudict)
-# 
+#
 #         menudict={}
 #         menudict["type"]="string"
 #         #menudict["name"]='0Modules/{}DXF_TO_GEO/1Convert DXF' # prf_elem
@@ -2931,11 +2931,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     print("params=",inam,propnam,ivl)
                     print("test=",tmp0["props"])
                     if(pbtyp=="Structural 2D"):
-                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Node-Xlocal","Mass1","Mass2","Mass3"]
-                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Rotation Z (kgm)"]
+                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Filename","Node-Xlocal","Mass1","Mass2","Mass3"]
+                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Filename of the TSH","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Rotation Z (kgm)"]
                     elif(pbtyp=="Structural 3D"):
-                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Node-Xlocal","Mass1","Mass2","Mass3","Mass4","Mass5","Mass6","Mass7"]
-                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Translation Z (kg)",
+                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Filename","Node-Xlocal","Mass1","Mass2","Mass3","Mass4","Mass5","Mass6","Mass7"]
+                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Filename of the TSH","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Translation Z (kg)",
                                          "Rotation X (kgm)","Rotation Y (kgm)","Rotation Z (kgm)","Warping (-)"]
                     else:
                         specialprops=[]
@@ -5256,14 +5256,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 igtypdim2='beamlax;1'
                 ientityold=-999
 
-
-                if PropAtts[igtypdim]!={}:
-                    for i in range(nallelems[1]):
-                        ielem=allElemTags[1][i]
-                        ientity=allElemEntityTags[1][i]
-
-                        if(ElemVals[igtypdim][i]=="-1"):
-                            raise ValueError(" Material is missing, at least for 'Curve "+str(ientity)+"'")
+# This was installed during debug_RS_20241104 (with no clear goal), but removed with no major effect for debug_JPM_20250504
+#                 if PropAtts[igtypdim]!={}:
+#                     for i in range(nallelems[1]):
+#                         ielem=allElemTags[1][i]
+#                         ientity=allElemEntityTags[1][i]
+#
+#                         if(ElemVals[igtypdim][i]=="-1"):
+#                             raise ValueError(" Material is missing, at least for 'Curve "+str(ientity)+"'")
 
 
                 if PropAtts[igtypdim]!={}:
