@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-05-05"
+        self.version="2025-05-11"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -550,7 +550,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         isSpecialProp=lstspprop!=[]
         if isSpecialProp:
             idxsp=lstspprop[0]
-            propnam=chgspecialprops[idxsp]
+            propnam=propnam.replace(specialprops[idxsp],chgspecialprops[idxsp])
         return(propnam,isSpecialProp)
 
     #Load ContextDB and SafirDB from the disk
@@ -868,6 +868,25 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #
                     for ik in range(istart,len(iline)-1):
                         iprop,ival=iline[ik].split(":");iprop=iprop.strip();ival=ival.strip()
+
+                        #
+                        if(self.pbType=="Structural 2D"):
+                            specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","Filename of the TEM","Filename of the TSH","Node-Xlocal","Mass1","Mass2","Mass3"]
+                            chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","TEM Filename","Filename","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Rotation Z (kgm)"]
+                        elif(self.pbType=="Structural 3D"):
+                            specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","Filename of the TEM","Filename of the TSH","Node-Xlocal","Mass1","Mass2","Mass3","Mass4","Mass5","Mass6","Mass7"]
+                            chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","TEM Filename","Filename","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Translation Z (kg)",
+                                             "Rotation X (kgm)","Rotation Y (kgm)","Rotation Z (kgm)","Warping (-)"]
+                        else:
+                            specialprops=[]
+                            chgspecialprops=[]
+    
+                        previouspropnam=iprop
+                        iprop,isSpecialProp=self.changeSpecialProps(iprop,specialprops,chgspecialprops)
+                    
+                        if isSpecialProp:
+                            print("!!!!!!!!! FOUND special prop !!!!!!!!!!!!!!"+previouspropnam+" => "+iprop)
+                        #
                         fullname=pref_elem+"/"+iprop
                         toStore.append({fullname:[ival]})
                     #
@@ -2928,26 +2947,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 for i in range(len(toStore)):
                     inam,propnam,ivl=getParam(i)
 
-                    print("params=",inam,propnam,ivl)
-                    print("test=",tmp0["props"])
-                    if(pbtyp=="Structural 2D"):
-                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Filename","Node-Xlocal","Mass1","Mass2","Mass3"]
-                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Filename of the TSH","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Rotation Z (kgm)"]
-                    elif(pbtyp=="Structural 3D"):
-                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Filename","Node-Xlocal","Mass1","Mass2","Mass3","Mass4","Mass5","Mass6","Mass7"]
-                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Filename of the TSH","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Translation Z (kg)",
-                                         "Rotation X (kgm)","Rotation Y (kgm)","Rotation Z (kgm)","Warping (-)"]
-                    else:
-                        specialprops=[]
-                        chgspecialprops=[]
-
-                    previouspropnam=propnam
-                    propnam,isSpecialProp=self.changeSpecialProps(propnam,specialprops,chgspecialprops)
+#                     print("params=",inam,propnam,ivl)
+#                     print("test=",tmp0["props"])
 
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
-
-                    if isSpecialProp:
-                        print("*********** FOUND changed property !!!! ***** iprop: ", propnam,"<=",previouspropnam)
                     #
 
                     merror,ivl=self.changeLabelToIdxOrNumerize(iprop,ivl)
@@ -2976,28 +2979,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     inam,propnam,ivl=getParam(i)
 #                     print("params=",inam,propnam,ivl)
 #                     print("test=",tmp0["props"])
-
-#                    specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)"]
-#                    chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)"]
-                    if(pbtyp=="Structural 2D"):
-                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Node-Xlocal","Mass1","Mass2","Mass3"]
-                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Rotation Z (kgm)"]
-                    elif(pbtyp=="Structural 3D"):
-                        specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","TEM Filename","Node-Xlocal","Mass1","Mass2","Mass3","Mass4","Mass5","Mass6","Mass7"]
-                        chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","Filename of the TEM","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Translation Z (kg)",
-                                         "Rotation X (kgm)","Rotation Y (kgm)","Rotation Z (kgm)","Warping (-)"]
-                    else:
-                        specialprops=[]
-                        chgspecialprops=[]
-
-                    previouspropnam=propnam
-                    propnam,isSpecialProp=self.changeSpecialProps(propnam,specialprops,chgspecialprops)
                     #
                     iprop=[k for k in tmp0["props"] if 'name' in k and propnam in k['name']][0]
 
-                    if isSpecialProp:
-                        print("*********** FOUND !!!! ***** iprop: ", propnam,"<=",previouspropnam)
-                    #
 
                     merror,ivl=self.changeLabelToIdxOrNumerize(iprop,ivl)
                     if(merror!=""):
@@ -7804,7 +7788,7 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"0Filename of the TEM","type":"string","values":[""]},
+                {"name":"0TEM Filename","type":"string","values":[""]},
                 {"name":"1Material Name(s)","type":"string","values":[""]},
                 {"ents":{},"pgs":{}}
                 ],
@@ -8610,7 +8594,7 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"0Filename of the TEM","type":"string","values":[""]},
+                {"name":"0TEM Filename","type":"string","values":[""]},
                 {"name":"1Material Name(s)","type":"string","values":[""]},
                 {"ents":{},"pgs":{}}
                 ],
@@ -9417,7 +9401,7 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"0Filename of the TSH","type":"string","values":[""]},
+                {"name":"0Filename","type":"string","values":[""]},
                 {"name":"1Thickness","type":"number","values":[0],"min":0,"max":1,"step":0},
                 {"name":"2Node level Z0","type":"number","values":[0],"min":0,"max":1,"step":0},
                 {"name":"3Material Name(s)","type":"string","values":[""]},
