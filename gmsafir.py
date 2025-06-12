@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-05-11"
+        self.version="2025-06-12"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -1247,7 +1247,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # Add infos
         menudict={}
         menudict["type"]="string"
-        menudict["name"]="0Modules/Solver/SAFIR/0Version"
+        #menudict["name"]="0Modules/Solver/SAFIR/0Version"
+        menudict["name"]="0Modules/Solver/SAFIR/0Version of GmSAFIR"
         menudict["values"]=[self.version]
         menudict["readOnly"]=True
         moremenus.append(menudict)
@@ -5483,7 +5484,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             #
             for i in range(len(PropPgs['spring;0'])):
                 ipg=int(PropPgs['spring;0'][i])
-                for ient in gmsh.model.getEntitiesForPhysicalGroup(1, int(ipg)):
+                for ient in gmsh.model.getEntitiesForPhysicalGroup(0, int(ipg)):
                     tmpelem={}
                     shpedges=gmsh.model.getBoundary([(0, int(ient))],recursive=True)
                     node1=allNodeTags.index([allElemNodeTags[0][i0] for i0 in range(nallelems[0]) if allElemEntityTags[0][i0]==shpedges[0][1]][0][0])+1
