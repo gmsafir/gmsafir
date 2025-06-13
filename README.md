@@ -16,9 +16,9 @@ Here are some other useful links:
 
 - [GmSAFIR Issues](https://github.com/gmsafir/gmsafir/issues) : Please submit there your issues
 
-- General information about SAFIR suite is found [here](https://www.uee.uliege.be/cms/c_4016387/fr/ueenew-ressources-sur-safir)  
+- General information about SAFIR suite is found [here](https://safirsupport.be/index.php/safir/safir-resources/)  
 
-- Compatibility between the input files created with GmSAFIR and version 2019b1 of SAFIR is treated [here](https://www.uee.uliege.be/upload/docs/application/pdf/2022-02/safir_prior_versions_-_gmsafir_compatibility.pdf)
+- Compatibility between the input files created with GmSAFIR and version 2019b1 of SAFIR is treated [here](https://github.com/user-attachments/files/20406343/SAFIR.prior.versions.-.GmSAFIR.compatibility.docx)
   
 ### Important Note: 
 In the Issues, the .geo .g4s and .IN files cannot be uploaded as is. Please, add .txt at the end of their names before uploading
