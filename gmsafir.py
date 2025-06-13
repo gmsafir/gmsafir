@@ -1284,25 +1284,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         moremenus[i]['visible']=True
 
 
-#
-#         menudict={}
-#         menudict["type"]="string"
-#         #menudict["name"]='0Modules/{}DXF_TO_GEO/0DXF Full path filename' # prf_elem
-#         menudict["name"]='0Modules/Solver/SAFIR/{}DXF_TO_GEO/0DXF Full path filename' # prf_elem
-#         #print('menudict["name"]=',menudict["name"])
-#         menudict["values"]=["test"]
-#         moremenus.append(menudict)
-#
-#         menudict={}
-#         menudict["type"]="string"
-#         #menudict["name"]='0Modules/{}DXF_TO_GEO/1Convert DXF' # prf_elem
-#         menudict["name"]='0Modules/Solver/SAFIR/{}DXF_TO_GEO/1Convert DXF' # prf_elem
-#         #print('menudict["name"]=',menudict["name"])
-#         menudict["values"]=["conv_dxf"]
-#         menudict["attributes"]={"Macro":"Action", "Aspect":"ReturnButton"}
-#         moremenus.append(menudict)
-
-
 
         gmsh.onelab.set(json.dumps(moremenus))
         gmsh.fltk.update()
@@ -1336,9 +1317,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #if(1>0): return
         print('cou')
         # Test existence of input file
-        input_dxf=gmsh.onelab.getString("0Modules/{}DXF_TO_GEO/0DXF Full path filename")[0]
-        print('cou2')
-        print("input_dxf=",input_dxf)
+        #
+        #input_dxf=gmsh.onelab.getString("0Modules/{}DXF_TO_GEO/0DXF Full path filename")
+        input_dxf=gmsh.onelab.getString("0Modules/Solver/SAFIR/{}DXF_TO_GEO/0DXF Full path filename")[0]
         #gmsh.logger.write(input_dxf, level="info")
         if(not os.path.exists(input_dxf)):
             gmsh.logger.write("This full path filename does not exist!", level="error")
