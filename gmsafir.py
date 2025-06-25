@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-06-12"
+        self.version="2025-06-125"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -3441,7 +3441,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         valtab=[[val0 for k0,val0 in d.items()] for d in v["props"]]
 
                         if(self.SolidFilename!="" and str(valtab[0][0][0])!=self.SolidFilename):
-                            gmsh.logger.write("Problem in Solid Material allocation: .OUT filename has already been assigned a different value (only one value possible): "+self.SoldFilename, level="error")
+                            gmsh.logger.write("Problem in Solid Material allocation: .OUT filename has already been assigned a different value (only one value possible): "+self.SolidFilename, level="error")
                             return -1,PropAtts,PropPgs,PropEnts,PropValPgs,PropValEnts,PropExtValEnts,PropExtValPgs,propstrs,ishptyp,ishptypm,nmats,uniqmatlist
                         #
                         self.SolidFilename=str(valtab[0][0][0])
