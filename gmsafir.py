@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-06-125"
+        self.version="2025-07-10"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -5358,7 +5358,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     for i in range(nallelems[2]):
                         ielem=allElemTags[2][i]
                         ientity=allElemEntityTags[2][i]
-                        idxshells.append(ielem)
+                        #idxshells.append(ielem)
 
                         if(ElemVals[igtypdim][i]!="-1"):
                             tmp={};tmpelem={}
@@ -5388,7 +5388,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 sectidx=len(INsectionShells)
 
                             # Add NODOFSHELL
-
+                            idxshells.append(ielem)
                             idxelem+=1
                             tmpelem['val']=['ELEM',idxelem,node1,node2,node3,node4,sectidx]
                             tmpelem['fmt']='(A10,I6,I11,I11,I11,I11,I11)'
