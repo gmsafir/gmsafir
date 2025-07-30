@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-07-10"
+        self.version="2025-07-30"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -3847,10 +3847,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         ikey=ikey.replace(re.search(pattern, ikey).group(0),'')
                                     if('valueLabels' in idefprops):
                                         ival=[k1 for k1,v1 in idefprops['valueLabels'].items() if ival0==v1][0]
-                                        if not ("visible" in idefprops and idefprops['visible']==False):
+                                        if(1>0):
+                                        # "File For ..." needs to be printed, though not visible
+                                        #if not ("visible" in idefprops and idefprops['visible']==False):
                                             llog.append(ikey+" : "+str(ival))
                                     else:
-                                        if not ("visible" in idefprops and idefprops['visible']==False):
+                                        # "File For ..." needs to be printed, though not visible
+                                        #if not ("visible" in idefprops and idefprops['visible']==False):
+                                        if(1>0):
                                             llog.append(ikey+" : "+str(ival0))
 
                                 llog.append("}");llog.append("")
@@ -3889,10 +3893,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         ikey=ikey.replace(re.search(pattern, ikey).group(0),'')
                                     if('valueLabels' in idefprops):
                                         ival=[k1 for k1,v1 in idefprops['valueLabels'].items() if ival0==v1][0]
+                                        # "File For ..." needs to be printed, though not visible
                                         #if not ("visible" in idefprops and idefprops['visible']==False):
                                         if(1>0):
                                             llog.append(ikey+" : "+str(ival))
                                     else:
+                                        # "File For ..." needs to be printed, though not visible
                                         #if not ("visible" in idefprops and idefprops['visible']==False):
                                         if(1>0):
                                             llog.append(ikey+" : "+str(ival0))
@@ -3930,6 +3936,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.prepWriteThermoMecaProps(PropAtts,PropEnts,PropExtValEnts,PropPgs,PropExtValPgs,propstrs,listlog,iflag)
         # Print the set of properties in contextDB (get from PropAtts)x
         listlog.append("");listlog.append("")
+        print("listlog=",listlog)
         #
         if iflag==1: #Write to log window
             for ilog in listlog:
