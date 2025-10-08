@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-07-30"
+        self.version="2025-10-08"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -3516,7 +3516,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         #
                         for i in range(ndofelem):
                             if(i==0):
-                                extval=str(valtab[1][0][0])
+                                #extval=str(valtab[1][0][0])
+                                extval=str(valtab[0][0][0]) # debug 2025-10-08
                             else:
                                 extval+=self.sep3+str(valtab[i][0][0])
                         #
