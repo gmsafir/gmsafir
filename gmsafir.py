@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-10-08"
+        self.version="2025-11-24"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -85,11 +85,19 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             gmsh.finalize()
             sys.exit(127)
 
+        #if(outsmg!=""):
+        #    gmsh.fltk.update()
+        #    gmsh.logger.write("!!!TEST0124 !!! Error when opening GEO file ", level="error")
+         
+     
         # specialCategs is defined by default - will be updated in getG4sJson if g4sfile exists:
         self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
                             ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
         self.reverseLAXEntities={}
         self.ReverseOnce=False
+        
+
+        
         #
         # Reading the different DBs:
         #
@@ -106,11 +114,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #
         # Read InspectDB
         self.loadConvertMenu()
+
+   
         self.inspectDB=json.loads(inspectDBstring)
         #
         # Keep track of the default ContextDB from this script, with default values
         self.contextDB0=json.loads(contextDBstring)
-        print("toto:",self.contextDB0)
+        #
         self.initCompleteContextDB(self.contextDB0)
 
         # Retrieve initial version of ContextDB
@@ -135,6 +145,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         if(self.nopopup): # Batch mode
             return
 
+
        # GUI Mode: Initial load the GUI's menus
         gmsh.onelab.clear()
         self.oldmenus=[]
@@ -148,6 +159,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.params= [k for k in s if 'SAFIR' in k['name'] or self.pbType in k['name']]
 
 
+        
     # Complete automatically some repetitive pieces in ContextDB, at initialization step when load from default values in this script
     def initCompleteContextDB(self,tmpg0):
         # Copy the Surface Materials from Thermal2D into Thermal3D
@@ -416,6 +428,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             5/ Batch mode: python gmsafir.py [full_path_G4Sfile] -nopopup: process all GEO files found in the directory with this G4S file
             """
 
+        outmsg=""
         # GUI MODE
         if(not "-nopopup" in sys.argv):
 
@@ -433,7 +446,11 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     self.dir=os.path.dirname(self.geofile)
                     if(os.path.exists(self.geofile)):
                         gmsh.logger.write("Ok, this .geo file does exist - The run directory is the directory containing this geofile", level="info")
-                        gmsh.open(self.geofile)
+                        try:
+                            gmsh.open(self.geofile)
+                        except Exception as e:
+                            gmsh.fltk.update()
+                            gmsh.logger.write("Error when opening GEO file "+self.geofile+": "+str(e), level="error")
                     #
     #                 else:
     #                     gmsh.logger.write("GEO file doesn't exist yet", level="info")
@@ -451,7 +468,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             gfile=tmpfiles[0]
                             self.geofile=os.path.join(self.dir,gfile)
                             gmsh.logger.write("Ok, found a single GEO file in this directory, "+os.path.basename(self.geofile)+" - It will be used", level="info")
-                            gmsh.open(self.geofile)
+                            try:
+                                gmsh.open(self.geofile)
+                            
+                            except Exception as e:
+                                gmsh.fltk.update()
+                                gmsh.logger.write("Error when opening GEO file "+self.geofile+": "+str(e), level="error")
                             #
                         elif(len(tmpfiles)>1):
                             msg="-- Too many GEO files in the directory - Need to specify one"
@@ -484,7 +506,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         gfile=tmpfiles[0]
                         self.geofile=os.path.join(self.dir,gfile)
                         gmsh.logger.write("Ok, found a single GEO file in this directory, "+os.path.basename(self.geofile)+" - It will be used", level="info")
-                        gmsh.open(self.geofile)
+                        try:
+                            gmsh.open(self.geofile)
+                        except Exception as e:
+                            #gmsh.open()
+                            gmsh.fltk.update()
+                            gmsh.logger.write("Error when opening GEO file "+self.geofile+": "+str(e), level="error")
+                        
                         #
                     elif(len(tmpfiles)>1):
                         msg="-- Too many GEO files in the directory - Need to specify one"
