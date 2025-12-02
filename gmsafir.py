@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-11-24"
+        self.version="2025-12-02"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -3333,6 +3333,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 propstrs.append(('blks;2','Block Constraint'))
                 propstrs.append(('same;3','SAME Constraint'))
                 propstrs.append(('void;2','Void Constraint'))
+                if(self.nvoids>0):
+                    propstrs.append(('void_sym;2','Void SymAxis Constraint'))
                 #propstrs.append(('epsrsolid;3','Residual Stress'))
             if(ndims==2):
                 propstrs.append(('void;1','Void Constraint'))
@@ -3422,6 +3424,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             ivoid=[list(iv.values())[0] for iv in ikey['props'] if 'Void number' in list(iv.keys())][0][0]
                             ikey["val"]=ivoid
                             ikey["extend_val"]=str(ivoid)+'- void Boundary'
+                        #
+                        if(self.nvoids>0):
+                            for i, (k, v) in enumerate(PropAtts['void_sym;2'].items()):
+                                ikey=PropAtts['void_sym;2'][k]
+                                ivoid=[list(iv.values())[0] for iv in ikey['props'] if 'Void number' in list(iv.keys())][0][0]
+                                ikey["val"]=i+1
+                                ikey["extend_val"]=str(ivoid)+'- void symAxis'
                 #
             except Exception as emsg:
                 gmsh.logger.write("Problem in void property attributes:"+str(emsg), level="error")
@@ -4681,6 +4690,19 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 gmsh.logger.write("A 'Void SymAxis Constraint' can only be defined for a Curve of 2 points - not the case for 'Curve "+ient+"'", level="error")
                                 return -1
 
+            if(ndims==3):
+                if(self.nvoids>0):
+                    if(PropPgs['void_sym;2']!=[]):
+                        gmsh.logger.write("A 'Physical Surface' cannot get a 'Void SymAxis Constraint'", level="error")
+                        return -1
+                    #
+                    if(PropEnts['void_sym;2']!={}):
+                        for i in range(len(PropEnts['void_sym;2'])):
+                            ient=PropEnts['void_sym;2'][i]
+                            nents=len(gmsh.model.getBoundary([(2, int(ient))],recursive=True))
+                            if(nents!=3):
+                                gmsh.logger.write("A 'Void SymAxis Constraint' can only be defined for a Surface of 3 points - not the case for 'Surface "+ient+"'", level="error")
+                                return -1                
 
             # Verification on entities/physgroups: Test that the TSH geometry has been correctly defined (at this place in the code because it requires the entity node coords)
             temtyp=""
@@ -5039,9 +5061,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # (Thermal) : Special storage for 'real_sym' and 'void_sym', where a same point(=elem) can belong to multiple symAxis
         # len(gmsh.model.mesh.getNodes(0, int(ient)))
         if(self.isThermal):
+            syms={}
+            symvals={}
             if(ndims==2):
-                syms={}
-                symvals={}
                 for igtypdim in ['real_sym;1','void_sym;1']:
                     syms[igtypdim]={}
                     symvals[igtypdim]={}
@@ -5063,7 +5085,28 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 symvals[igtypdim][ikey]=val
                 print("syms=",syms['void_sym;1'])
         #
-
+            if(ndims==3):
+                for igtypdim in ['void_sym;2']:
+                    syms[igtypdim]={}
+                    symvals[igtypdim]={}
+                    kdims=1
+                    if(self.nvoids>0):
+                        if(PropEnts[igtypdim]!={}):
+                            for i in range(len(PropEnts[igtypdim])):
+                                ikey=i
+                                val=PropValEnts[igtypdim][i]
+                                ient=PropEnts[igtypdim][i]
+                                inodes=gmsh.model.getBoundary([(2, int(ient))],recursive=True)
+                                for itup in inodes:
+                                    inode,_,_=gmsh.model.mesh.getNodes(0,itup[1])
+                                    inode_safir=allNodeTags.index(inode[0])+1
+                                    if(not ikey in syms[igtypdim]):
+                                        syms[igtypdim][ikey]=[inode_safir]
+                                    else:
+                                        syms[igtypdim][ikey].append(inode_safir)
+                                symvals[igtypdim][ikey]=val
+                print("syms=",syms['void_sym;2'])
+        #
 
         # Prepare Nodes to write (Thermal and Structural)
         INnodes=[]
@@ -6472,6 +6515,17 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     for k,v in syms['void_sym;1'].items():
                         val=symvals['void_sym;1'][k]
                         f.write(self.writeLineFortran('(A10,I6,I6,I6)',['SYMVOID',v[0],v[1],val])+"\n")
+                except Exception as emsg:
+                    gmsh.logger.write("Pb in writing void symmetry axis:"+str(emsg), level="error")
+                    return -1
+                
+
+            #Write VoidSym (Thermal 3D)
+            if(ndims==3 and self.nvoids>0):
+                try:
+                    for k,v in syms['void_sym;2'].items():
+                        val=symvals['void_sym;2'][k]
+                        f.write(self.writeLineFortran('(A10,I6,I6,I6)',['SYMVOID',v[0],v[1],v[2],val])+"\n")
                 except Exception as emsg:
                     gmsh.logger.write("Pb in writing void symmetry axis:"+str(emsg), level="error")
                     return -1
@@ -9203,6 +9257,19 @@ contextDBstring="""
                 "children":[]
                 }
             ]
+            },
+            {
+            "key":"Property Type","name":"Void SymAxis Constraint",
+            "props":[],
+            "children":[
+                {
+                "key":"Void SymAxis Type","name":"-",
+                "props":[
+                    {"name":"Void number","type":"number","values":[1],"min":0,"max":1,"step":1},
+                    {"ents":{},"pgs":{}}
+                    ],
+                "children":[]
+                }]
             }
         ]},
         {
