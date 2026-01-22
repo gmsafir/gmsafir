@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2025-12-02"
+        self.version="2026-01-22"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -1343,8 +1343,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
     def convert_dxf_geo(self):
         #if(1>0): return
-        print('cou')
-        # Test existence of input file
         #
         #input_dxf=gmsh.onelab.getString("0Modules/{}DXF_TO_GEO/0DXF Full path filename")
         input_dxf=gmsh.onelab.getString("0Modules/Solver/SAFIR/{}DXF_TO_GEO/0DXF Full path filename")[0]
@@ -1353,8 +1351,6 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             gmsh.logger.write("This full path filename does not exist!", level="error")
             return(-1)
 
-        else:
-            print("cou")
         # Continue
         output_geo=input_dxf.replace(".dxf",".geo").replace(".DXF",".geo")
 
@@ -1366,6 +1362,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         liste_points = []
         liste_lines = []
         layer_lines = defaultdict(list)
+        liste_surfaces = []
+        layer_surfaces = defaultdict(list)
+        surface_counter = 1
+        
         point_index_map = {}
         line_counter = 1
 
@@ -1373,28 +1373,48 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         for entity in msp:
             entity_type = entity.dxftype()
             layer_name = entity.dxf.layer
+            print(entity_type)
 
             # On ne traite que les LINE et POLYLINE
-            if entity_type not in ('LINE', 'LWPOLYLINE', 'POLYLINE'):
+            if entity_type not in ('LINE', 'LWPOLYLINE', 'POLYLINE','3DFACE'):
                 continue
 
             # Extraire les points
-            (rc,attrs) = self.get_entity_attributes(entity)
-            if(rc!=0):
-                gmsh.logger.write("Attribute reading error in DXF File", level="error")
-                return(rc)
-
-            if entity_type == 'LINE':
-                start, end = attrs['start'], attrs['end']
-                points = [start, end]
-            else:  # POLYLINE ou LWPOLYLINE
-                if 'points' in attrs:
-                    points = [p[:3] for p in attrs['points']]  # Prendre seulement (x,y,z)
-                else:
-                    continue
+            # Extraire les points selon le type d'entité
+            if entity_type == '3DFACE':
+                # 3DFACE a 4 points (le dernier peut être égal au premier)
+                points = [entity.dxf.vtx0, entity.dxf.vtx1, entity.dxf.vtx2, entity.dxf.vtx3]
+                # Supprimer les points dupliqués
+                unique_points = []
+                seen = set()
+                for point in points:
+                    point_tuple = (round(point[0], 6), round(point[1], 6), round(point[2], 6))
+                    if point_tuple not in seen:
+                        seen.add(point_tuple)
+                        unique_points.append(point)
+                points = unique_points
+                if len(points) < 3:
+                    continue  # Pas assez de points pour former une face
+            else:
+                (rc,attrs) = self.get_entity_attributes(entity)
+                if(rc!=0):
+                    gmsh.logger.write("Attribute reading error in DXF File", level="error")
+                    return(rc)
+    
+                if entity_type == 'LINE':
+                    start, end = attrs['start'], attrs['end']
+                    points = [start, end]
+                else:  # POLYLINE ou LWPOLYLINE
+                    if 'points' in attrs:
+                        points = [p[:3] for p in attrs['points']]  # Prendre seulement (x,y,z)
+                    else:
+                        continue
 
             # Ajouter les points à la liste globale et garder leur index
             line_point_indices = []
+            
+            # Ajouter une structure pour les surfaces
+
             for point in points:
                 point_tuple = tuple(round(coord, 6) for coord in point)  # Arrondi pour éviter les doublons
                 if point_tuple not in point_index_map:
@@ -1409,14 +1429,34 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 liste_lines.append(line_def)
                 layer_lines[layer_name].append(line_counter)
                 line_counter += 1
-            else:
+            elif entity_type == 'LWPOLYLINE' or entity_type == 'POLYLINE':
                 # Pour les polylignes, créer une ligne entre chaque paire de points consécutifs
                 for i in range(len(line_point_indices) - 1):
                     line_def = (line_point_indices[i], line_point_indices[i+1])
                     liste_lines.append(line_def)
                     layer_lines[layer_name].append(line_counter)
                     line_counter += 1
-
+                    
+            elif entity_type == '3DFACE':
+                # Pour les 3DFACE, créer une surface (Line Loop + Plane Surface)
+                if len(line_point_indices) >= 3:
+                    # Créer les lignes pour le contour
+                    face_lines = []
+                    for i in range(len(line_point_indices)):
+                        start_idx = line_point_indices[i]
+                        end_idx = line_point_indices[(i + 1) % len(line_point_indices)]
+                        line_def = (start_idx, end_idx)
+                        liste_lines.append(line_def)
+                        face_lines.append(line_counter)
+                        line_counter += 1
+                    
+                    # Créer la surface
+                    surface_def = face_lines  # Liste des lignes formant la surface
+                    liste_surfaces.append(surface_def)
+                    layer_surfaces[layer_name].append(surface_counter)
+                    surface_counter += 1
+        print("layre_surface(1)=",layer_surfaces)
+        print("list_surfaces(2)=",liste_surfaces)
         # Écrire le fichier .geo pour Gmsh
         with open(output_geo, 'w') as f:
             f.write("// Gmsh File automatically generated from DXF\n")
@@ -1433,12 +1473,30 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(f"Line({i}) = {{{line[0]}, {line[1]}}};\n")
 
             # Écrire les Physical Curve par layer
+            
             f.write("\n// Physical Curves par layer\n")
             for layer_name, line_numbers in layer_lines.items():
                 # Nettoyer le nom du layer pour Gmsh
                 clean_name = layer_name.replace(" ", "_").replace("-", "_")
                 lines_str = ",".join(map(str, line_numbers))
                 f.write(f'Physical Curve("{clean_name}") = {{{lines_str}}};\n')
+                
+# Écrire les surfaces (Line Loops et Plane Surfaces)
+            f.write("\n// Surfaces (3DFACE)\n")
+            for i, surface_lines in enumerate(liste_surfaces, 1):
+                # Créer le Line Loop
+                lines_str = ",".join(map(str, surface_lines))
+                f.write(f"Line Loop({1000 + i}) = {{{lines_str}}};\n")
+                # Créer la Plane Surface
+                f.write(f"Plane Surface({2000 + i}) = {{{1000 + i}}};\n")
+
+            # Écrire les Physical Surfaces par layer
+            f.write("\n// Physical Surfaces par layer\n")
+            for layer_name, surface_numbers in layer_surfaces.items():
+                # Nettoyer le nom du layer pour Gmsh
+                clean_name = layer_name.replace(" ", "_").replace("-", "_") + "_Surface"
+                surfaces_str = ",".join(map(str, [2000 + num for num in surface_numbers]))
+                f.write(f'Physical Surface("{clean_name}") = {{{surfaces_str}}};\n')
 
         gmsh.logger.write("Conversion DXF to GEO is successful!", level="info")
 
@@ -3223,6 +3281,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
 
     #Store the nodes and faces in coherent order for SAFIR
+    #Store the nodes and faces in coherent order for SAFIR
     def getOrderedFaces(self,ielemtype,ielemnodes):
         facenodes=[]
         if(ielemtype==1): # lines
@@ -3237,22 +3296,22 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             facenodes.append([ielemnodes[2],ielemnodes[3]])
             facenodes.append([ielemnodes[3],ielemnodes[0]])
         if(ielemtype==4): #tets
-            facenodes.append([ielemnodes[0],ielemnodes[1],ielemnodes[2]])
+            facenodes.append([ielemnodes[0],ielemnodes[2],ielemnodes[1]])
             facenodes.append([ielemnodes[0],ielemnodes[3],ielemnodes[2]])
             facenodes.append([ielemnodes[0],ielemnodes[1],ielemnodes[3]])
             facenodes.append([ielemnodes[1],ielemnodes[2],ielemnodes[3]])
         if(ielemtype==5): #hexas
-            facenodes.append([ielemnodes[0],ielemnodes[3],ielemnodes[7],ielemnodes[4]])
+            facenodes.append([ielemnodes[0],ielemnodes[4],ielemnodes[7],ielemnodes[3]])
             facenodes.append([ielemnodes[2],ielemnodes[3],ielemnodes[7],ielemnodes[6]])
             facenodes.append([ielemnodes[1],ielemnodes[2],ielemnodes[6],ielemnodes[5]])
             facenodes.append([ielemnodes[0],ielemnodes[1],ielemnodes[5],ielemnodes[4]])
-            facenodes.append([ielemnodes[0],ielemnodes[1],ielemnodes[2],ielemnodes[3]])
+            facenodes.append([ielemnodes[0],ielemnodes[3],ielemnodes[2],ielemnodes[1]])
             facenodes.append([ielemnodes[4],ielemnodes[5],ielemnodes[6],ielemnodes[7]])
         if(ielemtype==6): #prisms
-            facenodes.append([ielemnodes[0],ielemnodes[2],ielemnodes[5],ielemnodes[3]])
+            facenodes.append([ielemnodes[0],ielemnodes[3],ielemnodes[5],ielemnodes[2]])
             facenodes.append([ielemnodes[1],ielemnodes[2],ielemnodes[5],ielemnodes[4]])
             facenodes.append([ielemnodes[0],ielemnodes[1],ielemnodes[4],ielemnodes[3]])
-            facenodes.append([ielemnodes[0],ielemnodes[1],ielemnodes[2]])
+            facenodes.append([ielemnodes[0],ielemnodes[2],ielemnodes[1]])
             facenodes.append([ielemnodes[3],ielemnodes[4],ielemnodes[5]])
         return facenodes
 
@@ -5688,7 +5747,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 ielemnodes = allElemNodeTags[ndims][im]
                                 ielemtype=allElemTypes[ndims][im]
                                 ifaces=self.getOrderedFaces(ielemtype,ielemnodes)
-                                if(ielem==615): print(str(ifaces))
+                                #if(ielem==615): print(str(ifaces))
                                 found=False
                                 faceConstraints=['NO' for i0 in range(nfacesperelemmax)]
                                 for ifa in range(len(ifaces)):
@@ -5736,47 +5795,56 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     #
                     if(ndims==2):
                         igtypdim='void;1'
+                        nfacesperelemmax=4
                     elif(ndims==3):
                         igtypdim='void;2'
+                        nfacesperelemmax=6
                     #
                     igtyp='void'
                     ipref='ELEM'
                     if PropAtts[igtypdim]!={}:
+                        print("PropAtts[igtypdim]=",PropAtts[igtypdim])
+                        frtierfaceS = []
+                        frtierfaceSi = []
+                        
                         for i in range(nelemsm):
                             if(ElemVals[igtypdim][i]!="-1"):
-                                ival0=ElemVals[igtypdim][i]
                                 ielem=allElemTags[ndimsm][i]
                                 ientity=allElemEntityTags[ndimsm][i]
-
                                 frtierface=allElemNodeTags[ndimsm][i]
                                 frtierface.sort()
-                                found=False
-                                im=0
-                                while(not found and im<nelems):
-                                    ielemnodes=allElemNodeTags[ndims][im]
-                                    ielemtype=allElemTypes[ndims][im]
-                                    idx=im+1 # get the elem index, not the tag, to write in the outfile
-                                    ifaces=self.getOrderedFaces(ielemtype,ielemnodes)
-
-                                    for ifa in range(len(ifaces)):
-                                        elemface=ifaces[ifa]
-                                        elemface.sort()
-                                        if(frtierface==elemface):
-                                            found=True
-                                            ifa0=ifa
-
-                                    if(not found):
-                                            im+=1
-                                if(found):
+                                frtierfaceS.append(frtierface)
+                                frtierfaceSi.append(i)             
+                        # Boucle de recherche
+                        for im in range(nelems):
+                            ielem=allElemTags[ndims][im]
+                            ielemnodes = allElemNodeTags[ndims][im]
+                            ielemtype=allElemTypes[ndims][im]
+                            ifaces=self.getOrderedFaces(ielemtype,ielemnodes)
+                            for ifa in range(len(ifaces)):
+                                elemface=ifaces[ifa]
+                                elemface.sort()
+                                try:
+                                    j = frtierfaceS.index(elemface)
+                                    i = frtierfaceSi[j]
+                                    ival0=ElemVals[igtypdim][i]
+                                    idx=im+1
+                                    ifa0=ifa
                                     tmp={}
                                     tmp['val']=[ipref,idx,ifa0+1]
                                     tmp['fmt']='(A5,I6,I4)'
+                                    
                                     if(ival0 in INvoids):
                                         INvoids[ival0].append(tmp)
                                         frtvoids[ival0]+=1
                                     else:
                                         INvoids[ival0]=[tmp]
                                         frtvoids[ival0]=1
+                                #
+                                except:
+                                    pass
+                        del frtierfaceS
+                        del frtierfaceSi
 
                         for k,ifrtvoid in frtvoids.items():
                             nfrontiervoids=max(nfrontiervoids,ifrtvoid)
