@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2026-01-22"
+        self.version="2026-01-23"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -6149,7 +6149,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 # LAST VERIF
 
         if self.g4sfileError!="" or self.previousErrors!=[]:
-            gmsh.logger.write("Problem with previously existing errors - Solve them before proceeding to the IN file creation", level="error")
+            gmsh.logger.write("Problem with previously existing errors - Solve them before proceeding to the IN file creation - use 'reload properties' to see g4s error message", level="error")
             return -1
 
 
