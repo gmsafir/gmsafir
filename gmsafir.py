@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2026-01-23"
+        self.version="2026-02-02"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -5006,19 +5006,23 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             if igtypdim in ElemVals and ElemVals[igtypdim]!=[]:
                 for i in range(kelems):
                     if ElemVals[igtypdim][i]!="-1":
-                        ientity=allElemEntityTags[kdims][i]
+                        if igtypdim=="beamrelax;1":
+                            ientity=allElemEntityTags[kdims][i]
+                            if allElemEntityTags[kdims].count(ientity)==1:
+                                ElemVals[igtypdim][i]+="/S"
+                            else:
+                                #
+                                if (i>0 and allElemEntityTags[kdims][i-1]!=ientity) or i==0: # identifies the first left elem of the Beam
+                                    ElemVals[igtypdim][i]+="/L"
+                                    ielem_idx=0
+                                elif (i<kelems-1 and allElemEntityTags[kdims][i+1]!=ientity) or i==kelems-1: # identifies the last right elem of the Beam
+                                    ElemVals[igtypdim][i]+="/R"
+                                    ielem_idx+=1
+                                else: # intermediate elems in the Beam
+                                    ElemVals[igtypdim][i]+="/I"
+                                    ielem_idx+=1
                         #
-                        if (i>0 and allElemEntityTags[kdims][i-1]!=ientity) or i==0: # identifies the first left elem of the Beam
-                            ElemVals[igtypdim][i]+="/L"
-                            ielem_idx=0
-                        elif (i<kelems-1 and allElemEntityTags[kdims][i+1]!=ientity) or i==kelems-1: # identifies the last right elem of the Beam
-                            ElemVals[igtypdim][i]+="/R"
-                            ielem_idx+=1
-                        else: # intermediate elems in the Beam
-                            ElemVals[igtypdim][i]+="/I"
-                            ielem_idx+=1
-                        #
-                        if not igtypdim=="beamrelax;1":
+                        else:
                             ElemVals[igtypdim][i]+=";"+str(ielem_idx)+";"+str(nbelems[ientity])
                         #
 
@@ -5992,7 +5996,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     for i in range(kelems):
                         if(ElemVals[igtypdim][i]!="-1"):
                             ielem=allElemTags[kdims][i]
+                            
                             idx=idxbeams.index(ielem)+1
+                            print("RELAX:",idx," | ",ielem," | ",ElemVals[igtypdim][i])
                             ivaltab0,ivalcompl=ElemVals[igtypdim][i].split('/')
                             ivaltab=ivaltab0.split(self.sep3)
                             #
@@ -6021,7 +6027,18 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                         tmpelem['val'].append(-1.0)
                                 tmpelem['fmt']+=")"
                                 INelemRelax.append(tmpelem)
-                        #
+                            #
+                            elif ivalcompl=="S":
+                                tmpelem={}
+                                tmpelem['val']=['ELEM',idx]
+                                tmpelem['fmt']='(A10,I6'
+                            
+                                for idof in range(int(ndofperelem)):
+                                    tmpelem['fmt']+=',F10.1'
+                                    tmpelem['val'].append(float(ivaltab[idof]))
+                                tmpelem['fmt']+=")"
+                                INelemRelax.append(tmpelem)
+                                #
 
             except Exception as emsg:
                 gmsh.logger.write("Pb in preparing Beam Relaxations for writing:"+str(emsg), level="error")
