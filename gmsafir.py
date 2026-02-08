@@ -753,6 +753,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                         specialprops=["Name of the .IN File"]
                         chgspecialprops=["Name of the input File"]
+                        
                         previousiprop=iprop
                         iprop,isSpecialProp=self.changeSpecialProps(iprop,specialprops,chgspecialprops)
 
@@ -801,12 +802,26 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             jline=iline[ik]
                             iprop,ival=jline.split(":");iprop=iprop.strip();ival=ival.strip()
                             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key",iprop0)],False)['props']
+                            
+                            specialprops=["Expected name of the structural .IN File"]
+                            chgspecialprops=["Expected name of the structural input File"]
+                        
+                            previousiprop=iprop
+                            iprop,isSpecialProp=self.changeSpecialProps(iprop,specialprops,chgspecialprops)
+    
+                            idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
+    
+                            if isSpecialProp:
+                                print("*********** FOUND changed second-level property !!!! ***** idxtab: ", iprop,"<=",previousiprop)
+                                
                             idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
                             #
                             if(idxtab!=[]): # is a SafirDB "prop"
                                 k=idxtab[0]
                                 tmp0=changeSafirDBKeyAndProp(iprop,ival)
                             else:
+                                
+                                print('coucou3')
                                 gmsh.logger.write("Problem reading the .g4s file: \""+iprop+"\" is not recognized", level="error")
                                 self.g4sfileError="error"
                                 return
@@ -901,10 +916,12 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         if(self.pbType=="Structural 2D"):
                             specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","Filename of the TEM","Filename of the TSH","Node-Xlocal","Mass1","Mass2","Mass3"]
                             chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","TEM Filename","Filename","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Rotation Z (kgm)"]
+                        #
                         elif(self.pbType=="Structural 3D"):
                             specialprops=["Y' around X'","Reverse X'","Y'(dx,dy,dz)","Filename of the TEM","Filename of the TSH","Node-Xlocal","Mass1","Mass2","Mass3","Mass4","Mass5","Mass6","Mass7"]
                             chgspecialprops=["y' around x'","Reverse x'","y'(dx,dy,dz)","TEM Filename","Filename","Node1-Xlocal","Translation X (kg)","Translation Y (kg)","Translation Z (kg)",
                                              "Rotation X (kgm)","Rotation Y (kgm)","Rotation Z (kgm)","Warping (-)"]
+                        #
                         else:
                             specialprops=[]
                             chgspecialprops=[]

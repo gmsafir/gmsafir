@@ -1,4 +1,4 @@
-## GmSAFIR (current version 2026-02-02) ⚡
+## GmSAFIR (current version 2026-02-08) ⚡
 
 
 !!!!! Important preliminary notes:
