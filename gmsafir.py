@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2026-02-02"
+        self.version="2026-06-08"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -88,16 +88,16 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         #if(outsmg!=""):
         #    gmsh.fltk.update()
         #    gmsh.logger.write("!!!TEST0124 !!! Error when opening GEO file ", level="error")
-         
-     
+
+
         # specialCategs is defined by default - will be updated in getG4sJson if g4sfile exists:
         self.specialCategs=[('Beam Section Type','mats',1,'more'),('Truss Section Type','mats',1,'one'),('Surface Material','mats',2,'one'), \
                             ('Volume Material','mats',3,'one'),('Solid Material','mats',3,'more')]
         self.reverseLAXEntities={}
         self.ReverseOnce=False
-        
 
-        
+
+
         #
         # Reading the different DBs:
         #
@@ -115,7 +115,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         # Read InspectDB
         self.loadConvertMenu()
 
-   
+
         self.inspectDB=json.loads(inspectDBstring)
         #
         # Keep track of the default ContextDB from this script, with default values
@@ -159,7 +159,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         self.params= [k for k in s if 'SAFIR' in k['name'] or self.pbType in k['name']]
 
 
-        
+
     # Complete automatically some repetitive pieces in ContextDB, at initialization step when load from default values in this script
     def initCompleteContextDB(self,tmpg0):
         # Copy the Surface Materials from Thermal2D into Thermal3D
@@ -470,7 +470,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             gmsh.logger.write("Ok, found a single GEO file in this directory, "+os.path.basename(self.geofile)+" - It will be used", level="info")
                             try:
                                 gmsh.open(self.geofile)
-                            
+
                             except Exception as e:
                                 gmsh.fltk.update()
                                 gmsh.logger.write("Error when opening GEO file "+self.geofile+": "+str(e), level="error")
@@ -512,7 +512,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             #gmsh.open()
                             gmsh.fltk.update()
                             gmsh.logger.write("Error when opening GEO file "+self.geofile+": "+str(e), level="error")
-                        
+
                         #
                     elif(len(tmpfiles)>1):
                         msg="-- Too many GEO files in the directory - Need to specify one"
@@ -753,7 +753,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
                         specialprops=["Name of the .IN File"]
                         chgspecialprops=["Name of the input File"]
-                        
+
                         previousiprop=iprop
                         iprop,isSpecialProp=self.changeSpecialProps(iprop,specialprops,chgspecialprops)
 
@@ -802,25 +802,25 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             jline=iline[ik]
                             iprop,ival=jline.split(":");iprop=iprop.strip();ival=ival.strip()
                             tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("children","key",iprop0)],False)['props']
-                            
+
                             specialprops=["Expected name of the structural .IN File"]
                             chgspecialprops=["Expected name of the structural input File"]
-                        
+
                             previousiprop=iprop
                             iprop,isSpecialProp=self.changeSpecialProps(iprop,specialprops,chgspecialprops)
-    
+
                             idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
-    
+
                             if isSpecialProp:
                                 print("*********** FOUND changed second-level property !!!! ***** idxtab: ", iprop,"<=",previousiprop)
-                                
+
                             idxtab=[k for k in range(len(tmp0)) if tmp0[k]['name']==iprop]
                             #
                             if(idxtab!=[]): # is a SafirDB "prop"
                                 k=idxtab[0]
                                 tmp0=changeSafirDBKeyAndProp(iprop,ival)
                             else:
-                                
+
                                 print('coucou3')
                                 gmsh.logger.write("Problem reading the .g4s file: \""+iprop+"\" is not recognized", level="error")
                                 self.g4sfileError="error"
@@ -925,10 +925,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         else:
                             specialprops=[]
                             chgspecialprops=[]
-    
+
                         previouspropnam=iprop
                         iprop,isSpecialProp=self.changeSpecialProps(iprop,specialprops,chgspecialprops)
-                    
+
                         if isSpecialProp:
                             print("!!!!!!!!! FOUND special prop !!!!!!!!!!!!!!"+previouspropnam+" => "+iprop)
                         #
@@ -1382,7 +1382,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         liste_surfaces = []
         layer_surfaces = defaultdict(list)
         surface_counter = 1
-        
+
         point_index_map = {}
         line_counter = 1
 
@@ -1398,6 +1398,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
             # Extraire les points
             # Extraire les points selon le type d'entité
+
             if entity_type == '3DFACE':
                 # 3DFACE a 4 points (le dernier peut être égal au premier)
                 points = [entity.dxf.vtx0, entity.dxf.vtx1, entity.dxf.vtx2, entity.dxf.vtx3]
@@ -1417,21 +1418,24 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 if(rc!=0):
                     gmsh.logger.write("Attribute reading error in DXF File", level="error")
                     return(rc)
-    
+                #print("attrs=",attrs)
                 if entity_type == 'LINE':
                     start, end = attrs['start'], attrs['end']
                     points = [start, end]
                 else:  # POLYLINE ou LWPOLYLINE
-                    if 'points' in attrs:
-                        points = [p[:3] for p in attrs['points']]  # Prendre seulement (x,y,z)
+                    if 'points_3d' in attrs:
+                        points =  attrs['points_3d']
+                        #[p[:3] for p in attrs['points']]  # Prendre seulement (x,y,z)
                     else:
                         continue
 
             # Ajouter les points à la liste globale et garder leur index
             line_point_indices = []
-            
+
             # Ajouter une structure pour les surfaces
 
+            #print("points=",points)
+                
             for point in points:
                 point_tuple = tuple(round(coord, 6) for coord in point)  # Arrondi pour éviter les doublons
                 if point_tuple not in point_index_map:
@@ -1439,6 +1443,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     point_index_map[point_tuple] = len(liste_points)  # Index commence à 1
                 line_point_indices.append(point_index_map[point_tuple])
 
+
+            #print("line_point_indices=",line_point_indices)
+            
             # Créer les lignes
             if entity_type == 'LINE':
                 # Une seule ligne de start à end
@@ -1453,7 +1460,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     liste_lines.append(line_def)
                     layer_lines[layer_name].append(line_counter)
                     line_counter += 1
-                    
+
             elif entity_type == '3DFACE':
                 # Pour les 3DFACE, créer une surface (Line Loop + Plane Surface)
                 if len(line_point_indices) >= 3:
@@ -1466,13 +1473,13 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         liste_lines.append(line_def)
                         face_lines.append(line_counter)
                         line_counter += 1
-                    
+
                     # Créer la surface
                     surface_def = face_lines  # Liste des lignes formant la surface
                     liste_surfaces.append(surface_def)
                     layer_surfaces[layer_name].append(surface_counter)
                     surface_counter += 1
-        print("layre_surface(1)=",layer_surfaces)
+        print("layer_surface(1)=",layer_surfaces)
         print("list_surfaces(2)=",liste_surfaces)
         # Écrire le fichier .geo pour Gmsh
         with open(output_geo, 'w') as f:
@@ -1490,14 +1497,14 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(f"Line({i}) = {{{line[0]}, {line[1]}}};\n")
 
             # Écrire les Physical Curve par layer
-            
+
             f.write("\n// Physical Curves par layer\n")
             for layer_name, line_numbers in layer_lines.items():
                 # Nettoyer le nom du layer pour Gmsh
                 clean_name = layer_name.replace(" ", "_").replace("-", "_")
                 lines_str = ",".join(map(str, line_numbers))
                 f.write(f'Physical Curve("{clean_name}") = {{{lines_str}}};\n')
-                
+
 # Écrire les surfaces (Line Loops et Plane Surfaces)
             f.write("\n// Surfaces (3DFACE)\n")
             for i, surface_lines in enumerate(liste_surfaces, 1):
@@ -1521,6 +1528,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
     def get_entity_attributes(self,entity):
         """Récupère les attributs DXF d'une entité de manière sécurisée"""
 
+
         attributs = {}
         common_attrs = ['layer', 'linetype', 'color', 'lineweight']
 
@@ -1537,8 +1545,10 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         if entity_type == 'LINE':
             specific_attrs = ['start', 'end']
-        elif entity_type in ('LWPOLYLINE', 'POLYLINE'):
-            specific_attrs = ['points']
+        elif entity_type == 'LWPOLYLINE':
+            specific_attrs = ['points_3d']
+        elif entity_type == 'POLYLINE':
+            specific_attrs = ['points_3d', 'mode']
         elif entity_type == 'CIRCLE':
             specific_attrs = ['center', 'radius']
         elif entity_type == 'ARC':
@@ -1551,6 +1561,39 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 except:
                     attributs[attr] = "Reading error"
                     return(-1,attributs)
+
+
+    # Traitement spécifique pour LWPOLYLINE
+        if entity_type == 'LWPOLYLINE':
+            points_3d = []
+            # Parcourir les points de la LWPOLYLINE
+            for i, (x, y, start_w, end_w, bulge) in enumerate(entity):  # .lwpoints
+                # Ajouter la coordonnée Z = 0 pour les objets 2D
+                points_3d.append((x, y, 0.0))
+            attributs['points_3d'] = points_3d
+
+        # Traitement spécifique pour POLYLINE
+        elif entity_type == 'POLYLINE':
+            points_3d = []
+            mode = entity.get_mode()
+            attributs['mode'] = mode
+
+            # Parcourir les vertices de la POLYLINE
+            for i, vertex in enumerate(entity.vertices):
+                location = vertex.dxf.location
+
+                if mode == 'polyline2d':
+                    # Pour les polylignes 2D, ajouter Z = 0
+                    points_3d.append((location.x, location.y, 0.0))
+                elif mode == 'polyline3d':
+                    # Pour les polylignes 3D, conserver les 3 coordonnées
+                    points_3d.append((location.x, location.y, location.z))
+                else:
+                    # Mode inconnu, traiter comme 2D par défaut
+                    points_3d.append((location.x, location.y, 0.0))
+
+            attributs['points_3d'] = points_3d
+
 
         return (0,attributs)
 
@@ -4778,7 +4821,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             nents=len(gmsh.model.getBoundary([(2, int(ient))],recursive=True))
                             if(nents!=3):
                                 gmsh.logger.write("A 'Void SymAxis Constraint' can only be defined for a Surface of 3 points - not the case for 'Surface "+ient+"'", level="error")
-                                return -1                
+                                return -1
 
             # Verification on entities/physgroups: Test that the TSH geometry has been correctly defined (at this place in the code because it requires the entity node coords)
             temtyp=""
@@ -5827,7 +5870,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                         print("PropAtts[igtypdim]=",PropAtts[igtypdim])
                         frtierfaceS = []
                         frtierfaceSi = []
-                        
+
                         for i in range(nelemsm):
                             if(ElemVals[igtypdim][i]!="-1"):
                                 ielem=allElemTags[ndimsm][i]
@@ -5835,7 +5878,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 frtierface=allElemNodeTags[ndimsm][i]
                                 frtierface.sort()
                                 frtierfaceS.append(frtierface)
-                                frtierfaceSi.append(i)             
+                                frtierfaceSi.append(i)
                         # Boucle de recherche
                         for im in range(nelems):
                             ielem=allElemTags[ndims][im]
@@ -5854,7 +5897,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     tmp={}
                                     tmp['val']=[ipref,idx,ifa0+1]
                                     tmp['fmt']='(A5,I6,I4)'
-                                    
+
                                     if(ival0 in INvoids):
                                         INvoids[ival0].append(tmp)
                                         frtvoids[ival0]+=1
@@ -6013,7 +6056,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     for i in range(kelems):
                         if(ElemVals[igtypdim][i]!="-1"):
                             ielem=allElemTags[kdims][i]
-                            
+
                             idx=idxbeams.index(ielem)+1
                             print("RELAX:",idx," | ",ielem," | ",ElemVals[igtypdim][i])
                             ivaltab0,ivalcompl=ElemVals[igtypdim][i].split('/')
@@ -6049,7 +6092,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                 tmpelem={}
                                 tmpelem['val']=['ELEM',idx]
                                 tmpelem['fmt']='(A10,I6'
-                            
+
                                 for idof in range(int(ndofperelem)):
                                     tmpelem['fmt']+=',F10.1'
                                     tmpelem['val'].append(float(ivaltab[idof]))
@@ -6620,7 +6663,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 except Exception as emsg:
                     gmsh.logger.write("Pb in writing void symmetry axis:"+str(emsg), level="error")
                     return -1
-                
+
 
             #Write VoidSym (Thermal 3D)
             if(ndims==3 and self.nvoids>0):
@@ -7977,12 +8020,12 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"01Node1-Xlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"02Node1-Ylocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"03Node1-thetaZlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"04Node2-Xlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"05Node2-Ylocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"06Node2-thetaZlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
+                {"name":"01Node1-Xlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"02Node1-Ylocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"03Node1-thetaZlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"04Node2-Xlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"05Node2-Ylocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"06Node2-thetaZlocal Stiffness[,Fu]","type":"string","values":[""]},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
@@ -8795,20 +8838,20 @@ contextDBstring="""
             {
                 "key":"Sub-Type","name":"-",
                 "props":[
-                {"name":"01Node1-Xlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"02Node1-Ylocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"03Node1-Zlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"04Node1-thetaXlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"05Node1-thetaYlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"06Node1-thetaZlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"07Node1-W","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"08Node2-Xlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"09Node2-Ylocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"10Node2-Zlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"11Node2-thetaXlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"12Node2-thetaYlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"13Node2-thetaZlocal","type":"number","values":[-1],"min":-1,"max":1,"step":0},
-                {"name":"14Node2-W","type":"number","values":[-1],"min":-1,"max":1,"step":0.1},
+                {"name":"01Node1-Xlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"02Node1-Ylocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"03Node1-Zlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"04Node1-thetaXlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"05Node1-thetaYlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"06Node1-thetaZlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"07Node1-W Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"08Node2-Xlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"09Node2-Ylocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"10Node2-Zlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"11Node2-thetaXlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"12Node2-thetaYlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"13Node2-thetaZlocal Stiffness[,Fu]","type":"string","values":[""]},
+                {"name":"14Node2-W Stiffness[,Fu]","type":"string","values":[""]},
                 {"ents":{},"pgs":{}}
                 ],
                 "children":[]
