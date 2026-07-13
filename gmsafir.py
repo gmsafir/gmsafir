@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2026-06-08"
+        self.version="2026-07-13"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -1435,7 +1435,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
             # Ajouter une structure pour les surfaces
 
             #print("points=",points)
-                
+
             for point in points:
                 point_tuple = tuple(round(coord, 6) for coord in point)  # Arrondi pour éviter les doublons
                 if point_tuple not in point_index_map:
@@ -1445,7 +1445,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
 
             #print("line_point_indices=",line_point_indices)
-            
+
             # Créer les lignes
             if entity_type == 'LINE':
                 # Une seule ligne de start à end
@@ -6236,16 +6236,18 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
         f=open(os.path.join(self.dir,self.INfile),'w')
         #
         f.write("InputFile created with GMSH-SAFIR Interface : Ver. "+self.version+"\n")
+        #f.write("#\n")
         #
         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Title1")],False)
         f.write(tmp0['values'][0]+"\n")
 
         tmp0=self.getDBValue(self.safirDB,[("children","name",self.pbType),("props","name","Title2")],False)
         #title2=tmp0['values'][0].replace("1990-01-01",self.version)
-        title2=tmp0['values'][0]
-        f.write(title2+"\n")
+        #title2=tmp0['values'][0] #suppress title2: date is alraedy printed
+        #f.write(title2+"\n")
         f.write("\n")
-
+        f.write("\n")
+        
         # SERIES 2 (thermal and meca) - Quantity of nodes
         f.write(self.writeLineFortran('(A10,I6)',['NNODE',len(INnodes)])+"\n")
 
@@ -7266,8 +7268,8 @@ safirDBstring="""
     "key":"Problem Type","name":"Thermal 2D",
     "props":[
         {"name":"Title1","type":"string","values":["Safir Thermal Analysis"]},
-        {"name":"Title2","type":"string","values":["Model created with GmSAFIR version 1990-01-01"]},
-        {"name":"PRECISION","type":"number","values":[1.0e-3],"min":0,"max":1.0e-1,"step":1.0e-3},
+        {"name":"Title2","type":"string","values":[""]},
+        {"name":"PRECISION","type":"number","values":[2.0e-3],"min":0,"max":1.0e-1,"step":1.0e-3},
         {"name":"TETA","type":"number","values":[0.9],"min":0,"max":1,"step":0.1,"visible":true},
         {"name":"TINITIAL","type":"number","values":[20],"min":0,"max":1,"step":0.1,"visible":true},
         {"name":"TIMEPRINT,UPTIMEPRINT","type":"string","values":["30,3600"],"visible":true},
@@ -7346,7 +7348,7 @@ safirDBstring="""
     "key":"Problem Type","name":"Thermal 3D",
     "props":[
         {"name":"Title1","type":"string","values":["Safir_Thermal_3D_Analysis"]},
-        {"name":"Title2","type":"string","values":["Model created with GmSAFIR version 1990-01-01"]},
+        {"name":"Title2","type":"string","values":[""]},
         {"name":"PRECISION","type":"number","values":[1.0e-3],"min":0,"max":1.0e-1,"step":1.0e-3},
         {"name":"TETA","type":"number","values":[0.9],"min":0,"max":1,"step":0.1},
         {"name":"TINITIAL","type":"number","values":[20],"min":0,"max":1,"step":0.1},
@@ -7376,7 +7378,7 @@ safirDBstring="""
     "key":"Problem Type","name":"Structural 2D",
     "props":[
         {"name":"Title1","type":"string","values":["Safir_Structural_Analysis"]},
-        {"name":"Title2","type":"string","values":["Model created with GmSAFIR version 1990-01-01"]},
+        {"name":"Title2","type":"string","values":[""]},
         {"name":"Name of the input File","type":"string","values":["untitled.IN"]},
         {"type":"number","name":"Consider max displacement","values":[0],"choices":[0, 1],"valueLabels":{"NO":0,"YES":1}},
         {"type":"number","name":"MAX DISPL","values":[999],"min":1,"max":1000,"step":1,"visible":false},
@@ -8233,7 +8235,7 @@ contextDBstring="""
                     "props":[
                             {"name":"90Young module","type":"number","values":[2.1e11],"min":0,"max":1e12,"step":0},
                             {"name":"91Poisson coefficient","type":"number","values":[0.3],"min":0,"max":1,"step":0},
-                            {"name":"92Yield strength","type":"number","values":[2.45e8],"min":0,"max":1e10,"step":0},
+                            {"name":"92Yield strength","type":"number","values":[3.45e8],"min":0,"max":1e10,"step":0},
                             {"name":"93Max Temperature","type":"number","values":[1200],"min":0,"max":2000,"step":0},
                             {"name":"94Rate Decrease of Yield strength","type":"number","values":[0],"min":0,"max":100,"step":0},
                             {"name":"95Slenderness","type":"number","values":[0],"min":0,"max":1e10,"step":0},
