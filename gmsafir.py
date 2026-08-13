@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2026-07-13"
+        self.version="2026-08-13"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -6837,7 +6837,9 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             inb=int(tmpl[1])
                             if(inb+1!=len(lines) or inb<2):
                                 raise ValueError("Incorrect number of lines")
-                            tmpl=re.split(r'\s+',lines[1].replace('\n',''))
+                            tmpl=re.split(r'\s+',lines[1].replace('\n','').strip())
+                            print("user-defined len(tmpl)=",len(tmpl))
+                            print("user-defined tmpl=",tmpl)
                             if(len(tmpl)!=11):
                                 raise ValueError("Second line shall contain 11 parameters: T,k,c,rho,w,Tstart,Tend,hh,hu,emissiv,r")
                             for iline in lines[2:]:
