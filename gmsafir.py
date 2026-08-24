@@ -24,7 +24,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
 
         gmsh.initialize(sys.argv)
 
-        self.version="2026-08-13"
+        self.version="2026-08-24"
         self.authors0="Univ. of Liege & Efectis France"
         self.authors="Univ. of Liege"
 
@@ -1415,6 +1415,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                     continue  # Pas assez de points pour former une face
             else:
                 (rc,attrs) = self.get_entity_attributes(entity)
+                print("attrs=",attrs)
                 if(rc!=0):
                     gmsh.logger.write("Attribute reading error in DXF File", level="error")
                     return(rc)
@@ -1425,6 +1426,7 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 else:  # POLYLINE ou LWPOLYLINE
                     if 'points_3d' in attrs:
                         points =  attrs['points_3d']
+                        print("points=",points)
                         #[p[:3] for p in attrs['points']]  # Prendre seulement (x,y,z)
                     else:
                         continue
@@ -6058,15 +6060,23 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                             ielem=allElemTags[kdims][i]
 
                             idx=idxbeams.index(ielem)+1
+                            
                             print("RELAX:",idx," | ",ielem," | ",ElemVals[igtypdim][i])
                             ivaltab0,ivalcompl=ElemVals[igtypdim][i].split('/')
                             ivaltab=ivaltab0.split(self.sep3)
+                            #
+                            exists_Fu=any(',' in partie for partie in ivaltab)
                             #
                             if ivalcompl=="L" or ivalcompl=="R":
                                 tmpelem={}
                                 tmpelem['val']=['ELEM',idx]
                                 tmpelem['fmt']='(A10,I6'
                                 #
+                                if exists_Fu:
+                                    tmpelem2={}
+                                    tmpelem2['val']=['Fu']
+                                    tmpelem2['fmt']='(A10'
+                                
                                 if(ivalcompl=="L"):
                                     noffset=0
                                 if(ivalcompl=="R"):
@@ -6076,29 +6086,80 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                                     for idof in range(int(ndofperelem/2)):
                                         tmpelem['fmt']+=',F10.1'
                                         tmpelem['val'].append(-1.0)
+                                        #
+                                        if exists_Fu:
+                                            tmpelem2['fmt']+=',F10.1'
+                                            tmpelem2['val'].append(0)
                                 #
                                 for idof in range(int(ndofperelem/2)):
                                     tmpelem['fmt']+=',F10.1'
-                                    tmpelem['val'].append(float(ivaltab[idof+noffset]))
+                                    #
+                                    if exists_Fu:
+                                        tmpelem2['fmt']+=',F10.1'
+                                        tmpvaltab=ivaltab[idof+noffset].split(",")
+                                        #
+                                        if len(tmpvaltab)>1:
+                                            tmpelem2['val'].append(float(tmpvaltab[1]))
+                                        else:
+                                            tmpelem2['val'].append(0)
+                                        #
+                                        tmpval=tmpvaltab[0]
+                                        #
+                                    else:
+                                        tmpval=ivaltab[idof+noffset]
+                                        
+                                    tmpelem['val'].append(float(tmpval))
                                 #
                                 if(ivalcompl=="L"):
                                     for idof in range(int(ndofperelem/2)):
                                         tmpelem['fmt']+=',F10.1'
                                         tmpelem['val'].append(-1.0)
+                                        #
+                                        if exists_Fu:
+                                            tmpelem2['fmt']+=',F10.1'
+                                            tmpelem2['val'].append(0)
+                                            
                                 tmpelem['fmt']+=")"
                                 INelemRelax.append(tmpelem)
+                                
+                                if exists_Fu:
+                                    tmpelem2['fmt']+=")"
+                                    INelemRelax.append(tmpelem2)
                             #
                             elif ivalcompl=="S":
                                 tmpelem={}
                                 tmpelem['val']=['ELEM',idx]
                                 tmpelem['fmt']='(A10,I6'
+                                
+                                
+                                if exists_Fu:
+                                    tmpelem2={}
+                                    tmpelem2['val']=['Fu']
+                                    tmpelem2['fmt']='(A10'
 
                                 for idof in range(int(ndofperelem)):
                                     tmpelem['fmt']+=',F10.1'
-                                    tmpelem['val'].append(float(ivaltab[idof]))
+                                    #
+                                    if exists_Fu:
+                                        tmpelem2['fmt']+=',F10.1'
+                                        tmpvaltab=ivaltab[idof+noffset].split(",")
+                                        #
+                                        if len(tmpvaltab)>1:
+                                            tmpelem2['val'].append(float(tmpvaltab[1]))
+                                        else:
+                                            tmpelem2['val'].append(0)
+                                        #
+                                        tmpval=tmpvaltab[0]
+                                        #
+                                    else:
+                                        tmpval=ivaltab[idof+noffset]
+                                        
+                                    tmpelem['val'].append(float(tmpval))
                                 tmpelem['fmt']+=")"
                                 INelemRelax.append(tmpelem)
-                                #
+                                if exists_Fu:
+                                    tmpelem2['fmt']+=")"
+                                    INelemRelax.append(tmpelem2)
 
             except Exception as emsg:
                 gmsh.logger.write("Pb in preparing Beam Relaxations for writing:"+str(emsg), level="error")
@@ -6695,7 +6756,8 @@ class Myapp: # Use of class only in order to share 'params' as a global variable
                 f.write(self.writeLineFortran('(A10)',['RELAX_ELEM'])+"\n")
                 f.write(self.writeLineFortran('(A15)',['BEAMS'])+"\n")
                 for i in range(len(INelemRelax)):
-                    f.write(self.writeLineFortran(INelemRelax[i]['fmt'],INelemRelax[i]['val'])+"\n")
+                    if not all(x == 0 for x in INelemRelax[i]['val'][1:]):
+                        f.write(self.writeLineFortran(INelemRelax[i]['fmt'],INelemRelax[i]['val'])+"\n")
                 f.write(self.writeLineFortran('(A9)',['END_BEAMS'])+"\n")
                 f.write(self.writeLineFortran('(A9)',['END_RELAX'])+"\n")
 
