@@ -10035,7 +10035,7 @@ if __name__ == "__main__":
                         if(ndims==3):
                             gmsh.model.mesh.generate(3)
                     #
-                        self.updateReverse()
+                        myapp.updateReverse()
 
                     myapp.createIN()
         #
@@ -10066,7 +10066,7 @@ if __name__ == "__main__":
                         if(ndims==3):
                             gmsh.model.mesh.generate(3)
                     #
-                        self.updateReverse()
+                        myapp.updateReverse()
 
                     myapp.createIN()
                 else:
